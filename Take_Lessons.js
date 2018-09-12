@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    http://sec.guet.edu.cn
-// @version      0.3.1
+// @version      0.3.2
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
-// @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Take_Lessons.js
+// @updateURL  https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Take_Lessons.js
 // @grant        none
 // ==/UserScript==
 
@@ -258,7 +258,7 @@ function Rreplace_StuSct (module, time) {
 										gd.up('window').close();
 									}
 								});
-							} else if ("课号:" + rs[0].data.courseno + "选择失败，选课人数已满!" == obj.msg) {
+							} else if ("课程:" + rs[0].data.courseno + "选择失败，选课人数已满!" == obj.msg) {
 								Ext.Msg.updateProgress(Ext.TaskManager.timerId % 100 / 100);
 							} else {
 								Ext.TaskManager.stop(task);
