@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Take Lessons
-// @namespace    http://sec.guet.edu.cn
-// @version      0.3.2
+// @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
+// @version      0.3.3
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
-// @updateURL  https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Take_Lessons.js
+// @updateURL    https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Take_Lessons.js
 // @grant        none
 // ==/UserScript==
 
@@ -16,9 +16,8 @@ var col = {
     old_hide: true //旧模块是否隐藏
 };
 
-
 //启动接口
-Ext.onReady(function (){
+Ext.onReady(function () {
     //定义监视器
     var panel = Ext.getCmp("content_panel");
 
@@ -32,7 +31,7 @@ Ext.onReady(function (){
 
     text.innerHTML += '<br/>';
     text.innerHTML += '<br/>NAME:Take Lessons';
-    text.innerHTML += '<br/>VERSION:0.3';
+    text.innerHTML += '<br/>VERSION:0.3.3';
     text.innerHTML += '<br/>AUTHOR:cssxsh';
     text.innerHTML += '<br/>COMM:bug极多';
     console.log("Bug真的多。");
@@ -177,30 +176,29 @@ function Rreplace_StuSct (module, time) {
 			}
 		]
     });
-    function sctcno1(){
+    function sctcno1 () {
         var rs = grid.getSelectionModel().getSelection();
         if (rs.length > 0) {
-                var sto = gdcno.getStore();
-                sto.proxy.extraParams = rs[0].data;
-                sto.load();
-            } else {
-                Ext.Msg.alert("提示信息", "请选择一条记录进行编辑。");
-            }
+            var sto = gdcno.getStore();
+            sto.proxy.extraParams = rs[0].data;
+            sto.load();
+        } else {
+            Ext.Msg.alert("提示信息", "请选择一条记录进行编辑。");
         }
-        var cnoSto = Ext.create('Ext.data.Store', {
-            fields: ['term', 'courseno','grade','spno','scted', 'name','ap','xf','lot', 'courseid','stype', 'maxstu', 'sctcnt','comm'],
-            proxy: {
-                type: 'ajax', url: '/CourseSct/GetPlanCno',
-                reader: {
-					type: 'json',
-					root: 'data'
-				}
-			},
-			groupField: 'scted'
-		}
-	);
+    }
+    var cnoSto = Ext.create('Ext.data.Store', {
+        fields: ['term', 'courseno','grade','spno','scted', 'name','ap','xf','lot', 'courseid','stype', 'maxstu', 'sctcnt','comm'],
+        proxy: {
+            type: 'ajax', url: '/CourseSct/GetPlanCno',
+            reader: {
+				type: 'json',
+				root: 'data'
+			}
+		},
+		groupField: 'scted'
+	});
 
-    function sctSubmit(){
+    function sctSubmit () {
         var gd = this.up('grid');
         var rs = gd.getSelectionModel().getSelection();
 		if (rs.length > 0) {
@@ -233,7 +231,7 @@ function Rreplace_StuSct (module, time) {
             Ext.Msg.alert("提示", "请选择一个课号提交。");
         }
     }
-	function sctSubmit_(){
+	function sctSubmit_ () {
         var gd = this.up('grid');
         var rs = gd.getSelectionModel().getSelection();
 		if (rs.length > 0) {
@@ -319,64 +317,64 @@ function Rreplace_StuSct (module, time) {
                 })
             }],
             columns: [{
-			        header: "序号",
-					xtype: 'rownumberer',
-					width: 30
-				}, {
-					header: "专业",
-					dataIndex: "spno",
-					width: 94,
-					renderer: function(v) {
-						return sctDropDown(v,spSto,'spno','spname');
-					}
-				}, {
-					header: "课程序号",
-					dataIndex: "courseno",
-					width: 70
-				}, {
-					header: "容量",
-					dataIndex: "maxstu",
-					width: 35
-				}, {
-					header: "已选",
-					dataIndex: "sctcnt",
-					width: 35
-				},{
-					header: "抽签",
-					width: 35,
-					xtype: 'booleancolumn',
-					trueText: '是',
-					falseText: '否',
-					dataIndex: 'lot'
-				}, {
-					header: "年级",
-					dataIndex: "grade",
-					width: 45
-				}, {
-					header: "学分",
-					dataIndex: "xf",
-					width: 40
-				}, {
-					header: "教师",
-					dataIndex: "name",
-					width: 80
-				}, {
-					header: "上课安排",
-					dataIndex: "ap",
-					width: 94,
-					flex:1
-				}]
-            });
-            var sto = gdcno.getStore();
-            sto.proxy.extraParams = rec.data;
-            sto.load();
-            var win = Ext.create('Ext.window.Window', {
-                title: rec.data.cname + '(' + rec.data.courseid + ')',
-                modal: true, height: '80%', width: '80%', layout: 'fit',
-                items: [gdcno]
-            });
-            win.show();
-        }
+			    header: "序号",
+				xtype: 'rownumberer',
+				width: 30
+			}, {
+				header: "专业",
+				dataIndex: "spno",
+				width: 94,
+				renderer: function(v) {
+					return sctDropDown(v,spSto,'spno','spname');
+				}
+			}, {
+				header: "课程序号",
+				dataIndex: "courseno",
+				width: 70
+			}, {
+				header: "容量",
+				dataIndex: "maxstu",
+				width: 35
+			}, {
+				header: "已选",
+				dataIndex: "sctcnt",
+				width: 35
+			}, {
+				header: "抽签",
+				width: 35,
+				xtype: 'booleancolumn',
+				trueText: '是',
+				falseText: '否',
+				dataIndex: 'lot'
+			}, {
+				header: "年级",
+				dataIndex: "grade",
+				width: 45
+			}, {
+				header: "学分",
+				dataIndex: "xf",
+				width: 40
+			}, {
+				header: "教师",
+				dataIndex: "name",
+				width: 80
+			}, {
+				header: "上课安排",
+				dataIndex: "ap",
+				width: 94,
+				flex:1
+			}]
+        });
+        var sto = gdcno.getStore();
+        sto.proxy.extraParams = rec.data;
+        sto.load();
+        var win = Ext.create('Ext.window.Window', {
+            title: rec.data.cname + '(' + rec.data.courseid + ')',
+            modal: true, height: '80%', width: '80%', layout: 'fit',
+            items: [gdcno]
+        });
+        win.show();
+    }
     var pan = Ext.create('Edu.view.ShowPanel', {
         title: '学生' + scttype + '选课',
         items: [{
