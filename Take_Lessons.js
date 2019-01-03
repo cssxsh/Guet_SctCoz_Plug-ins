@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.3
+// @version      0.3.5
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -13,31 +13,33 @@
 //一些参数
 var col = {
     time: 1000, //抢课时间间隔
-    old_hide: true //旧模块是否隐藏
+    old_hide: true, //旧模块是否隐藏
 };
-
+var plugTools;
 //启动接口
 Ext.onReady(function () {
-    //定义监视器
-    var panel = Ext.getCmp("content_panel");
-
-    panel.addListener("add", function () {
-        var last = panel.items.items[panel.items.items.length - 1];
-        Rreplace_StuSct(last.id, col.time);
-    });
-
-    //载入一些提示
-    var text = Ext.getCmp("content_panel").items.items[0].body.dom;
-
-    text.innerHTML += '<br/>';
-    text.innerHTML += '<br/>NAME:Take Lessons';
-    text.innerHTML += '<br/>VERSION:0.3.3';
-    text.innerHTML += '<br/>AUTHOR:cssxsh';
-    text.innerHTML += '<br/>COMM:bug极多';
-    console.log("Bug真的多。");
-    //Ext.Msg.alert("提示", "这是一个demo");
+    //创建工具
+    plugTools = Ext.create("SctCoz.tools");
+	plugTools.init();
+    console.log("抢课脚本Bug真的多。");
+	var StuSct = {
+		action: "StuSct",
+		text: "选课",
+		id: "StuSct",
+		afterrender: function (){ Rreplace_StuSct("StuSct") },
+		activate: null
+	}
+	var StuSctCx = {
+		action: "StuSctCx",
+		text: "重学选课",
+		id: "StuSctCx",
+		afterrender: function () { Rreplace_StuSct("StuSctCx") },
+		activate: null
+	}
+    plugTools.menuChange(StuSct);
+    plugTools.menuChange(StuSctCx);
 });
-function Rreplace_StuSct (module, time) {
+function Rreplace_StuSct (module) {
     //判断模块是否符合
     var scttype = '';
     switch (module) {
@@ -281,8 +283,8 @@ function Rreplace_StuSct (module, time) {
 							Ext.TaskManager.stop(task);
 						}
 					});
-				}, 
-				interval: time
+				},
+				interval: col.time
 			};
 			Ext.TaskManager.start(task);
         } else {
@@ -376,7 +378,7 @@ function Rreplace_StuSct (module, time) {
         win.show();
     }
     var pan = Ext.create('Edu.view.ShowPanel', {
-        title: '学生' + scttype + '选课',
+        title: '学生' + scttype + '选课【插件模式】',
         items: [{
 			region: 'north',
 			layout: 'fit',
@@ -385,12 +387,19 @@ function Rreplace_StuSct (module, time) {
 			region: 'center',
 			layout: 'fit',
 			flex: 3,
+            id: module + "Grid",
 			items: [grid]
-		}]
+        }]
     });
-
     var tab = Ext.getCmp(module);
     tab.add(pan);
+    //防止炸裂
+    tab.addListener("destroy", function () {
+        if (pan != null) {
+            console.log("Boom!");
+            pan.close();
+        }
+    });
 
 	//隐藏多余的旧模块
     if (col.old_hide) {
@@ -399,3 +408,96 @@ function Rreplace_StuSct (module, time) {
         });
     }
 }
+
+Ext.define('SctCoz.tools', {
+    config:{
+		id: 'plug',
+        version: "0.1.5",
+	},
+	SysMenus: null,
+	Menus_Tree: null,
+	newMenus: [],
+	menuAdd: function (config) {
+        console.log(config.action + "add...");
+		var menu_config = {
+			"action": config.action,
+			"children": null,
+			"command": null,
+			"controller": "plug",
+			"id": config.id,
+			"leaf": true,
+			"text": config.text,
+			"type": "action",
+		};
+		this.Menus_Tree.appendChild(menu_config);
+		this.newMenus.push(config);
+	},
+	menuChange: function (config) {
+        console.log(config.action + " change...");
+		var menu_config = {
+			"action": config.action,
+			"children": null,
+			"command": null,
+			"controller": "plug",
+			"id": config.id,
+			"leaf": true,
+			"text": config.text,
+			"type": "action",
+		};
+		this.newMenus.push(config);
+	},
+	getNewListeners: function (id) {
+		for (var i in this.newMenus) {
+            console.log(id);
+			if (this.newMenus[i].id == id) {
+				var Listeners = {
+					afterrender: this.newMenus[i].afterrender,
+					activate: this.newMenus[i].activate
+				};
+				return Listeners;
+			}
+		}
+		return null;
+	}
+	,
+	newOpenTab: function (panel, id, text, actid) {
+		var tabPanel = Ext.getCmp("content_panel");
+		var tabNodeId = tabPanel.down('[id=' + actid + ']');
+		var Listeners = plugTools.getNewListeners(actid);
+		if (!tabNodeId) {
+			tabPanel.add({
+				id: actid,
+				title: text,
+				layout:'fit',
+				closable: true,
+				childActId: actid,
+				barChange: false,
+				loader: {
+					url: panel,
+					loadMask: '请稍等...',
+					autoLoad: true,
+					scripts: true
+                },
+                listeners: {
+                    afterrender: Listeners.afterrender || function (me, opts) {
+                    },
+                    activate: Listeners.activate || function (me, opts) {
+                        if (me.barChange) {
+                            me.barChange = false;
+                            me.loader.load();
+                        }
+                    }
+                }
+            }).show();
+        }
+        else
+            tabPanel.setActiveTab(tabNodeId);
+    },
+	init: function () {
+		//初始化
+        console.log("ver "+ this.version + "   initing...");
+		this.SysMenus = Ext.getCmp("SystemMenus");
+		this.Menus_Tree = this.SysMenus.items.items[0].node;
+		this.SysMenus.openTab = this.newOpenTab;
+	}
+});
