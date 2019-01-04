@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.5
+// @version      0.3.5.1
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -15,26 +15,32 @@ var col = {
     time: 1000, //抢课时间间隔
     old_hide: true, //旧模块是否隐藏
 };
-var plugTools;
 //启动接口
 Ext.onReady(function () {
     //创建工具
-    plugTools = Ext.create("SctCoz.tools");
-	plugTools.init();
+    window.plugTools;
+	if (window.plugTools == null) {
+		window.plugTools = Ext.create("SctCoz.tools");
+		plugTools.init();
+	}
     console.log("抢课脚本Bug真的多。");
 	var StuSct = {
 		action: "StuSct",
 		text: "选课",
 		id: "StuSct",
-		afterrender: function (){ Rreplace_StuSct("StuSct") },
-		activate: null
+		listeners: {
+			afterrender: function (me, opt){ Rreplace_StuSct("StuSct") },
+			activate: null
+		}
 	}
 	var StuSctCx = {
 		action: "StuSctCx",
 		text: "重学选课",
 		id: "StuSctCx",
-		afterrender: function () { Rreplace_StuSct("StuSctCx") },
-		activate: null
+		listeners: {
+			afterrender: function (me, opt) { Rreplace_StuSct("StuSctCx") },
+			activate: null
+		}
 	}
     plugTools.menuChange(StuSct);
     plugTools.menuChange(StuSctCx);
@@ -73,15 +79,15 @@ function Rreplace_StuSct (module) {
         argcols: [{
                 xtype: 'termcombo',
 				store: tmSto,
+				value:getTerm()[1],
 				allowBlank: false,
 				labelWidth:30,
-				readOnly: true,
-				value:getTerm()[1]
+				readOnly: true
             }, {
 				xtype: 'gradecombo',
+				allowBlank: false,
 				labelWidth: 30,
 				width: 120,
-				allowBlank: false,
 				size: 6
 			}, {
                 xtype: 'dptcombo',
@@ -95,16 +101,16 @@ function Rreplace_StuSct (module) {
 				width:240,
 				allowBlank: false
             }, {
+				xtype: 'hidden',
                 fieldLabel: '选课类别',
 				name: 'stype',
-				xtype: 'hidden',
 				value: scttype
             }, {
-                margin: '0 3',
 				xtype: 'button',
+				handler: queryStore,
 				text: '查询',
-				formBind: true,
-				handler: queryStore
+                margin: '0 3',
+				formBind: true
             }
 		]
     });
@@ -132,14 +138,15 @@ function Rreplace_StuSct (module) {
     var grid = Ext.create('Edu.view.ShowGrid', {
 		store: setSto,
         columns: [{
-				header: "序号",
 				xtype: 'rownumberer',
-				width: 30
+				header: "序号",
+				width: 40
 			}, {
-                xtype: 'actionrendercolumn',
-				header: '操作',
-                width: 40,
                 dataIndex:'scted',
+				header: '操作',
+                xtype: 'actionrendercolumn',
+                dataIndex:'scted',
+                width: 40,
                 renderer: function (v) {
 					if (!v) {
 						return ['选课'];
@@ -153,27 +160,27 @@ function Rreplace_StuSct (module) {
                     }
                 }]
             }, {
-				header: "已选",
-				width: 35,
+				dataIndex: 'scted',
 				xtype: 'booleancolumn',
+				header: "已选",
 				trueText: '是',
 				falseText: '否',
-				dataIndex: 'scted'
+				width: 40
 			}, {
-				header: "课程代码",
 				dataIndex: "courseid",
+				header: "课程代码",
 				width: 95
 			}, {
-				header: "课程名称",
 				dataIndex: "cname",
+				header: "课程名称",
 				width: 240
 			}, {
-				header: "课程性质",
 				dataIndex: "tname",
+				header: "课程性质",
 				minWidth: 60
 			}, {
-				header: "学分",
 				dataIndex: "xf",
+				header: "学分",
 				width: 40
 			}
 		]
@@ -323,46 +330,46 @@ function Rreplace_StuSct (module) {
 				xtype: 'rownumberer',
 				width: 30
 			}, {
-				header: "专业",
 				dataIndex: "spno",
+				header: "专业",
 				width: 94,
 				renderer: function(v) {
 					return sctDropDown(v,spSto,'spno','spname');
 				}
 			}, {
-				header: "课程序号",
 				dataIndex: "courseno",
+				header: "课程序号",
 				width: 70
 			}, {
-				header: "容量",
 				dataIndex: "maxstu",
+				header: "容量",
 				width: 35
 			}, {
-				header: "已选",
 				dataIndex: "sctcnt",
+				header: "已选",
 				width: 35
 			}, {
+				dataIndex: 'lot',
 				header: "抽签",
 				width: 35,
 				xtype: 'booleancolumn',
 				trueText: '是',
-				falseText: '否',
-				dataIndex: 'lot'
+				falseText: '否'
 			}, {
-				header: "年级",
 				dataIndex: "grade",
+				header: "年级",
 				width: 45
 			}, {
-				header: "学分",
 				dataIndex: "xf",
+				header: "学分",
 				width: 40
 			}, {
-				header: "教师",
 				dataIndex: "name",
+				header: "教师",
 				width: 80
 			}, {
-				header: "上课安排",
 				dataIndex: "ap",
+				header: "上课安排",
 				width: 94,
 				flex:1
 			}]
@@ -387,7 +394,6 @@ function Rreplace_StuSct (module) {
 			region: 'center',
 			layout: 'fit',
 			flex: 3,
-            id: module + "Grid",
 			items: [grid]
         }]
     });
@@ -412,7 +418,7 @@ function Rreplace_StuSct (module) {
 Ext.define('SctCoz.tools', {
     config:{
 		id: 'plug',
-        version: "0.1.5",
+        version: "0.1.5.1",
 	},
 	SysMenus: null,
 	Menus_Tree: null,
@@ -450,14 +456,20 @@ Ext.define('SctCoz.tools', {
 		for (var i in this.newMenus) {
             console.log(id);
 			if (this.newMenus[i].id == id) {
-				var Listeners = {
-					afterrender: this.newMenus[i].afterrender,
-					activate: this.newMenus[i].activate
-				};
+
+				var Listeners = this.newMenus[i].listeners;
+				if (Listeners.activate == null) {
+					Listeners.activate = function (me, opts) {
+                        if (me.barChange) {
+                            me.barChange = false;
+                            me.loader.load();
+                        }
+					}
+				}
 				return Listeners;
 			}
 		}
-		return null;
+		return {};
 	}
 	,
 	newOpenTab: function (panel, id, text, actid) {
@@ -478,16 +490,7 @@ Ext.define('SctCoz.tools', {
 					autoLoad: true,
 					scripts: true
                 },
-                listeners: {
-                    afterrender: Listeners.afterrender || function (me, opts) {
-                    },
-                    activate: Listeners.activate || function (me, opts) {
-                        if (me.barChange) {
-                            me.barChange = false;
-                            me.loader.load();
-                        }
-                    }
-                }
+                listeners: Listeners
             }).show();
         }
         else

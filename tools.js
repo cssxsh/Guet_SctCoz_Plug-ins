@@ -4,7 +4,7 @@
 Ext.define('SctCoz.tools', {
     config:{
 		id: 'plug',
-        version: "0.1.5",
+        version: "0.1.5.1",
 	},
 	SysMenus: null,
 	Menus_Tree: null,
@@ -42,14 +42,20 @@ Ext.define('SctCoz.tools', {
 		for (var i in this.newMenus) {
             console.log(id);
 			if (this.newMenus[i].id == id) {
-				var Listeners = {
-					afterrender: this.newMenus[i].afterrender,
-					activate: this.newMenus[i].activate
-				};
+
+				var Listeners = this.newMenus[i].listeners;
+				if (Listeners.activate == null) {
+					Listeners.activate = function (me, opts) {
+                        if (me.barChange) {
+                            me.barChange = false;
+                            me.loader.load();
+                        }
+					}
+				}
 				return Listeners;
 			}
 		}
-		return null;
+		return {};
 	}
 	,
 	newOpenTab: function (panel, id, text, actid) {
@@ -70,16 +76,7 @@ Ext.define('SctCoz.tools', {
 					autoLoad: true,
 					scripts: true
                 },
-                listeners: {
-                    afterrender: Listeners.afterrender || function (me, opts) {
-                    },
-                    activate: Listeners.activate || function (me, opts) {
-                        if (me.barChange) {
-                            me.barChange = false;
-                            me.loader.load();
-                        }
-                    }
-                }
+                listeners: Listeners
             }).show();
         }
         else
@@ -99,7 +96,9 @@ menu_config = {
 	action: "PanId",
 	text: "text",
 	id: "id",
-	afterrender function () {},
-	activate: function () {}
+	listeners: {
+		afterrender function (me, opt) {},		//一般为修改模块使用，模块启动后执行
+		activate: function (me, opt) {}		//一般为加载自定义模块使用，将覆盖原有加载方式，定义为空，则不覆盖
+	}
 }
 */
