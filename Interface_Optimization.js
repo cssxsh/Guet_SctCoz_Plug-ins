@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2
-// @description  ¶ÔÑ¡¿ÎÏµÍ³×öÒ»Ğ©ÓÅ»¯
+// @version      0.2.1
+// @description  å¯¹é€‰è¯¾ç³»ç»Ÿåšä¸€äº›ä¼˜åŒ–
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
@@ -10,9 +10,9 @@
 // @grant        none
 // ==/UserScript==
 
-//Æô¶¯½Ó¿Ú
+//å¯åŠ¨æ¥å£
 Ext.onReady(function () {
-    //´´½¨¹¤¾ß
+    //åˆ›å»ºå·¥å…·
     window.plugTools;
 	if (window.plugTools == null) {
 		window.plugTools = Ext.create("SctCoz.tools");
@@ -20,32 +20,40 @@ Ext.onReady(function () {
 	}
 	var CourseSetNewButton = {
 		action: "QryCourseSet",
-		text: "¿Î³ÌÉèÖÃ",
+		text: "è¯¾ç¨‹è®¾ç½®",
 		id: "QryCourseSet",
         listeners: {
-            add: function (me, opt) {//ÕâÀïÓÃadd·½·¨²»ÊÇºÜºÃ£¬µ«ÊÇÕÒ²»µ½ºÏÊÊµÄÊÂ¼şµÈ´ı¼ÓÔØÍê±Ï
-                me.items.items[0].items.items[0].items.items[0].items.items[0].add({width: 120, labelWidth: 35,  name: 'stid', fieldLabel: 'Ñ§ºÅ'})
-                console.log(me.items.items.length);
+            add: function (me, opt) {//è¿™é‡Œç”¨addæ–¹æ³•ä¸æ˜¯å¾ˆå¥½ï¼Œä½†æ˜¯æ‰¾ä¸åˆ°åˆé€‚çš„äº‹ä»¶ç­‰å¾…åŠ è½½å®Œæ¯•
+                var qryfrm = me.items.items[0].items.items[0].items.items[0].items.items[0];
+                qryfrm.add({width: 120, labelWidth: 35,  name: 'stid', fieldLabel: 'å­¦å·'});
+                var inputs = qryfrm.items.items;
+                for (var i in inputs) {
+                    if (inputs[i].xtype == 'combo') {
+                        inputs[i].editable = true;
+                    }
+                }
+                var grid = me.items.items[0].items.items[1].items.items[0];
+                for (var j in grid.columns) {
+                    grid.columns[j].sortable = true;
+                }
+                //console.log(me.items.items.length);
             },
             activate: null
         }
 	}
     plugTools.menuChange(CourseSetNewButton);
 
-	//ÕâÀïÃ»ÓĞÓÃÍ¨ÓÃ·½·¨
-    //¶¨Òå¼àÊÓÆ÷
+	//è¿™é‡Œæ²¡æœ‰ç”¨é€šç”¨æ–¹æ³•
+    //å®šä¹‰ç›‘è§†å™¨
     var panel = Ext.getCmp("content_panel");
     panel.addListener("add", function () {
         var lastTab = panel.items.items[panel.items.items.length - 1];
-        if (lastTab.id == "QryCourseSet") {
-            //lastTab.items.items[0].items.items[0].items.items[0].items.items[0].add({width: 120, labelWidth: 35,  name: 'stid', fieldLabel: 'Ñ§ºÅ'});
-        }
         lastTab.addListener("beforeshow", function () {
             var gridArr = Ext.query(".x-grid-with-col-lines");
             for (var i in gridArr) {
                 var g = Ext.getCmp(gridArr[i].id);
                 //console.log(Ext.getClassName(g));
-                if (Ext.getClassName(g) == "Ext.grid.Panel" ||Ext.getClassName(g) == "Edu.view.ShowGrid") {
+                if (Ext.getClassName(g) == "Ext.grid.Panel" || Ext.getClassName(g) == "Edu.view.ShowGrid") {
                     //console.log(g.id);
                     for (var j in g.columns) {
                         g.columns[j].sortable = true;
@@ -96,9 +104,8 @@ Ext.define('SctCoz.tools', {
 	},
 	getNewListeners: function (id) {
 		for (var i in this.newMenus) {
-            console.log(id);
+            //console.log(id);
 			if (this.newMenus[i].id == id) {
-
 				var Listeners = this.newMenus[i].listeners;
 				if (Listeners.activate == null) {
 					Listeners.activate = function (me, opts) {
@@ -128,7 +135,7 @@ Ext.define('SctCoz.tools', {
 				barChange: false,
 				loader: {
 					url: panel,
-					loadMask: 'ÇëÉÔµÈ...',
+					loadMask: 'è¯·ç¨ç­‰...',
 					autoLoad: true,
 					scripts: true
                 },
@@ -139,7 +146,7 @@ Ext.define('SctCoz.tools', {
             tabPanel.setActiveTab(tabNodeId);
     },
 	init: function () {
-		//³õÊ¼»¯
+		//åˆå§‹åŒ–
         console.log("ver "+ this.version + "   initing...");
 		this.SysMenus = Ext.getCmp("SystemMenus");
 		this.Menus_Tree = this.SysMenus.items.items[0].node;
