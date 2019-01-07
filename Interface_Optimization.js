@@ -48,7 +48,7 @@ Ext.onReady(function () {
                     var panView = Ext.create('Ext.panel.Panel', {layout: 'fit', autoScroll: true, frame: true});
                     Ext.create("Ext.window.Window", {
                         title: "课程表",
-                        width: '80%', height:'80%',modal: true, resizable: false, layout: 'border',
+                        width: '80%', height:'80%',modal: true, resizable: false, layout: 'fit',
                         items: [panView]
                     }).show();
                     ctb.render(panView.body, gRec);
