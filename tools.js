@@ -4,7 +4,7 @@
 Ext.define('SctCoz.tools', {
     config:{
 		id: 'plug',
-        version: "0.1.5.1",
+        version: "0.1.6",
 	},
 	SysMenus: null,
 	Menus_Tree: null,
@@ -40,9 +40,8 @@ Ext.define('SctCoz.tools', {
 	},
 	getNewListeners: function (id) {
 		for (var i in this.newMenus) {
-            console.log(id);
+            //console.log(id);
 			if (this.newMenus[i].id == id) {
-
 				var Listeners = this.newMenus[i].listeners;
 				if (Listeners.activate == null) {
 					Listeners.activate = function (me, opts) {
@@ -86,7 +85,7 @@ Ext.define('SctCoz.tools', {
 		//初始化
         console.log("ver "+ this.version + "   initing...");
 		this.SysMenus = Ext.getCmp("SystemMenus");
-		this.Menus_Tree = this.SysMenus.items.items[0].node;
+		this.Menus_Tree = this.SysMenus.down("treeview").node;
 		this.SysMenus.openTab = this.newOpenTab;
 	}
 });

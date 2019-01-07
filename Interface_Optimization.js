@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.1
+// @version      0.2.3
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -24,7 +24,8 @@ Ext.onReady(function () {
 		id: "QryCourseSet",
         listeners: {
             add: function (me, opt) {//这里用add方法不是很好，但是找不到合适的事件等待加载完毕
-                var qryfrm = me.items.items[0].items.items[0].items.items[0].items.items[0];
+                //修正面板功能
+                var qryfrm = me.down("fieldset"); //获取条件筛选面板
                 qryfrm.add({width: 120, labelWidth: 35,  name: 'stid', fieldLabel: '学号'});
                 var inputs = qryfrm.items.items;
                 for (var i in inputs) {
@@ -32,11 +33,26 @@ Ext.onReady(function () {
                         inputs[i].editable = true;
                     }
                 }
-                var grid = me.items.items[0].items.items[1].items.items[0];
+                //修正排序功能
+                var grid = me.down("grid");
                 for (var j in grid.columns) {
                     grid.columns[j].sortable = true;
                 }
-                //console.log(me.items.items.length);
+                //添加日程表功能
+                var ctb = Ext.create('Edu.view.coursetable');
+                var toolTbar = grid.down("toolbar");// 获取工具栏
+                toolTbar.add({ xtype: 'button', text: '转为课表', formBind: true, icon: '/images/0775.gif', handler: openTimeTable});
+                function openTimeTable (me, opt) {
+                    var grid = me.up("grid");
+                    var gRec = grid.getStore().data.items;
+                    var panView = Ext.create('Ext.panel.Panel', {layout: 'fit', autoScroll: true, frame: true});
+                    Ext.create("Ext.window.Window", {
+                        title: "课程表",
+                        width: '80%', height:'80%',modal: true, resizable: false, layout: 'border',
+                        items: [panView]
+                    }).show();
+                    ctb.render(panView.body, gRec);
+                }
             },
             activate: null
         }
@@ -48,7 +64,7 @@ Ext.onReady(function () {
     var panel = Ext.getCmp("content_panel");
     panel.addListener("add", function () {
         var lastTab = panel.items.items[panel.items.items.length - 1];
-        lastTab.addListener("beforeshow", function () {
+        lastTab.addListener("add", function () {
             var gridArr = Ext.query(".x-grid-with-col-lines");
             for (var i in gridArr) {
                 var g = Ext.getCmp(gridArr[i].id);
@@ -68,7 +84,7 @@ Ext.onReady(function () {
 Ext.define('SctCoz.tools', {
     config:{
 		id: 'plug',
-        version: "0.1.5",
+        version: "0.1.6",
 	},
 	SysMenus: null,
 	Menus_Tree: null,
@@ -149,7 +165,7 @@ Ext.define('SctCoz.tools', {
 		//初始化
         console.log("ver "+ this.version + "   initing...");
 		this.SysMenus = Ext.getCmp("SystemMenus");
-		this.Menus_Tree = this.SysMenus.items.items[0].node;
+		this.Menus_Tree = this.SysMenus.down("treeview").node;
 		this.SysMenus.openTab = this.newOpenTab;
 	}
 });
