@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.5
+// @version      0.2.7
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -31,8 +31,7 @@ Ext.onReady(function () {
 				inputs.forEach(function (i) {
 					i.editable = true;
 				})
-				// XTODO: 直接重写Grid
-
+				// TODO: 直接重写Grid
 				var newGrid = Ext.create('Ext.grid.Panel', {
 					columnLines: true,
 					width: '100%',
@@ -44,7 +43,16 @@ Ext.onReady(function () {
 					store: Ext.create('Edu.store.coursetables',{ pageSize: 500 }),
 					columns: [
 						{ header: "序号", xtype: 'rownumberer', width: 40 , sortable: false},
-						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: false, hidden: true, editor: { xtype: "checkbox", inputValue: true } },
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: false, editor: { xtype: "checkbox" }, listeners: {
+							// TODO: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
+							checkchange: function (me, index, checked) {
+								var sto = newGrid.getStore();
+								var courseno = sto.getAt(index).get("courseno");
+								sto.each( function (record) { if (record.get("courseno") == courseno) {
+									record.set("sct", checked);
+								}})
+							}
+						}},
 						{ header: "年级", dataIndex: "grade", width: 50 },
 						{ header: "专业", dataIndex: "spname", width: 120 },
 						{ header: "课程序号", dataIndex: "courseno", width: 80 },
@@ -81,7 +89,7 @@ Ext.onReady(function () {
 				var ctb = Ext.create('Edu.view.coursetable');
 				function openTimeTable (me, opt) {
 					var grid = me.up("grid");
-					var gRec = grid.getStore().data.items.filter(function (item) {console.log(item.data.sct); return item.data.sct == true;});
+					var gRec = grid.getStore().data.items.filter(function (item) { return item.data.sct == true; });
 					var panView = Ext.create('Ext.panel.Panel', { layout: 'fit', autoScroll: true, frame: true });
 					Ext.create("Ext.window.Window", {
 						title: "课程表", width: '80%', height:'80%', modal: true, resizable: false, layout: 'fit',
