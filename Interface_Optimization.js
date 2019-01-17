@@ -16,7 +16,7 @@ Ext.onReady(function () {
 	window.plugTools;
 	if (window.plugTools == null) {
 		window.plugTools = Ext.create("SctCoz.tools");
-		plugTools.init();
+		window.plugTools.init();
 	}
 	var CourseSetNew = {
 		action: "QryCourseSet",
@@ -26,31 +26,23 @@ Ext.onReady(function () {
 			add: function (me, opt) {//这里用add方法不是很好，但是找不到合适的事件等待加载完毕
 				//修正面板功能
 				var qryfrm = me.down("fieldset"); //获取条件筛选面板
-				qryfrm.add({width: 120, labelWidth: 35,  name: 'stid', fieldLabel: '学号'});
-				var inputs = qryfrm.items.items;
-				inputs.forEach(function (i) {
-					i.editable = true;
-				})
-				// TODO: 直接重写Grid
-				var newGrid = Ext.create('Ext.grid.Panel', {
+				qryfrm.add({width: 120, labelWidth: 35,  name: "stid", fieldLabel: "学号"});
+				qryfrm.items.items.forEach(function (item) { item.editable = true; });
+				//重写Grid
+				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
-					width: '100%',
-					height: '100%',
-					minHeight: 400,
-					plugins: [Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1 })],
+					width: "100%", height: "100%", minHeight: 400, layout: "fit",
+					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
 					viewConfig: { forceFit: true, stripeRows: true , enableTextSelection: true},
-					layout: 'fit',
-					store: Ext.create('Edu.store.coursetables',{ pageSize: 500 }),
+					store: Ext.create("Edu.store.coursetables",{ pageSize: 500 }),
 					columns: [
-						{ header: "序号", xtype: 'rownumberer', width: 40 , sortable: false},
+						{ header: "序号", xtype: "rownumberer", width: 40 , sortable: false},
 						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: false, editor: { xtype: "checkbox" }, listeners: {
 							// TODO: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
 							checkchange: function (me, index, checked) {
-								var sto = newGrid.getStore();
+								var sto = me.up("grid").getStore();
 								var courseno = sto.getAt(index).get("courseno");
-								sto.each( function (record) { if (record.get("courseno") == courseno) {
-									record.set("sct", checked);
-								}})
+								sto.each( function (record) { if (record.get("courseno") == courseno) { record.set("sct", checked); }});
 							}
 						}},
 						{ header: "年级", dataIndex: "grade", width: 50 },
@@ -73,26 +65,28 @@ Ext.onReady(function () {
 						{ header: "备注", dataIndex: "comment", flex:1}
 					],
 					tbar:[
-						{ xtype: 'button', text: '打印', formBind: true, iconCls: 'print', handler: printGrid },
-						{ xtype: 'button', text: '导出Excel', formBind: true, iconCls: 'excel', handler: expandGrid },
-						{ xtype: 'button', text: '转为课表', formBind: true, icon: '/images/0775.gif', handler: openTimeTable}
+						{ xtype: "button", text: "打印", formBind: true, iconCls: "print", handler: printGrid },
+						{ xtype: "button", text: "导出Excel", formBind: true, iconCls: "excel", handler: expandGrid },
+						{ xtype: "button", text: "转为课表", formBind: true, icon: "/images/0775.gif", handler: openTimeTable}
 					]
 				});
-				function printGrid() {
-					Ext.ux.grid.Printer.mainTitle = qryfrm.getForm().findField("term").getRawValue() + "课程设置";
+				function printGrid (me, opt) {
+					var grid = me.up("grid");
+					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
 					Ext.ux.grid.Printer.print(grid);
 				}
-				function expandGrid() {
-					Ext.ux.grid.Printer.mainTitle = qryfrm.getForm().findField("term").getRawValue() + "课程设置";
+				function expandGrid (me, opt) {
+					var grid = me.up("grid");
+					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
 					Ext.ux.grid.Printer.ToExcel(grid);
 				}
-				var ctb = Ext.create('Edu.view.coursetable');
+				var ctb = Ext.create("Edu.view.coursetable");
 				function openTimeTable (me, opt) {
 					var grid = me.up("grid");
 					var gRec = grid.getStore().data.items.filter(function (item) { return item.data.sct == true; });
-					var panView = Ext.create('Ext.panel.Panel', { layout: 'fit', autoScroll: true, frame: true });
+					var panView = Ext.create("Ext.panel.Panel", { layout: "fit", autoScroll: true, frame: true });
 					Ext.create("Ext.window.Window", {
-						title: "课程表", width: '80%', height:'80%', modal: true, resizable: false, layout: 'fit',
+						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show();
 					ctb.render(panView.body, gRec);
@@ -101,28 +95,47 @@ Ext.onReady(function () {
 					var form = me.down("fieldset").up("panel").getForm();
 					var params = form.getValues();
 					var sto = newGrid.getStore();
-					var wk = getSplitArray(form.findField("startweek").getValue(), '..');
-					params.startweek = wk[0];
-					params.endweek = wk[1];
-					wk = getSplitArray(form.findField("fromweek").getValue(), '..');
-					params.fromweek = wk[0];
-					params.toweek = wk[1];
-					wk = getSplitArray(form.findField("startsequence").getValue(), '..');
-					params.startsequence = wk[0];
-					params.endsequence = wk[1];
-					var sto_ = Ext.create('Edu.store.coursetables',{
+					// TODO: 或许应该看一下正则表达式
+					var reg = /^[1-9]+[0-9]*]*$/;
+					var wk = getSplitArray(form.findField("startweek").getValue(), "..");
+					if (reg.test(wk[0])) {
+						params.startweek = wk[0];
+						params.endweek = wk[1];
+					} else {
+						wk = getSplitArray(form.findField("startweek").getValue(), "-");
+						params.startweek = wk[0];
+						params.endweek = wk[1];
+					}
+					wk = getSplitArray(form.findField("fromweek").getValue(), "..");
+					if (reg.test(wk[0])) {
+						params.startweek = wk[0];
+						params.endweek = wk[1];
+					} else {
+						wk = getSplitArray(form.findField("fromweek").getValue(), "-");
+						params.fromweek = wk[0];
+						params.toweek = wk[1];
+					}
+					wk = getSplitArray(form.findField("startsequence").getValue(), "..");
+					if (reg.test(wk[0])) {
+						params.startweek = wk[0];
+						params.endweek = wk[1];
+					} else {
+						wk = getSplitArray(form.findField("startsequence").getValue(), "-");
+						params.startsequence = wk[0];
+						params.endsequence = wk[1];
+					}
+					var sto_ = Ext.create("Edu.store.coursetables",{
 						pageSize: 500,
 						listeners: {
 							load: function(st, rds, opts) {
 								var data = sto_.data.items;
-								data.forEach( function (t) {
-									t.data.sct = true;
-								});
+								data.forEach( function (t) { t.data.sct = true; });
 								sto.loadData(data);
 							}
 						}
 					});
 					sto_.proxy.extraParams = params;
+					sto.proxy.extraParams = params;
 					sto_.load();
 				}
 				var oldGrid = me.down("grid");
@@ -140,22 +153,22 @@ Ext.onReady(function () {
 				grid.columns[2].width = 120;
 				var gridView = grid.getView();
 				gridView.enableTextSelection = true;
-				// TODO：为columns添加checkcolumn， 不过看样子要之接重写Grid
-				var p = Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1 });
-				grid.headerCt.insert(1, Ext.create('Ext.grid.column.Column', { header: "有效", dataIndex: "enabled", xtype: 'checkcolumn', editor: { xtype: 'checkbox', inputValue: 1 } }));
+				// TODO: 为columns添加checkcolumn， 不过看样子要之接重写Grid
+				var p = Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 });
+				grid.headerCt.insert(1, Ext.create("Ext.grid.column.Column", { header: "有效", dataIndex: "enabled", xtype: "checkcolumn", editor: { xtype: "checkbox", inputValue: 1 } }));
 
 				//grid.headerCt.addPlugin(p);
 				//添加日程表功能
-				var ctb = Ext.create('Edu.view.coursetable');
+				var ctb = Ext.create("Edu.view.coursetable");
 				var toolTbar = grid.down("toolbar");// 获取工具栏
-				toolTbar.add({ xtype: 'button', text: '转为课表', formBind: true, icon: '/images/0775.gif', handler: openTimeTable});
+				toolTbar.add({ xtype: "button", text: "转为课表", formBind: true, icon: "/images/0775.gif", handler: openTimeTable});
 				function openTimeTable (me, opt) {
 					var grid = me.up("grid");
 					var gRec = grid.getStore().data.items;
-					var panView = Ext.create('Ext.panel.Panel', {layout: 'fit', autoScroll: true, frame: true});
+					var panView = Ext.create("Ext.panel.Panel", {layout: "fit", autoScroll: true, frame: true});
 					Ext.create("Ext.window.Window", {
 						title: "课程表",
-						width: '80%', height:'80%',modal: true, resizable: false, layout: 'fit',
+						width: "80%", height:"80%",modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show();
 					ctb.render(panView.body, gRec);
@@ -179,41 +192,36 @@ Ext.onReady(function () {
 				grid.columns[3].width = 60;
 				grid.columns[4].minWidth = 120;
 				grid.columns[4].width = 120;
-				grid.headerCt.insert(5, Ext.create('Ext.grid.column.Column', { header: "考核成绩", dataIndex: "khcj", minWidth: 30 }));
-				grid.headerCt.insert(5, Ext.create('Ext.grid.column.Column', { header: "期中成绩", dataIndex: "qzcj", minWidth: 30 , hidden: true}));
-				grid.headerCt.insert(5, Ext.create('Ext.grid.column.Column', { header: "平时成绩", dataIndex: "pscj", minWidth: 30 }));
-				grid.headerCt.insert(5, Ext.create('Ext.grid.column.Column', { header: "实验成绩", dataIndex: "sycj", minWidth: 30 , hidden: true}));
+				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "考核成绩", dataIndex: "khcj", minWidth: 30 }));
+				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "期中成绩", dataIndex: "qzcj", minWidth: 30 , hidden: true}));
+				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "平时成绩", dataIndex: "pscj", minWidth: 30 }));
+				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "实验成绩", dataIndex: "sycj", minWidth: 30 , hidden: true}));
 				var gridView = grid.getView();
 				gridView.enableTextSelection = true;
 			}
 		}
 	};
-
-	plugTools.menuChange(CourseSetNew);
-	plugTools.menuChange(StuScoreNew);
-	//这里没有用通用方法
-	//定义监视器
+	// TODO: 或许可以添加一端首页TAB的代码
+	window.plugTools.menuChange(CourseSetNew);
+	window.plugTools.menuChange(StuScoreNew);
+	// TODO: 这里没有用通用方法，所以之后可能要把这种情况加入SctCoz.tools的处理中
 	var panel = Ext.getCmp("content_panel");
 	panel.addListener("add", function () {
 		var lastTab = panel.items.last();
-		//console.log(lastTab);
 		lastTab.addListener("add", function () {
 			var grid = lastTab.down("grid");
 			if (grid != null) {
-				grid.columns.forEach(function (c) {
-					c.sortable = true;
-				});
+				grid.columns.forEach(function (c) { c.sortable = true; });
 				var gridView = grid.getView();
 				gridView.enableTextSelection = true;
 			}
 		});
 	});
-
 });
 
-Ext.define('SctCoz.tools', {
+Ext.define("SctCoz.tools", {
 	config:{
-		id: 'plug',
+		id: "plug",
 		version: "0.1.7",
 	},
 	SysMenus: null,
@@ -250,9 +258,7 @@ Ext.define('SctCoz.tools', {
 	},
 	getNewListeners: function (id) {
 		var Listeners = {};
-		this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-			Listeners = item.listeners;
-		});
+		this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) { Listeners = item.listeners; });
 		if (Listeners.activate == null) {
 			Listeners.activate = function (me, opts) {
 				if (me.barChange) {
@@ -265,19 +271,19 @@ Ext.define('SctCoz.tools', {
 	},
 	newOpenTab: function (panel, id, text, actid) {
 		var tabPanel = Ext.getCmp("content_panel");
-		var tabNodeId = tabPanel.down('[id=' + actid + ']');
+		var tabNodeId = tabPanel.down("[id=" + actid + "]");
 		var Listeners = plugTools.getNewListeners(actid);
 		if (!tabNodeId) {
 			tabPanel.add({
 				id: actid,
 				title: text,
-				layout:'fit',
+				layout:"fit",
 				closable: true,
 				childActId: actid,
 				barChange: false,
 				loader: {
 					url: panel,
-					loadMask: '请稍等...',
+					loadMask: "请稍等...",
 					autoLoad: true,
 					scripts: true
 				},
