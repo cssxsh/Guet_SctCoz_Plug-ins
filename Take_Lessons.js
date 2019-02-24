@@ -15,7 +15,7 @@ var col = {
 	time: 1000,        //抢课时间间隔
 	old_hide: true,    //旧模块是否隐藏
 	overflow: false,   //关闭以课程人数已满为继续抢课条件
-	allcourseno: false  //开启全课号
+	allcourseno: true  //开启全课号
 };
 //启动接口
 Ext.onReady(function () {
@@ -76,7 +76,7 @@ function Rreplace_StuSct (module) {
 		qryfrm.getForm().findField("spno").setValue("");
 	}
 	var qryfrm = Ext.create('Edu.view.QueryForm',{
-		url:'/CourseSct/StuInfo',
+		url:'/student/StuInfo',
 		labelWidth: 60,
 		argcols: [{
 			xtype: 'termcombo',
@@ -128,7 +128,7 @@ function Rreplace_StuSct (module) {
 	var setSto = Ext.create('Ext.data.Store', {
 		fields: ['id','term', 'courseid', 'cname', 'spno', 'grade', 'tname',  'xf', 'scted'],
 		proxy: {
-			type: 'ajax', url: '/CourseSct/GetPlan',
+			type: 'ajax', url: '/student/GetPlan',
 			reader: {
 				type: 'json',
 				root: 'data'
@@ -198,7 +198,7 @@ function Rreplace_StuSct (module) {
 	var cnoSto = Ext.create('Ext.data.Store', {
 		fields: ['term', 'courseno','grade','spno','scted', 'name','ap','xf','lot', 'courseid','stype', 'maxstu', 'sctcnt','comm'],
 		proxy: {
-			type: 'ajax', url: '/CourseSct/GetPlanCno',
+			type: 'ajax', url: '/student/GetPlanCno',
 			reader: {
 				type: 'json',
 				root: 'data'
@@ -213,7 +213,7 @@ function Rreplace_StuSct (module) {
 		if (rs.length > 0) {
 			rs[0].data.stype = qryfrm.getValues().stype;
 			Ext.Ajax.request({
-				url: "/CourseSct/SctSave" , //请求的地址
+				url: "/student/SctSave" , //请求的地址
 				params: rs[0].data,
 				method: "POST",
 				success: function (response, opts) {
@@ -248,7 +248,7 @@ function Rreplace_StuSct (module) {
 			var task = {
 				run: function () {
 					Ext.Ajax.request({
-						url: "/CourseSct/SctSave" , //请求的地址
+						url: "/student/SctSave" , //请求的地址
 						params: rs[0].data,
 						method: "POST",
 						success: function (response, opts) {
@@ -379,12 +379,12 @@ function Rreplace_StuSct (module) {
 		var sto = gdcno.getStore();
 		sto.proxy.extraParams = rec.data;
 		sto.load();
-		// TODO: 调整加载方式 把所有课号显示出来 并正常显示
+		// FIXME: 优化显示
 		if (col.allcourseno) {
 			var allCnoSto = Ext.create('Ext.data.Store', {
 				fields: ['term', 'courseno','grade','spno','scted', 'name','ap','xf','lot', 'courseid','stype', 'maxstu', 'sctcnt','comm'],
 				proxy: {
-					type: 'ajax', url: '/CourseSct/GetPlanCno',
+					type: 'ajax', url: '/student/GetPlanCno',
 					reader: {
 						type: 'json',
 						root: 'data'

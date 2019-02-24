@@ -26,9 +26,10 @@ Ext.onReady(function () {
 			add: function (me, opt) {//这里用add方法不是很好，但是找不到合适的事件等待加载完毕
 				//修正面板功能
 				var qryfrm = me.down("fieldset"); //获取条件筛选面板
-				qryfrm.add({width: 120, labelWidth: 35,  name: "stid", fieldLabel: "学号"});
+				qryfrm.add({ width: 120, labelWidth: 35,  name: "stid", fieldLabel: "学号" });
 				qryfrm.items.items.forEach(function (item) { item.editable = true; });
 				//重写Grid
+				var ctb = Ext.create("Edu.view.coursetable");
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
 					width: "100%", height: "100%", minHeight: 400, layout: "fit",
@@ -37,12 +38,15 @@ Ext.onReady(function () {
 					store: Ext.create("Edu.store.coursetables",{ pageSize: 500 }),
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 , sortable: false},
-						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: false, editor: { xtype: "checkbox" }, listeners: {
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: true, editor: { xtype: "checkbox" }, listeners: {
 							// TODO: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
 							checkchange: function (me, index, checked) {
 								var sto = me.up("grid").getStore();
 								var courseno = sto.getAt(index).get("courseno");
-								sto.each( function (record) { if (record.get("courseno") == courseno) { record.set("sct", checked); }});
+								sto.each( function (record) { if (record.get("courseno") == courseno) {
+									record.set("sct", checked);
+									console.log(record.set);
+								}});
 							}
 						}},
 						{ header: "年级", dataIndex: "grade", width: 50 },
@@ -80,10 +84,9 @@ Ext.onReady(function () {
 					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
 					Ext.ux.grid.Printer.ToExcel(grid);
 				}
-				var ctb = Ext.create("Edu.view.coursetable");
 				function openTimeTable (me, opt) {
 					var grid = me.up("grid");
-					var gRec = grid.getStore().data.items.filter(function (item) { return item.data.sct == true; });
+					var gRec = grid.getStore().data.items.filter(function (item) { return item.data.sct; });
 					var panView = Ext.create("Ext.panel.Panel", { layout: "fit", autoScroll: true, frame: true });
 					Ext.create("Ext.window.Window", {
 						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",

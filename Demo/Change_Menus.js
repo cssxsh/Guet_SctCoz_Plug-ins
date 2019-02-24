@@ -6,7 +6,7 @@
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
-// @updateURL    https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Change_Menus.js
+// @updateURL    https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Demo/Change_Menus.js
 // @grant        none
 // ==/UserScript==
 
