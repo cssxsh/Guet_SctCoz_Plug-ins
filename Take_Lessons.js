@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.5.6
+// @version      0.3.5.7
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -377,8 +377,6 @@ function Rreplace_StuSct (module) {
 			}]
 		});
 		var sto = gdcno.getStore();
-		sto.proxy.extraParams = rec.data;
-		sto.load();
 		// FIXME: 优化显示
 		if (col.allcourseno) {
 			var allCnoSto = Ext.create('Ext.data.Store', {
@@ -412,6 +410,9 @@ function Rreplace_StuSct (module) {
 					});
 				}
 			});
+		} else {
+			sto.proxy.extraParams = rec.data;
+			sto.load();
 		}
 		var win = Ext.create('Ext.window.Window', {
 			title: rec.data.cname + '(' + rec.data.courseid + ')',
