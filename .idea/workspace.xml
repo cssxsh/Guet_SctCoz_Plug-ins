@@ -38,8 +38,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="207">
-              <caret line="95" column="31" selection-start-line="95" selection-start-column="31" selection-end-line="95" selection-end-column="31" />
+            <state relative-caret-position="169">
+              <caret line="99" column="50" selection-start-line="99" selection-start-column="50" selection-end-line="99" selection-end-column="50" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -110,6 +110,11 @@
             <path>
               <item name="Guet_SctCoz_Plug-ins" type="b2602c69:ProjectViewProjectNode" />
               <item name="Guet_SctCoz_Plug-ins" type="462c0819:PsiDirectoryNode" />
+              <item name="Json" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="Guet_SctCoz_Plug-ins" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Guet_SctCoz_Plug-ins" type="462c0819:PsiDirectoryNode" />
               <item name="Test" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
@@ -162,7 +167,7 @@
       <workItem from="1550988349207" duration="190000" />
       <workItem from="1551070186951" duration="1271000" />
       <workItem from="1551361763005" duration="1752000" />
-      <workItem from="1551363592502" duration="1147000" />
+      <workItem from="1551363592502" duration="1423000" />
     </task>
     <task id="LOCAL-00001" summary="so shit">
       <created>1550986746290</created>
@@ -175,7 +180,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="54198000" />
+    <option name="totallyTimeSpent" value="54474000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -188,7 +193,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.22523117" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -283,8 +287,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="207">
-          <caret line="95" column="31" selection-start-line="95" selection-start-column="31" selection-end-line="95" selection-end-column="31" />
+        <state relative-caret-position="169">
+          <caret line="99" column="50" selection-start-line="99" selection-start-column="50" selection-end-line="99" selection-end-column="50" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
           </folding>
