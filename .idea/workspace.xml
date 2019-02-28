@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="85f5fd00-e5f8-42c6-a68b-a884feaace4d" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Take_Lessons.js" beforeDir="false" afterPath="$PROJECT_DIR$/Take_Lessons.js" afterDir="false" />
+    <list default="true" id="85f5fd00-e5f8-42c6-a68b-a884feaace4d" name="Default Changelist" comment="so shit">
+      <change afterPath="$PROJECT_DIR$/Json/GetHourInfo.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Interface_Optimization.js" beforeDir="false" afterPath="$PROJECT_DIR$/Interface_Optimization.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/temp/" />
@@ -34,31 +35,23 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="57">
-              <caret line="3" column="24" selection-start-line="3" selection-start-column="24" selection-end-line="3" selection-end-column="24" />
+            <state relative-caret-position="207">
+              <caret line="95" column="31" selection-start-line="95" selection-start-column="31" selection-end-line="95" selection-end-column="31" />
+              <folding>
+                <element signature="n#!!doc" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Take_Lessons.js">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Json/GetHourInfo.json">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="290">
-              <caret line="412" column="16" selection-start-line="412" selection-start-column="16" selection-end-line="412" selection-end-column="16" />
-              <folding>
-                <element signature="n#!!doc" expanded="true" />
-                <element signature="e#612#1195#0" />
-                <element signature="n#!!block;n#sctDpt#0;n#!!block;n#Rreplace_StuSct#0" />
-                <element signature="e#1893#2569#0" />
-                <element signature="e#3085#3927#0" />
-                <element signature="n#!!block;n#sctcno1#0;n#!!block;n#Rreplace_StuSct#0" />
-                <element signature="n#!!block;n#sctSubmit#0;n#!!block;n#Rreplace_StuSct#0" />
-                <element signature="n#!!block;n#sctSubmit_#0;n#!!block;n#Rreplace_StuSct#0" />
-                <element signature="e#7274#8790#0" />
-              </folding>
+            <state>
+              <caret column="38" selection-start-column="38" selection-end-column="38" />
             </state>
           </provider>
         </entry>
@@ -84,8 +77,9 @@
         <option value="$PROJECT_DIR$/Demo/test.js" />
         <option value="$PROJECT_DIR$/tools.js" />
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/Interface_Optimization.js" />
         <option value="$PROJECT_DIR$/Take_Lessons.js" />
+        <option value="$PROJECT_DIR$/Json/GetHourInfo.json" />
+        <option value="$PROJECT_DIR$/Interface_Optimization.js" />
       </list>
     </option>
   </component>
@@ -166,7 +160,9 @@
       <workItem from="1550985715792" duration="98000" />
       <workItem from="1550985960070" duration="951000" />
       <workItem from="1550988349207" duration="190000" />
-      <workItem from="1551070186951" duration="1078000" />
+      <workItem from="1551070186951" duration="1271000" />
+      <workItem from="1551361763005" duration="1752000" />
+      <workItem from="1551363592502" duration="1147000" />
     </task>
     <task id="LOCAL-00001" summary="so shit">
       <created>1550986746290</created>
@@ -179,7 +175,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="51106000" />
+    <option name="totallyTimeSpent" value="54198000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -203,10 +199,10 @@
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info active="true" anchor="bottom" id="TODO" order="6" visible="true" weight="0.2776204" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.2776204" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.3286119" />
-      <window_info anchor="bottom" id="Terminal" order="9" weight="0.12322946" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" visible="true" weight="0.36685553" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -241,6 +237,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Take_Lessons.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="830">
+          <caret line="300" column="24" selection-start-line="300" selection-start-column="24" selection-end-line="300" selection-end-column="24" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+            <element signature="e#612#1195#0" />
+            <element signature="n#!!block;n#sctDpt#0;n#!!block;n#Rreplace_StuSct#0" />
+            <element signature="e#1893#2569#0" />
+            <element signature="e#2835#3037#0" />
+            <element signature="e#3085#3927#0" />
+            <element signature="n#!!block;n#sctcno1#0;n#!!block;n#Rreplace_StuSct#0" />
+            <element signature="n#!!block;n#sctSubmit#0;n#!!block;n#Rreplace_StuSct#0" />
+            <element signature="n#!!block;n#sctSubmit_#0;n#!!block;n#Rreplace_StuSct#0" />
+            <element signature="n#!!block;n#sctcno#0;n#!!block;n#Rreplace_StuSct#0" />
+            <element signature="e#7274#8790#0" />
+            <element signature="e#10007#10213#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tools.js">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="95">
@@ -257,27 +274,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
+    <entry file="file://$PROJECT_DIR$/Json/GetHourInfo.json">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="3" column="24" selection-start-line="3" selection-start-column="24" selection-end-line="3" selection-end-column="24" />
+        <state>
+          <caret column="38" selection-start-column="38" selection-end-column="38" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Take_Lessons.js">
+    <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="290">
-          <caret line="412" column="16" selection-start-line="412" selection-start-column="16" selection-end-line="412" selection-end-column="16" />
+        <state relative-caret-position="207">
+          <caret line="95" column="31" selection-start-line="95" selection-start-column="31" selection-end-line="95" selection-end-column="31" />
           <folding>
             <element signature="n#!!doc" expanded="true" />
-            <element signature="e#612#1195#0" />
-            <element signature="n#!!block;n#sctDpt#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="e#1893#2569#0" />
-            <element signature="e#3085#3927#0" />
-            <element signature="n#!!block;n#sctcno1#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="n#!!block;n#sctSubmit#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="n#!!block;n#sctSubmit_#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="e#7274#8790#0" />
           </folding>
         </state>
       </provider>
