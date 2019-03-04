@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.7.2
+// @version      0.2.7.3
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
-// @updateURL    https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Interface_Optimization.js
+// @updateURL    https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
+// @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
+// @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @grant        none
 // ==/UserScript==
 
@@ -26,21 +28,33 @@ Ext.onReady(function () {
 			add: function (me, opt) {//这里用add方法不是很好，但是找不到合适的事件等待加载完毕
 				//修正面板功能
 				var qryfrm = me.down("fieldset"); //获取条件筛选面板
-				qryfrm.add({ width: 120, labelWidth: 35,  name: "stid", fieldLabel: "学号" });
+				qryfrm.add({ width: 120, labelWidth: 35,  name: "stid", fieldLabel: "其他" });
 				qryfrm.items.items.forEach(function (item) { item.editable = true; });
 				//重写Grid
 				var ctb = Ext.create("Edu.view.coursetable");
+				var newFields = [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term","courseid","coment","studentcount","credithour","teachperiod","labperiod","copperiod","maxperson"];
+				var newStore = Ext.create("Ext.data.Store", { 
+					pageSize: 500,
+					fields: newFields,
+					proxy: {
+						type: 'ajax', url: '/Query/GetCourseTable',
+						reader: { type: 'json', root: 'data'}
+					}, 
+					autoLoad: false
+				});
+				//newStore.fields = newFields;
+
 
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
 					width: "100%", height: "100%", minHeight: 400, layout: "fit",
 					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
 					viewConfig: { forceFit: true, stripeRows: true , enableTextSelection: true},
-					store: Ext.create("Edu.store.coursetables",{ pageSize: 500 }),
+					store: newStore,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 , sortable: false},
 						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: true, editor: { xtype: "checkbox" }, listeners: {
-							// TODO: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
+							// XXX: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
 							checkchange: function (me, index, checked) {
 								var sto = me.up("grid").getStore();
 								var courseno = sto.getAt(index).get("courseno");
@@ -92,9 +106,10 @@ Ext.onReady(function () {
 					Ext.create("Ext.window.Window", {
 						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
-					}).show();
+					}).show()
 					/*
 					if (ctb.store.data.length == 0) {
+						ctb.store.proxy.type = "jsonp"
 						ctb.store.proxy.url = "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.json";
 						ctb.store.load();
 					}
@@ -115,7 +130,7 @@ Ext.onReady(function () {
 					var form = me.down("fieldset").up("panel").getForm();
 					var params = form.getValues();
 					var sto = newGrid.getStore();
-					// TODO: 或许应该看一下正则表达式
+					// XXX: 或许应该看一下正则表达式
 					var reg = /^[1-9]+[0-9]*]*$/;
 					var wk = getSplitArray(form.findField("startweek").getValue(), "..");
 					if (reg.test(wk[0])) {
@@ -144,6 +159,8 @@ Ext.onReady(function () {
 						params.startsequence = wk[0];
 						params.endsequence = wk[1];
 					}
+					/*
+					Ext.apply
 					var sto_ = Ext.create("Edu.store.coursetables",{
 						pageSize: 500,
 						listeners: {
@@ -155,8 +172,13 @@ Ext.onReady(function () {
 						}
 					});
 					sto_.proxy.extraParams = params;
-					sto.proxy.extraParams = params;
 					sto_.load();
+					*/
+					sto.proxy.extraParams = params;
+					//Ext.apply(sto, { fields: [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term","courseid","coment","studentcount","credithour","teachperiod","labperiod","copperiod","maxperson"] });
+					
+					sto.load();
+					console.log(newGrid.id);
 				}
 				var oldGrid = me.down("grid");
 				var panel = oldGrid.up("panel");
@@ -173,7 +195,7 @@ Ext.onReady(function () {
 				grid.columns[2].width = 120;
 				var gridView = grid.getView();
 				gridView.enableTextSelection = true;
-				// TODO: 为columns添加checkcolumn， 不过看样子要之接重写Grid
+				// -TODO: 为columns添加checkcolumn， 不过看样子要之接重写Grid
 				var p = Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 });
 				grid.headerCt.insert(1, Ext.create("Ext.grid.column.Column", { header: "有效", dataIndex: "enabled", xtype: "checkcolumn", editor: { xtype: "checkbox", inputValue: 1 } }));
 
@@ -221,10 +243,54 @@ Ext.onReady(function () {
 			}
 		}
 	};
-	// TODO: 或许可以添加一端首页TAB的代码
+	var FirstNew = {
+		action: "First",
+		text: "首页",
+		id: "First",
+		listeners: {
+			add: function (me, opt) {
+				// TODO: 对首页内容进行补充
+				var grid = me.down("grid");
+				var gdSto = grid.getStore();
+				// TODO: 写加载新信息的方式 预计使用 LoadData
+				gdSto.loadData([{"id":2,"title":"2018-2019第二学期选课通知","content":null,"postdate":null,"operator":"教务处","ntype":null,"reader":null,"showdate":"2018年12月29日","chk":null,"openshow":1}],
+				true);
+				function showMsgNew (me, rowIndex, colIndex) {
+					var rec = me.getStore().getAt(rowIndex);
+					if (rec.data.operator == "Plugins") {
+						// TODO: 写针对插件添加的信息显示方式
+					} else {
+						editfrm.load({
+							url: '/comm/getnews/' + rec.data.id, 
+							success: function sc(a, b) {
+								var rc = b.result.data;
+								openmsg(rc.title, rc.content.replace(/\n/g, "<br/>"));
+								Ext.create("Ext.window.Window", {
+									title: rc.title,
+									width: '70%', height:'70%',modal: true, resizable: true, layout: 'fit',
+									items: [{ xtype: 'form', autoScroll: true, frame: true, padding: '1', html: rc.content.replace(/\n/g, "<br/>") }]
+								}).show();
+							}
+						})
+					}
+				}
+				var editfrm = Ext.create("Ext.form.Panel", {
+					bodyPadding: 5, frame: true, region: 'north',
+					html: '<table width="100%"><tr><td><p>尊敬的用户：</p><p>　　您好，欢迎使用桂林电子科技大学教务管理系统。</p></td></tr></table>'
+				});
+
+				grid.columns[0].handler = showMsgNew;
+				// TODO: 尝试修改可关闭性
+			}
+		}
+	};
 	window.plugTools.menuChange(CourseSetNew);
 	window.plugTools.menuChange(StuScoreNew);
-	// TODO: 这里没有用通用方法，所以之后可能要把这种情况加入SctCoz.tools的处理中
+	//window.plugTools.menuChange(FirstNew);
+	Ext.getCmp("First").addListener("afterrender", FirstNew.listeners.add);
+	//console.log(Ext.getCmp("First").down("grid"));
+	//FirstNew.listeners.add(Ext.getCmp("First"), null);
+	// FIXME: 这里没有用通用方法，所以之后可能要把这种批量处理情况加入SctCoz.tools的处理中
 	var panel = Ext.getCmp("content_panel");
 	panel.addListener("add", function () {
 		var lastTab = panel.items.last();

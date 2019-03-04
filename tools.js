@@ -6,7 +6,7 @@ Ext.define('SctCoz.tools', {
 		id: 'plug',
 		version: "0.1.7",
 	},
-	// FIXME: 弄一个变量仓库专门管理常用全局变量
+	// TODO: 弄一个变量仓库专门管理常用全局变量
 	SysMenus: null,
 	Menus_Tree: null,
 	newMenus: [],

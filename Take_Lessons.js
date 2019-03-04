@@ -1,12 +1,14 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.5.7
+// @version      0.3.5.8
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
-// @updateURL    https://github.com/cssxsh/Guet_SctCoz_Plug-ins/raw/master/Take_Lessons.js
+// @updateURL    https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Take_Lessons.js
+// @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Take_Lessons.js
+// @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Take_Lessons.js
 // @grant        none
 // ==/UserScript==
 
@@ -23,7 +25,7 @@ Ext.onReady(function () {
 	window.plugTools;
 	if (window.plugTools == null) {
 		window.plugTools = Ext.create("SctCoz.tools");
-		plugTools.init();
+		window.plugTools.init();
 	}
 	//console.log("抢课脚本Bug真的多。");
 	var StuSct = {
@@ -44,8 +46,8 @@ Ext.onReady(function () {
 			activate: null
 		}
 	}
-	plugTools.menuChange(StuSct);
-	plugTools.menuChange(StuSctCx);
+	window.plugTools.menuChange(StuSct);
+	window.plugTools.menuChange(StuSctCx);
 });
 function Rreplace_StuSct (module) {
 	//判断模块是否符合
