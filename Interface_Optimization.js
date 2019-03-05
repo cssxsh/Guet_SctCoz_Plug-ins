@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.7.3
+// @version      0.2.7.4
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -9,6 +9,7 @@
 // @updateURL    https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
+// @run-at       document-end
 // @grant        none
 // ==/UserScript==
 
@@ -37,8 +38,8 @@ Ext.onReady(function () {
 					pageSize: 500,
 					fields: newFields,
 					proxy: {
-						type: 'ajax', url: '/Query/GetCourseTable',
-						reader: { type: 'json', root: 'data'}
+						type: "ajax", url: "/Query/GetCourseTable",
+						reader: { type: "json", root: "data"}
 					}, 
 					autoLoad: false
 				});
@@ -132,6 +133,7 @@ Ext.onReady(function () {
 					var sto = newGrid.getStore();
 					// XXX: 或许应该看一下正则表达式
 					var reg = /^[1-9]+[0-9]*]*$/;
+
 					var wk = getSplitArray(form.findField("startweek").getValue(), "..");
 					if (reg.test(wk[0])) {
 						params.startweek = wk[0];
@@ -141,19 +143,21 @@ Ext.onReady(function () {
 						params.startweek = wk[0];
 						params.endweek = wk[1];
 					}
+
 					wk = getSplitArray(form.findField("fromweek").getValue(), "..");
 					if (reg.test(wk[0])) {
-						params.startweek = wk[0];
-						params.endweek = wk[1];
+						params.fromweek = wk[0];
+						params.toweek = wk[1];
 					} else {
 						wk = getSplitArray(form.findField("fromweek").getValue(), "-");
 						params.fromweek = wk[0];
 						params.toweek = wk[1];
 					}
+
 					wk = getSplitArray(form.findField("startsequence").getValue(), "..");
 					if (reg.test(wk[0])) {
-						params.startweek = wk[0];
-						params.endweek = wk[1];
+						params.startsequence = wk[0];
+						params.endsequence = wk[1];
 					} else {
 						wk = getSplitArray(form.findField("startsequence").getValue(), "-");
 						params.startsequence = wk[0];
@@ -243,53 +247,118 @@ Ext.onReady(function () {
 			}
 		}
 	};
+	/*
 	var FirstNew = {
 		action: "First",
 		text: "首页",
 		id: "First",
 		listeners: {
 			add: function (me, opt) {
-				// TODO: 对首页内容进行补充
+				// -TODO: 对首页内容进行补充
 				var grid = me.down("grid");
 				var gdSto = grid.getStore();
-				// TODO: 写加载新信息的方式 预计使用 LoadData
-				gdSto.loadData([{"id":2,"title":"2018-2019第二学期选课通知","content":null,"postdate":null,"operator":"教务处","ntype":null,"reader":null,"showdate":"2018年12月29日","chk":null,"openshow":1}],
+				// -TODO: 写加载新信息的方式 预计使用 LoadData
+				gdSto.loadData([{"id":2,"title":"text","content":null,"postdate":null,"operator":"Plugins","ntype":null,"reader":null,"showdate":"emmm","chk":null,"openshow":1}],
 				true);
 				function showMsgNew (me, rowIndex, colIndex) {
 					var rec = me.getStore().getAt(rowIndex);
 					if (rec.data.operator == "Plugins") {
-						// TODO: 写针对插件添加的信息显示方式
+						// -TODO: 写针对插件添加的信息显示方式
 					} else {
 						editfrm.load({
-							url: '/comm/getnews/' + rec.data.id, 
+							url: "/comm/getnews/" + rec.data.id, 
 							success: function sc(a, b) {
 								var rc = b.result.data;
 								openmsg(rc.title, rc.content.replace(/\n/g, "<br/>"));
 								Ext.create("Ext.window.Window", {
 									title: rc.title,
-									width: '70%', height:'70%',modal: true, resizable: true, layout: 'fit',
-									items: [{ xtype: 'form', autoScroll: true, frame: true, padding: '1', html: rc.content.replace(/\n/g, "<br/>") }]
+									width: "70%", height:"70%",modal: true, resizable: true, layout: "fit",
+									items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
 								}).show();
 							}
 						})
 					}
 				}
 				var editfrm = Ext.create("Ext.form.Panel", {
-					bodyPadding: 5, frame: true, region: 'north',
-					html: '<table width="100%"><tr><td><p>尊敬的用户：</p><p>　　您好，欢迎使用桂林电子科技大学教务管理系统。</p></td></tr></table>'
+					bodyPadding: 5, frame: true, region: "north",
+					html: "<table width="100%"><tr><td><p>尊敬的用户：</p><p>　　您好，欢迎使用桂林电子科技大学教务管理系统。</p></td></tr></table>"
 				});
 
 				grid.columns[0].handler = showMsgNew;
-				// TODO: 尝试修改可关闭性
+				// -TODO: 尝试修改可关闭性
 			}
 		}
 	};
+	*/
 	window.plugTools.menuChange(CourseSetNew);
 	window.plugTools.menuChange(StuScoreNew);
 	//window.plugTools.menuChange(FirstNew);
-	Ext.getCmp("First").addListener("afterrender", FirstNew.listeners.add);
-	//console.log(Ext.getCmp("First").down("grid"));
-	//FirstNew.listeners.add(Ext.getCmp("First"), null);
+	// FIXME: 首页的情况比较特殊这里特殊处理
+	Ext.getCmp("First").close();
+	Ext.getCmp("content_panel").add({
+		id: "First",
+		title: "首页", 
+		layout: "fit",
+		closable: false, 
+		autoDestroy: true,
+		listeners: {
+			afterrender: function () {
+				Ext.QuickTips.init();
+				Ext.form.Field.prototype.MsgTarget = "side";
+				
+				// TODO: 重写加载新信息的方式
+				var gdSto = Ext.create("Edu.store.NewsInfo", {
+					autoLoad: true, 
+					listeners: {
+						"load": function (a, b) {
+							grid.setVisible(b.length > 0);
+							var rec = a.findRecord("openshow", 1);
+							if (rec) showMsg(rec.data.id);
+							// TODO: 尝试在这里添加一下获取新信息
+						}
+					}
+				});
+				Ext.apply(gdSto.proxy, { url: "/comm/getusernews" });
+
+				// TODO: 重写显示新信息的方式
+				function showMsg(id) {
+					editfrm.load({
+						url: "/comm/getnews/" + id, 
+						success: function sc(a, b) {
+							var rc = b.result.data;
+							Ext.create("Ext.window.Window", {
+								title: rc.title, width: "70%", height:"70%", modal: true, resizable: true, layout: "fit",
+								items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
+							}).show();
+						}
+					})
+				}
+				var grid = Ext.create("Edu.view.ShowGrid",{
+					store: gdSto, region: "center", hidden: true, title: "公共信息",
+					columns: [{
+						xtype:"actioncolumn", width:30,header:"查阅", icon: "/images/0775.gif", tooltip: "阅读",
+						handler: function (grid, rowIndex, colIndex) {
+							var rec = grid.getStore().getAt(rowIndex);
+							showmsg(rec.data.id);
+						}
+					},
+						{ header: "序号", xtype: "rownumberer", width: 40 },
+						{ header: "标题", dataIndex: "title", width: 400 },
+						{ header: "发布来源", dataIndex: "operator" },
+						{ header: "发布日期", dataIndex: "showdate" }
+					]
+				});
+				var editfrm = Ext.create("Ext.form.Panel", {
+					bodyPadding: 5, frame: true, region: "north",
+					html: "<table width='100%'><tr><td><p>尊敬的用户：</p><p>　　您好，欢迎使用桂林电子科技大学教务管理系统。</p></td></tr></table>"
+				});
+			
+				var pan = Ext.create("Edu.view.ShowPanel", { items:[grid] });
+				var tab = Ext.getCmp("First");
+				tab.add(pan);
+			}
+		}
+	});
 	// FIXME: 这里没有用通用方法，所以之后可能要把这种批量处理情况加入SctCoz.tools的处理中
 	var panel = Ext.getCmp("content_panel");
 	panel.addListener("add", function () {
@@ -306,9 +375,60 @@ Ext.onReady(function () {
 });
 
 Ext.define("SctCoz.tools", {
-	config:{
+	config: {
 		id: "plug",
-		version: "0.1.7",
+		version: "0.2.0",
+	},
+	ClassStorage: {
+		//变量数组
+		NewMenus: [],
+		ValuesOfClass: [],
+
+		//操作方法
+		Save: function () {
+			var type = arguments[0];
+			var value = arguments[1];
+			if (type == "menu") {
+				NewMenus.push(value);
+				var id = arguments[1].id;
+				value.push({ id, value });
+			} else if (type == "value") {
+				var id = arguments[2];
+				value.push({id, value});
+			}
+		},
+		Get: function () {
+			var type = arguments[0];
+			var id = arguments[1];
+			if (type == "menu") {
+				//返回第一个符合的菜单
+				NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
+					return item;
+				});
+			} else if (type == "value") {
+				//返回第一个符合的变量
+				ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
+					return item;
+				});
+			}
+			return null;
+		},
+		Set: function () {
+			var type = arguments[0];
+			var id = arguments[1];
+			var setdata = arguments[2];
+			if (type == "menu") {
+				//处理第一个符合的菜单
+				NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
+					setdata.call(item);
+				});
+			} else if (type == "value") {
+				//处理第一个符合的变量
+				ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
+					setdata.call(item);
+				});
+			}
+		}
 	},
 	SysMenus: null,
 	Menus_Tree: null,
@@ -326,7 +446,8 @@ Ext.define("SctCoz.tools", {
 			"type": "action",
 		};
 		this.Menus_Tree.appendChild(menu_config);
-		this.newMenus.push(config);
+		//this.newMenus.push(config);
+		this.ClassStorage.Save("menu", config);
 	},
 	menuChange: function (config) {
 		console.log(config.action + " change...");
@@ -340,11 +461,18 @@ Ext.define("SctCoz.tools", {
 			"text": config.text,
 			"type": "action",
 		};
-		this.newMenus.push(config);
+		//this.newMenus.push(config);
+		this.ClassStorage.Save("menu", config);
 	},
 	getNewListeners: function (id) {
 		var Listeners = {};
-		this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) { Listeners = item.listeners; });
+		// this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
+		// 	Listeners = item.listeners;
+		// });
+		this.ClassStorage.Set("menu", id, function (item) {
+			Listeners = item.listeners;
+		});
+
 		if (Listeners.activate == null) {
 			Listeners.activate = function (me, opts) {
 				if (me.barChange) {
@@ -357,13 +485,13 @@ Ext.define("SctCoz.tools", {
 	},
 	newOpenTab: function (panel, id, text, actid) {
 		var tabPanel = Ext.getCmp("content_panel");
-		var tabNodeId = tabPanel.down("[id=" + actid + "]");
+		var tabNodeId = tabPanel.down("[id=' + actid + ']");
 		var Listeners = plugTools.getNewListeners(actid);
 		if (!tabNodeId) {
 			tabPanel.add({
 				id: actid,
 				title: text,
-				layout:"fit",
+				layout: "fit",
 				closable: true,
 				childActId: actid,
 				barChange: false,
@@ -382,10 +510,13 @@ Ext.define("SctCoz.tools", {
 	},
 	init: function () {
 		//初始化
-		console.log("ver "+ this.version + "   initing...");
+		console.log("ver " + this.version + "   initing...");
 		this.SysMenus = Ext.getCmp("SystemMenus");
 		this.Menus_Tree = this.SysMenus.down("treeview").node;
 		//重载打开Tab的方法
 		this.SysMenus.openTab = this.newOpenTab;
+		Ext.Loader.setPath({
+            SctCoz: "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master"
+        });
 	}
 });
