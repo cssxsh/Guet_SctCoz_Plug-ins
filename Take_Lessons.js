@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.6.0
+// @version      0.3.6.1
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -10,6 +10,7 @@
 // @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Take_Lessons.js
 // @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Take_Lessons.js
 // @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
+// @license      MIT
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==

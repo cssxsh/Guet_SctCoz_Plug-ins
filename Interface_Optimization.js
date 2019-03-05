@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.7.5
+// @version      0.2.7.7
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -10,10 +10,17 @@
 // @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
+// @license      MIT
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
 
+//一些参数
+var col = {
+	ver: "0.2",
+	stid_hide: false,    //学号参数是否隐藏
+	sct_hide: false,     //已选控制是否隐藏
+};
 //启动接口
 Ext.onReady(function () {
 	//创建工具
@@ -30,7 +37,7 @@ Ext.onReady(function () {
 			add: function (me, opt) {//这里用add方法不是很好，但是找不到合适的事件等待加载完毕
 				//修正面板功能
 				var qryfrm = me.down("fieldset"); //获取条件筛选面板
-				qryfrm.add({ width: 120, labelWidth: 35,  name: "stid", fieldLabel: "其他" });
+				if (!col.stid_hide) qryfrm.add({ width: 120, labelWidth: 35,  name: "stid", fieldLabel: "其他" });
 				qryfrm.items.items.forEach(function (item) { item.editable = true; });
 				//重写Grid
 				var ctb = Ext.create("Edu.view.coursetable");
@@ -46,7 +53,6 @@ Ext.onReady(function () {
 				});
 				//newStore.fields = newFields;
 
-
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
 					width: "100%", height: "100%", minHeight: 400, layout: "fit",
@@ -55,7 +61,7 @@ Ext.onReady(function () {
 					store: newStore,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 , sortable: false},
-						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: true, editor: { xtype: "checkbox" }, listeners: {
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: {
 							// XXX: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
 							checkchange: function (me, index, checked) {
 								var sto = me.up("grid").getStore();
@@ -311,10 +317,36 @@ Ext.onReady(function () {
 				var gdSto = Ext.create("Edu.store.NewsInfo", {
 					autoLoad: true, 
 					listeners: {
-						"load": function (a, b) {
-							grid.setVisible(b.length > 0);
-							var rec = a.findRecord("openshow", 1);
-							if (rec) showMsg(rec.data.id);
+						"load": function (me, data) {
+							grid.setVisible(data.length > 0);
+							var rec = me.findRecord("openshow", 1);
+							if (rec) showMsg(rec.data);
+							// XXX: 添加一下必要的须知
+							//console.log(me);
+							me.loadData([{ 
+								"id": "info-1",
+								"title": "插件用户须知",
+								"content": 
+									"当前优化插件版本为：" + col.ver + "\n\n" +
+									"当前插件仍处于未完成的测试阶段。\n" +
+									"如果插件有问题或者对插件有什么建议或意见请到以下链接反馈：\n" +
+									"<a href='https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues' target='_blank'>https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues</a>"
+								, 
+								"postdate": null,
+								"operator": "插件",
+								"ntype": null,
+								"reader": function () {
+									Ext.create("Ext.window.Window", {
+										title: this.title, width: "40%", height:"40%", modal: true, resizable: true, layout: "fit",
+										items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: this.content.replace(/\n/g, "<br/>") }]
+									}).show();
+								},
+								"showdate": "2019年03月05日",
+								"chk": null,
+								"openshow": 0
+								}],
+								true
+							);
 							// TODO: 尝试在这里添加一下获取新信息
 						}
 					}
@@ -322,25 +354,34 @@ Ext.onReady(function () {
 				Ext.apply(gdSto.proxy, { url: "/comm/getusernews" });
 
 				// TODO: 重写显示新信息的方式
-				function showMsg(id) {
-					editfrm.load({
-						url: "/comm/getnews/" + id, 
-						success: function sc(a, b) {
-							var rc = b.result.data;
-							Ext.create("Ext.window.Window", {
-								title: rc.title, width: "70%", height:"70%", modal: true, resizable: true, layout: "fit",
-								items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
-							}).show();
+				function showMsg(data) {
+					var id = data.id;
+					if (data.operator != "插件") {
+						editfrm.load({
+							url: "/comm/getnews/" + id, 
+							success: function sc(a, b) {
+								var rc = b.result.data;
+								Ext.create("Ext.window.Window", {
+									title: rc.title, width: "70%", height:"70%", modal: true, resizable: true, layout: "fit",
+									items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
+								}).show();
+							}
+						})
+					} else {
+						if (data.reader == null) {
+
+						} else {
+							data.reader();
 						}
-					})
+					}
 				}
 				var grid = Ext.create("Edu.view.ShowGrid",{
 					store: gdSto, region: "center", hidden: true, title: "公共信息",
 					columns: [{
-						xtype:"actioncolumn", width:30,header:"查阅", icon: "/images/0775.gif", tooltip: "阅读",
+						xtype: "actioncolumn", width: 30, header: "查阅", icon: "/images/0775.gif", tooltip: "阅读",
 						handler: function (grid, rowIndex, colIndex) {
 							var rec = grid.getStore().getAt(rowIndex);
-							showMsg(rec.data.id);
+							showMsg(rec.data);
 						}
 					},
 						{ header: "序号", xtype: "rownumberer", width: 40 },
