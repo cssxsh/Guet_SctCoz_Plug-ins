@@ -389,12 +389,12 @@ Ext.define("SctCoz.tools", {
 			var type = arguments[0];
 			var value = arguments[1];
 			if (type == "menu") {
-				NewMenus.push(value);
+				this.NewMenus.push(value);
 				var id = arguments[1].id;
-				value.push({ id, value });
+				this.ValuesOfClass.push({ id, value });
 			} else if (type == "value") {
 				var id = arguments[2];
-				value.push({id, value});
+				this.ValuesOfClass.push({id, value});
 			}
 		},
 		Get: function () {
@@ -402,12 +402,12 @@ Ext.define("SctCoz.tools", {
 			var id = arguments[1];
 			if (type == "menu") {
 				//返回第一个符合的菜单
-				NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
+				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
 					return item;
 				});
 			} else if (type == "value") {
 				//返回第一个符合的变量
-				ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
+				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
 					return item;
 				});
 			}
@@ -419,12 +419,12 @@ Ext.define("SctCoz.tools", {
 			var setdata = arguments[2];
 			if (type == "menu") {
 				//处理第一个符合的菜单
-				NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
+				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
 					setdata.call(item);
 				});
 			} else if (type == "value") {
 				//处理第一个符合的变量
-				ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
+				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
 					setdata.call(item);
 				});
 			}
@@ -516,7 +516,7 @@ Ext.define("SctCoz.tools", {
 		//重载打开Tab的方法
 		this.SysMenus.openTab = this.newOpenTab;
 		Ext.Loader.setPath({
-            SctCoz: "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master"
+            SctCoz: "https://raw.githack.com/cssxsh/Guet_SctCoz_Plug-ins/master"
         });
 	}
 });

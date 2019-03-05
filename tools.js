@@ -144,7 +144,7 @@ Ext.define("SctCoz.tools", {
 		//重载打开Tab的方法
 		this.SysMenus.openTab = this.newOpenTab;
 		Ext.Loader.setPath({
-            SctCoz: "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master"
+            SctCoz: "https://raw.githack.com/cssxsh/Guet_SctCoz_Plug-ins/master"
         });
 	}
 	// TODO: 写一些调试用组件
