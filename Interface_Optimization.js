@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.7.4
+// @version      0.2.7.5
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -9,6 +9,7 @@
 // @updateURL    https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
 // @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
+// @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
 // @run-at       document-end
 // @grant        none
 // ==/UserScript==
@@ -339,7 +340,7 @@ Ext.onReady(function () {
 						xtype:"actioncolumn", width:30,header:"查阅", icon: "/images/0775.gif", tooltip: "阅读",
 						handler: function (grid, rowIndex, colIndex) {
 							var rec = grid.getStore().getAt(rowIndex);
-							showmsg(rec.data.id);
+							showMsg(rec.data.id);
 						}
 					},
 						{ header: "序号", xtype: "rownumberer", width: 40 },
