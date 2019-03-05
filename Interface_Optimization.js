@@ -420,12 +420,12 @@ Ext.define("SctCoz.tools", {
 			if (type == "menu") {
 				//处理第一个符合的菜单
 				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-					setdata.call(item);
+					setdata(item);
 				});
 			} else if (type == "value") {
 				//处理第一个符合的变量
 				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
-					setdata.call(item);
+					setdata(item);
 				});
 			}
 		}
