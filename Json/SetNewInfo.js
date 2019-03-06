@@ -1,5 +1,5 @@
-Ext.onReady(function () {
-    window.plugTools.ClassStorage.Set("value", "NewInfo", function (data) {
-        data = "test";
-    })
+window.plugTools.ClassStorage.Set("value", "NewInfo", function (data) {
+    console.log("test");
+    var result =  "test";
+    return result;
 });
