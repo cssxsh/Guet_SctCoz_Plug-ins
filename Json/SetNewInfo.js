@@ -16,6 +16,7 @@ window.plugTools.ClassStorage.Set("value", "NewInfo", function (data) {
         "showdate": "2019年03月06日",
         "chk": null,
         "openshow": 0
-        };
+    };
+    Ext.getCmp("First").down("grid").getStore().loadData(result);
     return result;
 });
