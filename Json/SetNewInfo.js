@@ -17,7 +17,7 @@ window.plugTools.ClassStorage.Set("value", "NewInfo", function (item) {
         "chk": null,
         "openshow": 0
     };
-    Ext.getCmp("First").down("grid").getStore().loadData(result);
+    Ext.getCmp("First").down("grid").getStore().loadData([result], true);
     item.value = result;
     return result;
 });
