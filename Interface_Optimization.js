@@ -331,10 +331,10 @@ Ext.onReady(function () {
 							// TODO: 尝试在这里添加一下获取新信息
 							// 这里使用一种暂时性的办法
 							window.plugTools.ClassStorage.Save("value", null, "NewInfo");
-							//Ext.Loader.setConfig({enabled: false});
-							Ext.require("SctCoz.Json.SetNewInfo");
+							// Ext.Loader.setConfig({enabled: false});
+							// Ext.require("SctCoz.Json.SetNewInfo");
 							
-							console.log("sos");
+							// console.log("sos");
 						}
 					}
 				});
@@ -409,7 +409,7 @@ Ext.onReady(function () {
 Ext.define("SctCoz.tools", {
 	config: {
 		id: "plug",
-		version: "0.2.0",
+		version: "0.2.2",
 	},
 	ClassStorage: {
 		//变量数组
@@ -452,14 +452,10 @@ Ext.define("SctCoz.tools", {
 			var setdata = arguments[2];
 			if (type == "menu") {
 				//处理第一个符合的菜单
-				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-					item.value = setdata(item.value);
-				});
+				this.NewMenus.filter(function (item) { return item.id == id }).forEach(setdata);
 			} else if (type == "value") {
 				//处理第一个符合的变量
-				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
-					item.value = setdata(item.value);
-				});
+				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(setdata);
 			}
 		}
 	},
@@ -503,6 +499,7 @@ Ext.define("SctCoz.tools", {
 		// 	Listeners = item.listeners;
 		// });
 		this.ClassStorage.Set("menu", id, function (item) {
+			console.log(item);
 			Listeners = item.listeners;
 		});
 

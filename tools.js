@@ -4,7 +4,7 @@
 Ext.define("SctCoz.tools", {
 	config: {
 		id: "plug",
-		version: "0.2.0",
+		version: "0.2.2",
 	},
 	// XXX: 弄一个变量仓库专门管理常用全局变量
 	ClassStorage: {
@@ -28,18 +28,19 @@ Ext.define("SctCoz.tools", {
 		Get: function () {
 			var type = arguments[0];
 			var id = arguments[1];
+			var value = null;
 			if (type == "menu") {
 				//返回第一个符合的菜单
 				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-					return item;
+					value = item.value;
 				});
 			} else if (type == "value") {
 				//返回第一个符合的变量
 				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
-					return item;
+					value = item.value;
 				});
 			}
-			return null;
+			return value;
 		},
 		Set: function () {
 			var type = arguments[0];
@@ -47,14 +48,10 @@ Ext.define("SctCoz.tools", {
 			var setdata = arguments[2];
 			if (type == "menu") {
 				//处理第一个符合的菜单
-				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-					setdata(item);
-				});
+				this.NewMenus.filter(function (item) { return item.id == id }).forEach(setdata);
 			} else if (type == "value") {
 				//处理第一个符合的变量
-				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
-					setdata(item);
-				});
+				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(setdata);
 			}
 		}
 	},
@@ -98,6 +95,7 @@ Ext.define("SctCoz.tools", {
 		// 	Listeners = item.listeners;
 		// });
 		this.ClassStorage.Set("menu", id, function (item) {
+			console.log(item);
 			Listeners = item.listeners;
 		});
 

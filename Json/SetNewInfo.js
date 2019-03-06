@@ -1,4 +1,4 @@
-window.plugTools.ClassStorage.Set("value", "NewInfo", function (data) {
+window.plugTools.ClassStorage.Set("value", "NewInfo", function (item) {
     console.log("test");
     var result =  { 
         "id": "info-1",
@@ -18,5 +18,6 @@ window.plugTools.ClassStorage.Set("value", "NewInfo", function (data) {
         "openshow": 0
     };
     Ext.getCmp("First").down("grid").getStore().loadData(result);
+    item.value = result;
     return result;
 });
