@@ -12,7 +12,8 @@
 // @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
 // @license      MIT
 // @run-at       document-end
-// @grant        none
+// @connect      raw.githubusercontent.com
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
 
 //一些参数

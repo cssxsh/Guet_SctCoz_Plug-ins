@@ -1,20 +1,21 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.7.9
+// @version      0.2.8.0
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
 // @include      http://172.16.13.22/Login/MainDesktop
-// @updateURL    https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
-// @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
-// @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Interface_Optimization.js
+// @updateURL    https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Update/Interface_Optimization.js
+// @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Update/Interface_Optimization.js
+// @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Update/Interface_Optimization.js
 // @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
 // @license      MIT
 // @run-at       document-end
-// @grant        none
+// @connect      raw.githubusercontent.com
+// @grant        GM_xmlhttpRequest
 // ==/UserScript==
-
+"use strict";
 //一些参数
 var col = {
 	ver: "0.2",
@@ -24,6 +25,14 @@ var col = {
 //启动接口
 Ext.onReady(function () {
 	//创建工具
+	// 
+	GM_xmlhttpRequest({
+		method: "GET",
+		url: "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.js",
+		onload: function(response) {
+			console.log(response);
+		}
+	})
 	window.plugTools;
 	if (window.plugTools == null) {
 		window.plugTools = Ext.create("SctCoz.tools");
