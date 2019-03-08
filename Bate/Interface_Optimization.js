@@ -323,9 +323,10 @@ Ext.onReady(function () {
 								data.reader(data);
 							break;
 							case "string":
-								plugTools.Logger(data.reader == "function reader(me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }", 0);
-								//eval(this.reader);
-								eval("function reader(me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }");
+								plugTools.Logger(data.reader, 0);
+								plugTools.Logger("function reader (me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }", 0);
+								eval(this.reader);
+								//eval("function reader(me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }");
 								this.reader  = reader;
 								this.reader(data);
 							break;
