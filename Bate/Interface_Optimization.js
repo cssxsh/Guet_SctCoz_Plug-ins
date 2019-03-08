@@ -196,14 +196,15 @@ Ext.onReady(function () {
 								coursenoKey.forEach(function (courseno) {
 									group.some(function (item) {
 										if (courseno == item.name) {
-											item.children.forEach(function (rec) {
-												plugTools.LoadData({
-													path: "Comm/" + courseno + ".json",
-													success: function (response) {
+											plugTools.LoadData({
+												path: "Comm/" + courseno + ".json",
+												success: function (response) {
+													plugTools.Logger(response.data[0], 0)
+													item.children.forEach(function (rec) {
 														rec.set("spname", response.data.comm);
-													},
-													failure: fail
-												});
+													});
+												},
+												failure: fail
 											});
 											return true;
 										} else {
