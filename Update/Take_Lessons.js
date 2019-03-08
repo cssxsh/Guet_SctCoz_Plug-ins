@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.7.0
+// @version      0.4.0.0
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -14,31 +14,37 @@
 // @run-at       document-end
 // @connect      raw.githubusercontent.com
 // @grant        GM_xmlhttpRequest
+// @grant		 GM_deleteValue
+// @grant		 GM_listValues
+// @grant		 GM_addValueChangeListener
+// @grant		 GM_removeValueChangeListener
+// @grant		 GM_setValue
+// @grant		 GM_getValue
 // ==/UserScript==
 
-//一些参数
-var col = {
-	time: 1000,        //抢课时间间隔
-	old_hide: true,    //旧模块是否隐藏
-	overflow: false,   //关闭以课程人数已满为继续抢课条件
-	allcourseno: true  //开启全课号
-};
-//启动接口
+"use strict";
+
+// 启动接口
 Ext.onReady(function () {
-	//创建工具
-	window.plugTools;
-	if (window.plugTools == null) {
-		window.plugTools = Ext.create("SctCoz.tools");
-		window.plugTools.init();
-	}
-	window.plugTools.ClassStorage.Save("menu", col, "StuSctCol");
-	//console.log("抢课脚本Bug真的多。");
+	// 一些参数
+	let col = {
+		ver: "0.3",			// 主要版本号
+		time: 1000,			// 抢课时间间隔
+		old_hide: true,		// 旧模块是否隐藏
+		overflow: false,	// 关闭以课程人数已满为继续抢课条件
+		allcourseno: true	// 开启全课号
+	};
+	// 创建工具
+	let plugTools = SctCoz.tools;
+	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
+
+	plugTools.ClassStorage.Save("value", col, "T_L_Col");
 	var StuSctNew = {
 		action: "StuSct",
 		text: "选课",
 		id: "StuSct",
 		listeners: {
-			afterrender: function (me, opt){ Rreplace_StuSct("StuSct") },
+			afterrender: function (me, opt){ Rreplace_StuSct("StuSct", col) },
 			activate: null
 		}
 	}
@@ -47,22 +53,23 @@ Ext.onReady(function () {
 		text: "重学选课",
 		id: "StuSctCx",
 		listeners: {
-			afterrender: function (me, opt) { Rreplace_StuSct("StuSctCx") },
+			afterrender: function (me, opt) { Rreplace_StuSct("StuSctCx", col) },
 			activate: null
 		}
 	}
-	window.plugTools.menuChange(StuSctNew);
-	window.plugTools.menuChange(StuSctCxNew);
+	plugTools.menuChange(StuSctNew);
+	plugTools.menuChange(StuSctCxNew);
 });
-function Rreplace_StuSct (module) {
+
+function Rreplace_StuSct (module, col) {
 	//判断模块是否符合
-	var scttype = '';
+	let scttype = "";
 	switch (module) {
-		case ('StuSct'):
-			scttype = '正常';
+		case ("StuSct"):
+			scttype = "正常";
 			break;
-		case ('StuSctCx'):
-			scttype = '重修';
+		case ("StuSctCx"):
+			scttype = "重修";
 			break;
 		default :
 			//不符合要求退出
@@ -70,55 +77,55 @@ function Rreplace_StuSct (module) {
 	}
 	//加载修改过的功能
 	Ext.QuickTips.init();
-	Ext.form.Field.prototype.MsgTarget = 'side';
+	Ext.form.Field.prototype.MsgTarget = "side";
 
-	var dptSto = Ext.data.StoreManager.lookup('dptSto');
+	var dptSto = Ext.data.StoreManager.lookup("dptSto");
 
-	var tmSto = Ext.data.StoreManager.lookup('xqSto');
-	var spSto = Ext.create('Edu.store.Spinfo');
+	var tmSto = Ext.data.StoreManager.lookup("xqSto");
+	var spSto = Ext.create("Edu.store.Spinfo");
 	function sctDpt(cmb, rec) {
 		var dpt = rec[0].data.dptno;
 		spSto.clearFilter();
-		spSto.filter('dptno', new RegExp('^' + dpt + '$'));
+		spSto.filter("dptno", new RegExp("^" + dpt + "$"));
 		qryfrm.getForm().findField("spno").setValue("");
 	}
-	var qryfrm = Ext.create('Edu.view.QueryForm',{
-		url:'/student/StuInfo',
+	var qryfrm = Ext.create("Edu.view.QueryForm",{
+		url: "/student/StuInfo",
 		labelWidth: 60,
 		argcols: [{
-			xtype: 'termcombo',
+			xtype: "termcombo",
 			store: tmSto,
 			value: getTerm()[1],
 			allowBlank: false,
-			labelWidth:30,
+			labelWidth: 30,
 			readOnly: true
 		}, {
-			xtype: 'gradecombo',
+			xtype: "gradecombo",
 			allowBlank: false,
 			labelWidth: 30,
 			width: 120,
 			size: 6
 		}, {
-			xtype: 'dptcombo',
+			xtype: "dptcombo",
 			store: dptSto,
-			fieldLabel: '开课学院',
+			fieldLabel: "开课学院",
 			editable: false,
 			listeners: {select: sctDpt}
 		}, {
-			xtype: 'kscombo',
+			xtype: "kscombo",
 			store: spSto,
-			width:240,
+			width: 240,
 			allowBlank: false
 		}, {
-			xtype: 'hidden',
-			fieldLabel: '选课类别',
-			name: 'stype',
+			xtype: "hidden",
+			fieldLabel: "选课类别",
+			name: "stype",
 			value: scttype
 		}, {
-			xtype: 'button',
+			xtype: "button",
 			handler: queryStore,
-			text: '查询',
-			margin: '0 3',
+			text: "查询",
+			margin: "0 3",
 			formBind: true
 		}]
 	});
@@ -132,32 +139,33 @@ function Rreplace_StuSct (module) {
 		sto.proxy.extraParams = params;
 		sto.load();
 	}
-	var setSto = Ext.create('Ext.data.Store', {
-		fields: ['id','term', 'courseid', 'cname', 'spno', 'grade', 'tname',  'xf', 'scted'],
+	var setSto = Ext.create("Ext.data.Store", {
+		fields: ["id", "term", "courseid", "cname", "spno", "grade", "tname",  "xf", "scted"],
 		proxy: {
-			type: 'ajax', url: '/student/GetPlan',
+			type: "ajax", 
+			url: "/student/GetPlan",
 			reader: {
-				type: 'json',
-				root: 'data'
+				type: "json",
+				root: "data"
 			}
 		}
 	});
 
-	var grid = Ext.create('Edu.view.ShowGrid', {
+	var grid = Ext.create("Edu.view.ShowGrid", {
 		store: setSto,
 		columns: [{
-			xtype: 'rownumberer',
+			xtype: "rownumberer",
 			header: "序号",
 			width: 40
 		}, {
-			dataIndex:'scted',
-			header: '操作',
-			xtype: 'actionrendercolumn',
-			dataIndex:'scted',
+			dataIndex: "scted",
+			header: "操作",
+			xtype: "actionrendercolumn",
+			dataIndex: "scted",
 			width: 40,
 			renderer: function (v) {
 				if (!v) {
-					return ['选课'];
+					return ["选课"];
 				}
 			},
 			items: [{
@@ -168,11 +176,11 @@ function Rreplace_StuSct (module) {
 				}
 			}]
 		}, {
-			dataIndex: 'scted',
-			xtype: 'booleancolumn',
+			dataIndex: "scted",
+			xtype: "booleancolumn",
 			header: "已选",
-			trueText: '是',
-			falseText: '否',
+			trueText: "是",
+			falseText: "否",
 			width: 40
 		}, {
 			dataIndex: "courseid",
@@ -202,20 +210,20 @@ function Rreplace_StuSct (module) {
 			Ext.Msg.alert("提示信息", "请选择一条记录进行编辑。");
 		}
 	}
-	var cnoSto = Ext.create('Ext.data.Store', {
-		fields: ['term', 'courseno','grade','spno','scted', 'name','ap','xf','lot', 'courseid','stype', 'maxstu', 'sctcnt','comm'],
+	var cnoSto = Ext.create("Ext.data.Store", {
+		fields: ["term", "courseno", "grade", "spno", "scted", "name", "ap", "xf", "lot", "courseid", "stype", "maxstu", "sctcnt", "comm"],
 		proxy: {
-			type: 'ajax', url: '/student/GetPlanCno',
+			type: "ajax", url: "/student/GetPlanCno",
 			reader: {
-				type: 'json',
-				root: 'data'
+				type: "json",
+				root: "data"
 			}
 		},
-		groupField: 'spno'
+		groupField: "spno"
 	});
 
 	function sctSubmit () {
-		var gd = this.up('grid');
+		var gd = this.up("grid");
 		var rs = gd.getSelectionModel().getSelection();
 		if (rs.length > 0) {
 			rs[0].data.stype = qryfrm.getValues().stype;
@@ -232,7 +240,7 @@ function Rreplace_StuSct (module) {
 								jg[0].data.scted = 1;
 								jg[0].commit();
 								cnoSto.removeAll();
-								gd.up('window').close();
+								gd.up("window").close();
 							}
 						});
 					} else {
@@ -240,7 +248,7 @@ function Rreplace_StuSct (module) {
 					}
 				},
 				failure: function (response, opts) {
-					Ext.Msg.alert('错误', '状态:' + response.status + ': ' + response.statusText);
+					Ext.Msg.alert("错误", "状态:" + response.status + ": " + response.statusText);
 				}
 			});
 		} else {
@@ -248,7 +256,7 @@ function Rreplace_StuSct (module) {
 		}
 	}
 	function sctSubmit_ () {
-		var gd = this.up('grid');
+		var gd = this.up("grid");
 		var rs = gd.getSelectionModel().getSelection();
 		if (rs.length > 0) {
 			rs[0].data.stype = qryfrm.getValues().stype;
@@ -270,7 +278,7 @@ function Rreplace_StuSct (module) {
 										jg[0].data.scted = 1;
 										jg[0].commit();
 										cnoSto.removeAll();
-										gd.up('window').close();
+										gd.up("window").close();
 									}
 								});
 							} else if ("课程:" + rs[0].data.courseno + "选择失败，选课人数已满!" == obj.msg || col.overflow) {
@@ -284,7 +292,7 @@ function Rreplace_StuSct (module) {
 						failure: function (response, opts) {
 							Ext.TaskManager.stop(task);
 							Ext.Msg.hide();
-							Ext.Msg.alert('错误', '状态:' + response.status + ': ' + response.statusText);
+							Ext.Msg.alert("错误", "状态:" + response.status + ": " + response.statusText);
 						}
 					});
 					Ext.Msg.show({
@@ -308,43 +316,43 @@ function Rreplace_StuSct (module) {
 	}
 	function sctcno(rec){
 		cnoSto.removeAll();
-		if (rec.get('scted') == 1) {
-			return Ext.Msg.alert('提示','本课程已选！');
+		if (rec.get("scted") == 1) {
+			return Ext.Msg.alert("提示", "本课程已选！");
 		}
-		var gdcno = Ext.create('Edu.view.ShowGrid', {
+		var gdcno = Ext.create("Edu.view.ShowGrid", {
 			selType: "checkboxmodel",
 			selModel: { mode: "SINGLE" },
 			store: cnoSto,
 			tbar: [{
-				xtype: 'button',
-				text: '提交',
+				xtype: "button",
+				text: "提交",
 				handler: sctSubmit
 			}, {
-				xtype: 'button',
-				text: '抢课',
+				xtype: "button",
+				text: "抢课",
 				handler: sctSubmit_
 			}],
 			features:[{
-				ftype: 'groupingsummary',
-				groupHeaderTpl: Ext.create('Ext.XTemplate', '<div>{groupValue:this.formatName}共{children.length}个课号</div>', {
+				ftype: "groupingsummary",
+				groupHeaderTpl: Ext.create("Ext.XTemplate", "<div>{groupValue:this.formatName}共{children.length}个课号</div>", {
 					formatName: function(groupValue) {
 						//console.log(this.getGroupId("spno"));
-						return sctDropDown(groupValue, spSto, 'spno', 'spname');
-						//console.log(sctDropDown(groupValue, spSto, 'spno', 'spname'));
+						return sctDropDown(groupValue, spSto, "spno", "spname");
+						//console.log(sctDropDown(groupValue, spSto, "spno", "spname"));
 						//return groupValue == rec.data.spno ? "当前专业" : "其它专业";
 					}
 				})
 			}],
 			columns: [{
 				header: "序号",
-				xtype: 'rownumberer',
+				xtype: "rownumberer",
 				width: 30
 			}, {
 				dataIndex: "spno",
 				header: "专业",
 				width: 94,
 				renderer: function(v) {
-					return sctDropDown(v, spSto, 'spno', 'spname');
+					return sctDropDown(v, spSto, "spno", "spname");
 				}
 			}, {
 				dataIndex: "courseno",
@@ -359,12 +367,12 @@ function Rreplace_StuSct (module) {
 				header: "已选",
 				width: 35
 			}, {
-				dataIndex: 'lot',
+				dataIndex: "lot",
 				header: "抽签",
 				width: 35,
-				xtype: 'booleancolumn',
-				trueText: '是',
-				falseText: '否'
+				xtype: "booleancolumn",
+				trueText: "是",
+				falseText: "否"
 			}, {
 				dataIndex: "grade",
 				header: "年级",
@@ -386,16 +394,17 @@ function Rreplace_StuSct (module) {
 		});
 		var sto = gdcno.getStore();
 		if (col.allcourseno) {
-			var allCnoSto = Ext.create('Ext.data.Store', {
-				fields: ['term', 'courseno','grade','spno','scted', 'name','ap','xf','lot', 'courseid','stype', 'maxstu', 'sctcnt','comm'],
+			var allCnoSto = Ext.create("Ext.data.Store", {
+				fields: ["term", "courseno", "grade", "spno", "scted", "name", "ap", "xf", "lot", "courseid", "stype", "maxstu", "sctcnt","comm"],
 				proxy: {
-					type: 'ajax', url: '/student/GetPlanCno',
+					type: "ajax", 
+					url: "/student/GetPlanCno",
 					reader: {
-						type: 'json',
-						root: 'data'
+						type: "json",
+						root: "data"
 					}
 				},
-				groupField: 'spno',
+				groupField: "spno",
 				listeners: {
 					load: function(st, rds, opts) {
 						sto.loadData(allCnoSto.data.items, true);
@@ -403,7 +412,7 @@ function Rreplace_StuSct (module) {
 				}
 			});
 			Ext.Ajax.request({
-				url: '/Query/GetCoursePlan',
+				url: "/Query/GetCoursePlan",
 				params: {
 					courseid: rec.get("courseid"),
 					term: rec.get("term")
@@ -421,23 +430,23 @@ function Rreplace_StuSct (module) {
 			sto.proxy.extraParams = rec.data;
 			sto.load();
 		}
-		var win = Ext.create('Ext.window.Window', {
-			title: rec.data.cname + '(' + rec.data.courseid + ')',
-			modal: true, height: '80%', width: '80%', layout: 'fit',
+		var win = Ext.create("Ext.window.Window", {
+			title: rec.data.cname + "(" + rec.data.courseid + ")",
+			modal: true, height: "80%", width: "80%", layout: "fit",
 			items: [gdcno]
 		});
 		win.show();
 	}
-	var pan = Ext.create('Edu.view.ShowPanel', {
+	var pan = Ext.create("Edu.view.ShowPanel", {
 		id: "SctPan",
-		title: '学生' + scttype + '选课【插件模式】',
+		title: "学生" + scttype + "选课【插件模式】",
 		items: [{
-			region: 'north',
-			layout: 'fit',
+			region: "north",
+			layout: "fit",
 			items: [qryfrm]
 		},{
-			region: 'center',
-			layout: 'fit',
+			region: "center",
+			layout: "fit",
 			flex: 3,
 			items: [grid]
 		}]
@@ -445,11 +454,11 @@ function Rreplace_StuSct (module) {
 	var tab = Ext.getCmp(module);
 	tab.add(pan);
 	//防止炸裂
-	tab.addListener("destroy", function () {
-		if (pan != null) {
-			console.log("Boom!");
-		}
-	});
+	// tab.addListener("destroy", function () {
+	// 	if (pan != null) {
+	// 		console.log("Boom!");
+	// 	}
+	// });
 
 	//隐藏多余的旧模块
 	if (col.old_hide) {
@@ -459,147 +468,234 @@ function Rreplace_StuSct (module) {
 	}
 }
 
-Ext.define("SctCoz.tools", {
-	config: {
-		id: "plug",
-		version: "0.2.2",
-	},
-	ClassStorage: {
-		//变量数组
-		NewMenus: [],
-		ValuesOfClass: [],
-
-		//操作方法
-		Save: function () {
-			var type = arguments[0];
-			var value = arguments[1];
-			if (type == "menu") {
-				this.NewMenus.push(value);
-				var id = arguments[1].id;
-				this.ValuesOfClass.push({ id, value });
-			} else if (type == "value") {
-				var id = arguments[2];
-				this.ValuesOfClass.push({id, value});
-			}
+if (typeof SctCoz == "undefined") {//防止重复定义
+	Ext.define("SctCoz.tools", {
+		config: {
+			id: "plug",
 		},
-		Get: function () {
-			var type = arguments[0];
-			var id = arguments[1];
-			var value = null;
-			if (type == "menu") {
-				//返回第一个符合的菜单
-				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-					value = item.value;
-				});
-			} else if (type == "value") {
-				//返回第一个符合的变量
-				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
-					value = item.value;
-				});
-			}
-			return value;
-		},
-		Set: function () {
-			var type = arguments[0];
-			var id = arguments[1];
-			var setdata = arguments[2];
-			if (type == "menu") {
-				//处理第一个符合的菜单
-				this.NewMenus.filter(function (item) { return item.id == id }).forEach(setdata);
-			} else if (type == "value") {
-				//处理第一个符合的变量
-				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(setdata);
-			}
-		}
-	},
-	SysMenus: null,
-	Menus_Tree: null,
-	newMenus: [],
-	menuAdd: function (config) {
-		console.log(config.action + "add...");
-		var menu_config = {
-			"action": config.action,
-			"children": null,
-			"command": null,
-			"controller": "plug",
-			"id": config.id,
-			"leaf": true,
-			"text": config.text,
-			"type": "action",
-		};
-		this.Menus_Tree.appendChild(menu_config);
-		//this.newMenus.push(config);
-		this.ClassStorage.Save("menu", config);
-	},
-	menuChange: function (config) {
-		console.log(config.action + " change...");
-		var menu_config = {
-			"action": config.action,
-			"children": null,
-			"command": null,
-			"controller": "plug",
-			"id": config.id,
-			"leaf": true,
-			"text": config.text,
-			"type": "action",
-		};
-		//this.newMenus.push(config);
-		this.ClassStorage.Save("menu", config);
-	},
-	getNewListeners: function (id) {
-		var Listeners = {};
-		// this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-		// 	Listeners = item.listeners;
-		// });
-		this.ClassStorage.Set("menu", id, function (item) {
-			console.log(item);
-			Listeners = item.listeners;
-		});
-
-		if (Listeners.activate == null) {
-			Listeners.activate = function (me, opts) {
-				if (me.barChange) {
-					me.barChange = false;
-					me.loader.load();
-				}
-			}
-		}
-		return Listeners;
-	},
-	newOpenTab: function (panel, id, text, actid) {
-		var tabPanel = Ext.getCmp("content_panel");
-		var tabNodeId = tabPanel.down("[id=' + actid + ']");
-		var Listeners = plugTools.getNewListeners(actid);
-		if (!tabNodeId) {
-			tabPanel.add({
-				id: actid,
-				title: text,
-				layout: "fit",
-				closable: true,
-				childActId: actid,
-				barChange: false,
-				loader: {
-					url: panel,
-					loadMask: "请稍等...",
-					autoLoad: true,
-					scripts: true
+		statics: {
+			version: "0.3.0",
+			inited: false,
+			debugLevel: 2,
+			SysMenus: null,
+			Menus_Tree: null,
+	
+			ClassStorage: {
+				//变量数组
+				NewMenus: [],
+				NewMenusIdList: [],
+		
+				//操作方法
+				Save: function (type, value, id) {
+					if (type == "menu") {
+						this.NewMenus.push(value);
+						this.NewMenusIdList.push(value.id);
+					} else if (type == "value") {
+						GM_setValue(id, value);
+					}
 				},
-				listeners: Listeners
-			}).show();
+				Get: function (type, id) {
+					let value = null;
+					if (type == "menu") {
+						//返回符合的菜单
+						// this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
+						// 	value = item.value;
+						// });
+						value = this.NewMenus.find(function (item) { return item.id == id });
+					} else if (type == "value") {
+						value = GM_getValue(id);
+					}
+					return value;
+				},
+				Set: function (type, id, setdata) {
+					if (type == "menu") {
+						//处理符合的菜单
+						this.NewMenus.filter(function (item) { return item.id == id }).forEach(setdata);
+					} else if (type == "value") {
+						setdata(GM_getValue(id));
+					}
+				},
+				Delete: function (type, id) {
+					if (type == "menu") {
+						//处理符合的菜单
+						this.NewMenus.filter(function (item) { return item.id == id }).forEach(NewMenus.splice);
+					} else if (type == "value") {
+						GM_deleteValue(id);
+					}
+				},
+				getList: function (type) {
+					if (type == "menu") {
+						return this.NewMenusIdList;
+					} else if (type == "value") {
+						return GM_listValues();
+					}
+				}
+			},
+			menuAdd: function (config) {
+				// console.log(config.action + " add...");
+				this.Logger(config.action + " add...");
+				var menu_config = {
+					"action": config.action,
+					"children": null,
+					"command": null,
+					"controller": "plug",
+					"id": config.id,
+					"leaf": true,
+					"text": config.text,
+					"type": "action",
+				};
+				this.Menus_Tree.appendChild(menu_config);
+				//this.newMenus.push(config);
+				this.ClassStorage.Save("menu", config);
+			},
+			menuChange: function (config) {
+				// console.log(config.action + " change...");
+				this.Logger(config.action + " change...");
+				var menu_config = {
+					"action": config.action,
+					"children": null,
+					"command": null,
+					"controller": "plug",
+					"id": config.id,
+					"leaf": true,
+					"text": config.text,
+					"type": "action",
+				};
+				//this.newMenus.push(config);
+				this.ClassStorage.Save("menu", config);
+			},
+			getNewListeners: function (id) {
+				//this.Logger(this.ClassStorage.Get("menu", id));
+				let menu = this.ClassStorage.Get("menu", id);
+				let Listeners = (menu == null) ? {} : menu.listeners;
+		
+				if (Listeners.activate == null) {
+					Listeners.activate = function (me, opts) {
+						if (me.barChange) {
+							me.barChange = false;
+							me.loader.load();
+						}
+					}
+				}
+				return Listeners;
+			},
+			newOpenTab: function (panel, id, text, actid) {
+				let tabPanel = Ext.getCmp("content_panel");
+				let tabNodeId = tabPanel.down("[id=' + actid + ']");
+				let Listeners = SctCoz.tools.getNewListeners(actid);
+				if (!tabNodeId) {
+					tabPanel.add({
+						id: actid,
+						title: text,
+						layout: "fit",
+						closable: true,
+						childActId: actid,
+						barChange: false,
+						loader: {
+							url: panel,
+							loadMask: "请稍等...",
+							autoLoad: true,
+							scripts: true
+						},
+						listeners: Listeners
+					}).show();
+				}
+				else {
+					tabPanel.setActiveTab(tabNodeId);
+				}
+			},
+			init: function (config) {
+				// config 参数赋值
+				if (typeof config != "undefine"){
+					// this.id = config.id|"plug";
+					this.debugLevel = typeof config.debugLevel == "undefine" ? this.debugLevel : config.debugLevel;
+				}
+				//初始化
+				this.Logger("ver " + this.version + " initing...");
+				this.SysMenus = Ext.getCmp("SystemMenus");
+				//this.Logger(this.SysMenus);
+				this.Menus_Tree = this.SysMenus.down("treeview").node;
+				//重载打开Tab的方法
+				this.SysMenus.openTab = this.newOpenTab;
+				Ext.Loader.setPath({
+					SctCoz: "https://raw.githack.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate"
+				});
+				this.inited = true;
+			},
+			// 写一些调试用组件
+			// 调试输出
+			Logger: function (info, Level) {
+				// 选择输出形式
+				let prefix = "";
+				let style = "";
+				// 默认输出等级为1
+				let level = typeof Level == "undefined" ? 1 : Level;
+				// 低于debug等级不输出
+				if (level < this.debugLevel) return;
+				switch (level) {
+					default :	// 默认等级与 level 0 一致
+					case 0:
+						console.log(info);
+					break;		// 过程记录
+					case 1:
+						prefix = "@: ";
+						style = "color: green;";
+						console.log("%c" + prefix + info, style);
+					break;		// 运行异常
+					case 2:
+						prefix = "$: ";
+						style = "color: blue; font-size: 12px";
+						console.log("%c" + prefix + info, style);
+					break;		// 轻微警告
+					case 3:
+						prefix = "#: ";
+						style = "color: yellow; font-size: 24px";
+						console.log("%c" + prefix + info, style);
+					break;		// 严重错误
+					case 4:	
+						prefix = "!: ";
+						style = "color: red; font-size: 48px";
+						console.log("%c" + prefix + info, style);
+					break;
+					case 5:		// 回滚代码
+						prefix = "作者是个菜鸡！！！： ";
+						style = "color: black; font-size: 96px";
+						console.log("%c" + prefix + info, style);
+					break;
+				}
+			},
+			LoadData: function (config) {
+				this.Logger(config, 0);
+				this.Logger("loading...", 0);
+				GM_xmlhttpRequest({
+					// GET, HEAD, POST, 默认GET
+					method: config.method||"GET",
+					// 数据选项， 仅在POST情况下生效
+					data: config.data,
+					// 默认加载path
+					url: config.url||("https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/" + config.path),
+					// arraybuffer, blob, json， 默认json
+					responseType: config.type||"json",
+					// 延迟上限， 默认3000ms
+					outtime: config.timeout||3000,
+					// 加载失败的情况
+					ontimeout: config.failure,
+					onerror: config.failure,
+					// 成功完成的情况
+					onload: function (result) {
+						switch (result.status) {
+							case 404:
+								config.failure(result);
+							break;
+							case 200:
+							default :
+								config.success(result.response);
+							break;
+						}
+					}
+					// 还有其他修改选项详情看文档
+				});
+			}
 		}
-		else {
-			tabPanel.setActiveTab(tabNodeId);
-		}
-	},
-	init: function () {
-		//初始化
-		console.log("ver " + this.version + "   initing...");
-		this.SysMenus = Ext.getCmp("SystemMenus");
-		this.Menus_Tree = this.SysMenus.down("treeview").node;
-		//重载打开Tab的方法
-		this.SysMenus.openTab = this.newOpenTab;
-		Ext.Loader.setPath({
-            SctCoz: "https://raw.githack.com/cssxsh/Guet_SctCoz_Plug-ins/master"
-        });
-	}
-});
+	});
+}

@@ -1,5 +1,5 @@
 //这是一个接口库
-//version 0.2.0
+//version 0.3.0
 if (typeof SctCoz == "undefined") {//防止重复定义
 	Ext.define("SctCoz.tools", {
 		config: {
