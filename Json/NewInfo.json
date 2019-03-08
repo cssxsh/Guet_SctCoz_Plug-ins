@@ -7,7 +7,7 @@
             "title": "test",
             "content": "test",
             "postdate": null,
-            "operator": "教务处",
+            "operator": "插件",
             "ntype": null,
             "reader": "function (me) { Ext.create('Ext.window.Window', { title: this.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\n/g, '<br/>')}] }).show(); }",
             "showdate": "2019年03月08日",
@@ -15,3 +15,4 @@
             "openshow": 0
         }
     ]
+}

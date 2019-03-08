@@ -36,7 +36,7 @@ Ext.onReady(function () {
 	};
 	// 创建工具
 	let plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init({debugLevel: 0});
+	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
 
 	plugTools.ClassStorage.Save("value", col, "T_L_Col");
 	var StuSctNew = {

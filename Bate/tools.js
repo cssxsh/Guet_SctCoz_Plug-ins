@@ -139,9 +139,9 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			},
 			init: function (config) {
 				// config 参数赋值
-				if (config != null){
+				if (typeof config != "undefine"){
 					// this.id = config.id|"plug";
-					this.debugLevel = config.debugLevel|this.debugLevel;
+					this.debugLevel = typeof config.debugLevel == "undefine" ? this.debugLevel : config.debugLevel;
 				}
 				//初始化
 				this.Logger("ver " + this.version + "   initing...");
@@ -162,9 +162,9 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 				let prefix = "";
 				let style = "";
 				// 默认输出等级为1
-				let level = Level|1;
+				let level = typeof Level == "undefined" ? 1 : Level;
 				// 低于debug等级不输出
-				if (level >= this.debugLevel) return;
+				if (level < this.debugLevel) return;
 				switch (level) {
 					default :	// 默认等级与 level 0 一致
 					case 0:
@@ -199,17 +199,19 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			},
 			// XXX: 加载外部资源函数封装
 			LoadData: function (config) {
+				this.Logger(config, 0);
+				this.Logger("loading...", 0);
 				GM_xmlhttpRequest({
 					// GET, HEAD, POST, 默认GET
-					method: config.method|"GET",
+					method: config.method||"GET",
 					// 数据选项， 仅在POST情况下生效
 					data: config.data,
 					// 默认加载path
-					url: config.url|("https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/" + config.path),
+					url: config.url||("https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/" + config.path),
 					// arraybuffer, blob, json， 默认json
-					responseType: config.type|"json",
+					responseType: config.type||"json",
 					// 延迟上限， 默认3000ms
-					timeout: config.timeout|3000,
+					outtime: config.timeout||3000,
 					// 加载失败的情况
 					ontimeout: config.failure,
 					onerror: config.failure,

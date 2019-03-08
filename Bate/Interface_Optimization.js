@@ -34,7 +34,7 @@ Ext.onReady(function () {
 	};
 	// 创建工具
 	let plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init({debugLevel: 0});
+	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
 	
 	// 创建并应用修改
 	var CourseSetNew = {
@@ -268,8 +268,20 @@ Ext.onReady(function () {
 							grid.setVisible(data.length > 0);
 							let rec = me.findRecord("openshow", 1);
 							if (rec) showMsg(rec.data);
+							// TODO: 尝试在这里添加一下获取新信息
+							plugTools.LoadData({
+								path: "NewInfo.json",
+								success: function (response) {
+									plugTools.Logger(response, 0);
+									let data = Ext.isArray(response.data) ? response.data : [response.data];
+									//me.loadData(data);
+								},
+								failure: function (result) {
+									plugTools.LoadData(result, 2);
+								}
+							});
+							
 							// XXX: 添加一下必要的须知
-							//console.log(me);
 							me.loadData([{ 
 								"id": "info-0",
 								"title": "插件用户须知",
@@ -296,18 +308,6 @@ Ext.onReady(function () {
 								}],
 								true
 							);
-							// TODO: 尝试在这里添加一下获取新信息
-							plugTools.LoadData({
-								path: "",
-								success: function (response) {
-									let data = Ext.isArray(response.data) ? response.data : [response.data];
-									plugTools.Logger(rec);
-									//me.loadData(data);
-								},
-								failure: function (result) {
-
-								}
-							})
 						}
 					}
 				});
