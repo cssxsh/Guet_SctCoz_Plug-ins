@@ -15,7 +15,6 @@
 // @connect      raw.githubusercontent.com
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
-
 "use strict";
 //一些参数
 var col = {
@@ -26,14 +25,6 @@ var col = {
 //启动接口
 Ext.onReady(function () {
 	//创建工具
-	// 
-	GM_xmlhttpRequest({
-		method: "GET",
-		url: "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.js",
-		onload: function(response) {
-			console.log(response);
-		}
-	})
 	window.plugTools;
 	if (window.plugTools == null) {
 		window.plugTools = Ext.create("SctCoz.tools");
@@ -77,7 +68,6 @@ Ext.onReady(function () {
 								var courseno = sto.getAt(index).get("courseno");
 								sto.each( function (record) { if (record.get("courseno") == courseno) {
 									record.set("sct", checked);
-									//console.log(record.set);
 								}});
 							}
 						}},
@@ -124,13 +114,6 @@ Ext.onReady(function () {
 						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show()
-					/*
-					if (ctb.store.data.length == 0) {
-						ctb.store.proxy.type = "jsonp"
-						ctb.store.proxy.url = "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.json";
-						ctb.store.load();
-					}
-					*/
 					if (ctb.store.data.length == 0) {
 						ctb.store.loadData([
 							{"term": "2018-2019_2", "nodeno": "1", "nodename": "<font size=1>上午第一节</font></br>", "memo": "08:25-10:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": ""},
@@ -176,10 +159,7 @@ Ext.onReady(function () {
 					}
 
 					sto.proxy.extraParams = params;
-					//Ext.apply(sto, { fields: [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term","courseid","coment","studentcount","credithour","teachperiod","labperiod","copperiod","maxperson"] });
-					
 					sto.load();
-					//console.log(newGrid.id);
 				}
 				var oldGrid = me.down("grid");
 				var panel = oldGrid.up("panel");
@@ -187,36 +167,6 @@ Ext.onReady(function () {
 				queryButton.handler = queryStore;
 				panel.remove(oldGrid);
 				panel.add(newGrid);
-				/*
-				//修正Grid功能
-				var grid = me.down("grid");
-				grid.columns.forEach(function (c) {
-					c.sortable = true;
-				});
-				grid.columns[2].width = 120;
-				var gridView = grid.getView();
-				gridView.enableTextSelection = true;
-				// -TODO: 为columns添加checkcolumn， 不过看样子要之接重写Grid
-				var p = Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 });
-				grid.headerCt.insert(1, Ext.create("Ext.grid.column.Column", { header: "有效", dataIndex: "enabled", xtype: "checkcolumn", editor: { xtype: "checkbox", inputValue: 1 } }));
-
-				//grid.headerCt.addPlugin(p);
-				//添加日程表功能
-				var ctb = Ext.create("Edu.view.coursetable");
-				var toolTbar = grid.down("toolbar");// 获取工具栏
-				toolTbar.add({ xtype: "button", text: "转为课表", formBind: true, icon: "/images/0775.gif", handler: openTimeTable});
-				function openTimeTable (me, opt) {
-					var grid = me.up("grid");
-					var gRec = grid.getStore().data.items;
-					var panView = Ext.create("Ext.panel.Panel", {layout: "fit", autoScroll: true, frame: true});
-					Ext.create("Ext.window.Window", {
-						title: "课程表",
-						width: "80%", height:"80%",modal: true, resizable: false, layout: "fit",
-						items: [panView]
-					}).show();
-					ctb.render(panView.body, gRec);
-				}
-				*/
 			},
 			activate: null
 		}
@@ -244,50 +194,8 @@ Ext.onReady(function () {
 			}
 		}
 	};
-	// var FirstNew = {
-	// 	action: "First",
-	// 	text: "首页",
-	// 	id: "First",
-	// 	listeners: {
-	// 		add: function (me, opt) {
-	// 			// -TODO: 对首页内容进行补充
-	// 			var grid = me.down("grid");
-	// 			var gdSto = grid.getStore();
-	// 			// -TODO: 写加载新信息的方式 预计使用 LoadData
-	// 			gdSto.loadData([{"id":2,"title":"text","content":null,"postdate":null,"operator":"Plugins","ntype":null,"reader":null,"showdate":"emmm","chk":null,"openshow":1}],
-	// 			true);
-	// 			function showMsgNew (me, rowIndex, colIndex) {
-	// 				var rec = me.getStore().getAt(rowIndex);
-	// 				if (rec.data.operator == "Plugins") {
-	// 					// -TODO: 写针对插件添加的信息显示方式
-	// 				} else {
-	// 					editfrm.load({
-	// 						url: "/comm/getnews/" + rec.data.id, 
-	// 						success: function sc(a, b) {
-	// 							var rc = b.result.data;
-	// 							openmsg(rc.title, rc.content.replace(/\n/g, "<br/>"));
-	// 							Ext.create("Ext.window.Window", {
-	// 								title: rc.title,
-	// 								width: "70%", height:"70%",modal: true, resizable: true, layout: "fit",
-	// 								items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
-	// 							}).show();
-	// 						}
-	// 					})
-	// 				}
-	// 			}
-	// 			var editfrm = Ext.create("Ext.form.Panel", {
-	// 				bodyPadding: 5, frame: true, region: "north",
-	// 				html: "<table width="100%"><tr><td><p>尊敬的用户：</p><p>　　您好，欢迎使用桂林电子科技大学教务管理系统。</p></td></tr></table>"
-	// 			});
-
-	// 			grid.columns[0].handler = showMsgNew;
-	// 			// -TODO: 尝试修改可关闭性
-	// 		}
-	// 	}
-	// };
 	window.plugTools.menuChange(CourseSetNew);
 	window.plugTools.menuChange(StuScoreNew);
-	//window.plugTools.menuChange(FirstNew);
 	Ext.getCmp("First").close();
 	Ext.getCmp("content_panel").add({
 		id: "First",
@@ -307,7 +215,6 @@ Ext.onReady(function () {
 							grid.setVisible(data.length > 0);
 							var rec = me.findRecord("openshow", 1);
 							if (rec) showMsg(rec.data);
-							//console.log(me);
 							me.loadData([{ 
 								"id": "info-0",
 								"title": "插件用户须知",
@@ -323,7 +230,6 @@ Ext.onReady(function () {
 								"reader": function (me) {
 									Ext.create("Ext.window.Window", {
 										title: this.title, width: "40%", height:"40%", modal: true, resizable: true, layout: "fit",
-										// items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: this.content.replace(/\n/g, "<br/>") }]
 										items: [{xtype: "form", autoScroll: true, frame: true, padding: "1", html: me.content.replace(/\n/g, "<br/>")}]
 									}).show();
 								},
@@ -335,10 +241,6 @@ Ext.onReady(function () {
 							);
 							// 这里使用一种暂时性的办法
 							window.plugTools.ClassStorage.Save("value", null, "NewInfo");
-							// Ext.Loader.setConfig({enabled: false});
-							// Ext.require("SctCoz.Json.SetNewInfo");
-							
-							// console.log("sos");
 						}
 					}
 				});
@@ -364,6 +266,7 @@ Ext.onReady(function () {
 							data.reader = eval("(" + data.reader + ")");
 							data.reader(data);
 						} else {
+
 						}
 					}
 				}
@@ -491,14 +394,10 @@ Ext.define("SctCoz.tools", {
 			"text": config.text,
 			"type": "action",
 		};
-		//this.newMenus.push(config);
 		this.ClassStorage.Save("menu", config);
 	},
 	getNewListeners: function (id) {
 		var Listeners = {};
-		// this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-		// 	Listeners = item.listeners;
-		// });
 		this.ClassStorage.Set("menu", id, function (item) {
 			console.log(item);
 			Listeners = item.listeners;

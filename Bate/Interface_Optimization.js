@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.2.8.0
+// @version      0.3.0.0
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -14,31 +14,29 @@
 // @run-at       document-end
 // @connect      raw.githubusercontent.com
 // @grant        GM_xmlhttpRequest
+// @grant		 GM_deleteValue
+// @grant		 GM_listValues
+// @grant		 GM_addValueChangeListener
+// @grant		 GM_removeValueChangeListener
+// @grant		 GM_setValue
+// @grant		 GM_getValue
 // ==/UserScript==
 
 "use strict";
-//一些参数
-var col = {
-	ver: "0.2",
-	stid_hide: false,    //学号参数是否隐藏
-	sct_hide: false,     //已选控制是否隐藏
-};
-//启动接口
+
+// 启动接口
 Ext.onReady(function () {
-	//创建工具
-	// 
-	GM_xmlhttpRequest({
-		method: "GET",
-		url: "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.js",
-		onload: function(response) {
-			console.log(response);
-		}
-	})
-	window.plugTools;
-	if (window.plugTools == null) {
-		window.plugTools = Ext.create("SctCoz.tools");
-		window.plugTools.init();
-	}
+	// 一些参数
+	let col = {
+		ver: "0.3",			//主要版本号
+		stid_hide: false,	//学号参数是否隐藏
+		sct_hide: false,	//已选控制是否隐藏
+	};
+	// 创建工具
+	let plugTools = SctCoz.tools;
+	if (!plugTools.inited) plugTools.init({debugLevel: 0});
+	
+	// 创建并应用修改
 	var CourseSetNew = {
 		action: "QryCourseSet",
 		text: "课程设置",
@@ -72,6 +70,7 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 , sortable: false},
 						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: {
+							// XXX: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
 							checkchange: function (me, index, checked) {
 								var sto = me.up("grid").getStore();
 								var courseno = sto.getAt(index).get("courseno");
@@ -147,6 +146,7 @@ Ext.onReady(function () {
 					var form = me.down("fieldset").up("panel").getForm();
 					var params = form.getValues();
 					var sto = newGrid.getStore();
+					// XXX: 或许应该看一下正则表达式
 					var text;
 					var wk;
 					var reg1 = /^[0-9]*\.\.[0-9]*$/;
@@ -244,50 +244,10 @@ Ext.onReady(function () {
 			}
 		}
 	};
-	// var FirstNew = {
-	// 	action: "First",
-	// 	text: "首页",
-	// 	id: "First",
-	// 	listeners: {
-	// 		add: function (me, opt) {
-	// 			// -TODO: 对首页内容进行补充
-	// 			var grid = me.down("grid");
-	// 			var gdSto = grid.getStore();
-	// 			// -TODO: 写加载新信息的方式 预计使用 LoadData
-	// 			gdSto.loadData([{"id":2,"title":"text","content":null,"postdate":null,"operator":"Plugins","ntype":null,"reader":null,"showdate":"emmm","chk":null,"openshow":1}],
-	// 			true);
-	// 			function showMsgNew (me, rowIndex, colIndex) {
-	// 				var rec = me.getStore().getAt(rowIndex);
-	// 				if (rec.data.operator == "Plugins") {
-	// 					// -TODO: 写针对插件添加的信息显示方式
-	// 				} else {
-	// 					editfrm.load({
-	// 						url: "/comm/getnews/" + rec.data.id, 
-	// 						success: function sc(a, b) {
-	// 							var rc = b.result.data;
-	// 							openmsg(rc.title, rc.content.replace(/\n/g, "<br/>"));
-	// 							Ext.create("Ext.window.Window", {
-	// 								title: rc.title,
-	// 								width: "70%", height:"70%",modal: true, resizable: true, layout: "fit",
-	// 								items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
-	// 							}).show();
-	// 						}
-	// 					})
-	// 				}
-	// 			}
-	// 			var editfrm = Ext.create("Ext.form.Panel", {
-	// 				bodyPadding: 5, frame: true, region: "north",
-	// 				html: "<table width="100%"><tr><td><p>尊敬的用户：</p><p>　　您好，欢迎使用桂林电子科技大学教务管理系统。</p></td></tr></table>"
-	// 			});
-
-	// 			grid.columns[0].handler = showMsgNew;
-	// 			// -TODO: 尝试修改可关闭性
-	// 		}
-	// 	}
-	// };
-	window.plugTools.menuChange(CourseSetNew);
-	window.plugTools.menuChange(StuScoreNew);
-	//window.plugTools.menuChange(FirstNew);
+	plugTools.menuChange(CourseSetNew);
+	plugTools.menuChange(StuScoreNew);
+	plugTools.ClassStorage.Save("value", col, "I_O_Col");
+	// FIXME: 首页的情况比较特殊这里特殊处理
 	Ext.getCmp("First").close();
 	Ext.getCmp("content_panel").add({
 		id: "First",
@@ -300,13 +260,15 @@ Ext.onReady(function () {
 				Ext.QuickTips.init();
 				Ext.form.Field.prototype.MsgTarget = "side";
 				
+				// XXX: 重写加载新信息的方式
 				var gdSto = Ext.create("Edu.store.NewsInfo", {
 					autoLoad: true, 
 					listeners: {
 						"load": function (me, data) {
 							grid.setVisible(data.length > 0);
-							var rec = me.findRecord("openshow", 1);
+							let rec = me.findRecord("openshow", 1);
 							if (rec) showMsg(rec.data);
+							// XXX: 添加一下必要的须知
 							//console.log(me);
 							me.loadData([{ 
 								"id": "info-0",
@@ -329,24 +291,32 @@ Ext.onReady(function () {
 								},
 								"showdate": "2019年03月05日",
 								"chk": null,
-								"openshow": 0
+								"openshow": 0,
+								"isPluger": true
 								}],
 								true
 							);
-							// 这里使用一种暂时性的办法
-							window.plugTools.ClassStorage.Save("value", null, "NewInfo");
-							// Ext.Loader.setConfig({enabled: false});
-							// Ext.require("SctCoz.Json.SetNewInfo");
-							
-							// console.log("sos");
+							// TODO: 尝试在这里添加一下获取新信息
+							plugTools.LoadData({
+								path: "",
+								success: function (response) {
+									let data = Ext.isArray(response.data) ? response.data : [response.data];
+									plugTools.Logger(rec);
+									//me.loadData(data);
+								},
+								failure: function (result) {
+
+								}
+							})
 						}
 					}
 				});
 				Ext.apply(gdSto.proxy, { url: "/comm/getusernews" });
 
+				// XXX: 重写显示新信息的方式
 				function showMsg(data) {
-					var id = data.id;
-					if (data.operator != "插件") {
+					let id = data.id;
+					if (!data.isPluger) {
 						editfrm.load({
 							url: "/comm/getnews/" + id, 
 							success: function sc(a, b) {
@@ -364,6 +334,7 @@ Ext.onReady(function () {
 							data.reader = eval("(" + data.reader + ")");
 							data.reader(data);
 						} else {
+							// TODO: 需要处理一种绘制函数不存在的情况
 						}
 					}
 				}
@@ -393,161 +364,18 @@ Ext.onReady(function () {
 			}
 		}
 	});
-	var panel = Ext.getCmp("content_panel");
+	// FIXME: 这里没有用通用方法，所以之后可能要把这种批量处理情况加入SctCoz.tools的处理中
+	let panel = Ext.getCmp("content_panel");
 	panel.addListener("add", function () {
-		var lastTab = panel.items.last();
+		let lastTab = panel.items.last();
 		lastTab.addListener("add", function () {
-			var grid = lastTab.down("grid");
+			// TODO: 这里用ExtJs ComponentQuery 组件选择器 重写一下
+			let grid = lastTab.down("grid");
 			if (grid != null) {
 				grid.columns.forEach(function (c) { c.sortable = true; });
-				var gridView = grid.getView();
+				let gridView = grid.getView();
 				gridView.enableTextSelection = true;
 			}
 		});
 	});
-});
-
-Ext.define("SctCoz.tools", {
-	config: {
-		id: "plug",
-		version: "0.2.2",
-	},
-	ClassStorage: {
-		//变量数组
-		NewMenus: [],
-		ValuesOfClass: [],
-
-		//操作方法
-		Save: function () {
-			var type = arguments[0];
-			var value = arguments[1];
-			if (type == "menu") {
-				this.NewMenus.push(value);
-				var id = arguments[1].id;
-				this.ValuesOfClass.push({ id, value });
-			} else if (type == "value") {
-				var id = arguments[2];
-				this.ValuesOfClass.push({id, value});
-			}
-		},
-		Get: function () {
-			var type = arguments[0];
-			var id = arguments[1];
-			var value = null;
-			if (type == "menu") {
-				//返回第一个符合的菜单
-				this.NewMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-					value = item.value;
-				});
-			} else if (type == "value") {
-				//返回第一个符合的变量
-				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(function (item) {
-					value = item.value;
-				});
-			}
-			return value;
-		},
-		Set: function () {
-			var type = arguments[0];
-			var id = arguments[1];
-			var setdata = arguments[2];
-			if (type == "menu") {
-				//处理第一个符合的菜单
-				this.NewMenus.filter(function (item) { return item.id == id }).forEach(setdata);
-			} else if (type == "value") {
-				//处理第一个符合的变量
-				this.ValuesOfClass.filter(function (item) { return item.id == id }).forEach(setdata);
-			}
-		}
-	},
-	SysMenus: null,
-	Menus_Tree: null,
-	newMenus: [],
-	menuAdd: function (config) {
-		console.log(config.action + "add...");
-		var menu_config = {
-			"action": config.action,
-			"children": null,
-			"command": null,
-			"controller": "plug",
-			"id": config.id,
-			"leaf": true,
-			"text": config.text,
-			"type": "action",
-		};
-		this.Menus_Tree.appendChild(menu_config);
-		//this.newMenus.push(config);
-		this.ClassStorage.Save("menu", config);
-	},
-	menuChange: function (config) {
-		console.log(config.action + " change...");
-		var menu_config = {
-			"action": config.action,
-			"children": null,
-			"command": null,
-			"controller": "plug",
-			"id": config.id,
-			"leaf": true,
-			"text": config.text,
-			"type": "action",
-		};
-		//this.newMenus.push(config);
-		this.ClassStorage.Save("menu", config);
-	},
-	getNewListeners: function (id) {
-		var Listeners = {};
-		// this.newMenus.filter(function (item) { return item.id == id }).forEach(function (item) {
-		// 	Listeners = item.listeners;
-		// });
-		this.ClassStorage.Set("menu", id, function (item) {
-			console.log(item);
-			Listeners = item.listeners;
-		});
-
-		if (Listeners.activate == null) {
-			Listeners.activate = function (me, opts) {
-				if (me.barChange) {
-					me.barChange = false;
-					me.loader.load();
-				}
-			}
-		}
-		return Listeners;
-	},
-	newOpenTab: function (panel, id, text, actid) {
-		var tabPanel = Ext.getCmp("content_panel");
-		var tabNodeId = tabPanel.down("[id=' + actid + ']");
-		var Listeners = plugTools.getNewListeners(actid);
-		if (!tabNodeId) {
-			tabPanel.add({
-				id: actid,
-				title: text,
-				layout: "fit",
-				closable: true,
-				childActId: actid,
-				barChange: false,
-				loader: {
-					url: panel,
-					loadMask: "请稍等...",
-					autoLoad: true,
-					scripts: true
-				},
-				listeners: Listeners
-			}).show();
-		}
-		else {
-			tabPanel.setActiveTab(tabNodeId);
-		}
-	},
-	init: function () {
-		//初始化
-		console.log("ver " + this.version + "   initing...");
-		this.SysMenus = Ext.getCmp("SystemMenus");
-		this.Menus_Tree = this.SysMenus.down("treeview").node;
-		//重载打开Tab的方法
-		this.SysMenus.openTab = this.newOpenTab;
-		Ext.Loader.setPath({
-            SctCoz: "https://raw.githack.com/cssxsh/Guet_SctCoz_Plug-ins/master"
-        });
-	}
 });

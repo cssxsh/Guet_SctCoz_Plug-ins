@@ -17,6 +17,7 @@ window.plugTools.ClassStorage.Set("value", "NewInfo", function (item) {
         "chk": null,
         "openshow": 0
     };
+    // loadData输入的数据是数组形式， o(╥﹏╥)o
     Ext.getCmp("First").down("grid").getStore().loadData([result], true);
     item.value = result;
     return result;
