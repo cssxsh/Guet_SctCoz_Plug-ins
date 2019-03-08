@@ -5,7 +5,7 @@
         { 
             "id": "info-1",
             "title": "功能介绍",
-            "content": "简单介绍一下脚本所拥有的功能: </br>",
+            "content": "<p style='font-size:24px'>简单介绍一下教务目前所拥有的功能: </p></br></br><p style='color:red'>1.&nbsp</p><p style='color:black'>优化各个模块中表格(Grid)功能，将不能排序的表格改进成可以排序。并且使其可以选中文字用于复制粘贴。</p></br><p style='color:red'>2.&nbsp</p><p style='color:black'>在<u>课程设置</u>模块中添加<strong>转为课表</strong>功能，方便排课使用。并且转为<strong>转为课表</strong>可以配合<strong>选中</strong>使用</p></br><p style='color:red'>3.&nbsp</p><p style='color:black'>补齐<u>成绩查询</u>模块中的</u>平时成绩</u>和</u>考核成绩</u>，还有其他部分成绩需要点击列头取消隐藏。</p></br><p style='color:red'>4.&nbsp</p><p style='color:black'>在<u>课程设置</u>模块中利用预留的备注列添加课程信息，例如QQ群。关于课程信息，欢迎到请到以下链接给我投稿━(*｀∀´*)ノ亻!<a href='https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues' target='_blank'>https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues</a></p></br><p style='color:red'>5.&nbsp</p><p style='color:black'>还有一些零碎的优化和功能就不一一介绍了</p></br>",
             "postdate": null,
             "operator": "插件",
             "ntype": null,
