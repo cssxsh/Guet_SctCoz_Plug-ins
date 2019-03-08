@@ -225,7 +225,6 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 								config.success(result.response);
 							break;
 						}
-						config.success(result.response);
 					}
 					// 还有其他修改选项详情看文档
 				});

@@ -274,7 +274,7 @@ Ext.onReady(function () {
 								success: function (response) {
 									plugTools.Logger(response, 0);
 									let data = Ext.isArray(response.data) ? response.data : [response.data];
-									//me.loadData(data);
+									me.loadData(data, true);
 								},
 								failure: function (result) {
 									plugTools.LoadData(result, 2);
