@@ -194,22 +194,16 @@ Ext.onReady(function () {
 								let coursenoKey = Ext.Array.intersect(Ext.Array.pluck(group, "name"), Ext.Array.pluck(coursenoList, "courseno"));
 								plugTools.Logger(coursenoKey, 0);
 								coursenoKey.forEach(function (courseno) {
-									group.some(function (item) {
-										if (courseno == item.name) {
-											plugTools.LoadData({
-												path: "Comm/" + courseno + ".json",
-												success: function (response) {
-													plugTools.Logger(response.data[0], 0)
-													item.children.forEach(function (rec) {
-														rec.set("spname", response.data.comm);
-													});
-												},
-												failure: fail
+									let item = group.find(function (item) { return courseno == item.name });
+									plugTools.LoadData({
+										path: "Comm/" + courseno + ".json",
+										success: function (response) {
+											plugTools.Logger(response.data[0], 0)
+											item.children.forEach(function (rec) {
+												rec.set("comment", response.data.comm);
 											});
-											return true;
-										} else {
-											return false;
-										}
+										},
+										failure: fail
 									});
 								});
 							},
