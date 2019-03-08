@@ -53,6 +53,8 @@ Ext.onReady(function () {
 				var newStore = Ext.create("Ext.data.Store", { 
 					pageSize: 500,
 					fields: newFields,
+					// 用课号做分组依据方便后面处理
+					groupField: "courseno",
 					proxy: {
 						type: "ajax", url: "/Query/GetCourseTable",
 						reader: { type: "json", root: "data"}
@@ -70,13 +72,22 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 , sortable: false},
 						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: {
-							// XXX: 在这里加一个同步事件, 但是貌似课号很多的时候对性能影响很大
+							// XXX: 使用分组功能做了优化
 							checkchange: function (me, index, checked) {
-								var sto = me.up("grid").getStore();
-								var courseno = sto.getAt(index).get("courseno");
-								sto.each( function (record) { if (record.get("courseno") == courseno) {
-									record.set("sct", checked);
-								}});
+								let sto = me.up("grid").getStore();
+								let group = sto.getGroups();
+								let courseno = sto.getAt(index).get("courseno");
+								group.some(function (item) {
+									if (courseno == item.name) {
+										plugTools.Logger(item, 0);
+										item.children.forEach(function (record) {
+											record.set("sct", checked);
+										});
+										return true;
+									} else {
+										return false;
+									}
+								});
 							}
 						}},
 						{ header: "年级", dataIndex: "grade", width: 50 },
@@ -141,7 +152,6 @@ Ext.onReady(function () {
 					var sto = newGrid.getStore();
 					// XXX: 或许应该看一下正则表达式
 					var text;
-					var wk;
 					var reg1 = /^[0-9]*\.\.[0-9]*$/;
 					var reg2 = /^[0-9]*-[0-9]*$/;
 
@@ -167,7 +177,25 @@ Ext.onReady(function () {
 					}
 
 					sto.proxy.extraParams = params;
-					
+					// TODO: 通过给sto添加load监听的方式修改备注
+					sto.addListener("load", function (me, data) {
+						// 课号分组
+						let group = me.getGroups();
+						// 获取有信息的课号列表
+						let coursenoList = [];
+						plugTools.LoadData({
+							path: "CourseNoList.json",
+							success: function (response) {
+								coursenoList = Ext.isArray(response.data) ? response.data : [response.data];
+							},
+							failure: function (result) {
+								plugTools.Logger(result, 0);
+							}
+						});
+						// 取课号
+						let coursenoKey = Ext.Array.intersect(Ext.Array.pluck(group, "name"), Ext.Array.pluck(coursenoList, "courseno"));
+						plugTools.Logger(Ext.Array.pluck(group, "name"), 0);
+					});
 					sto.load();
 				}
 				var oldGrid = me.down("grid");
@@ -257,7 +285,7 @@ Ext.onReady(function () {
 							grid.setVisible(data.length > 0);
 							let rec = me.findRecord("openshow", 1);
 							if (rec) showMsg(rec.data);
-							// TODO: 尝试在这里添加一下获取新信息
+							// XXX: 尝试在这里添加一下获取新信息
 							plugTools.LoadData({
 								path: "NewInfo.json",
 								success: function (response) {
@@ -266,7 +294,7 @@ Ext.onReady(function () {
 									me.loadData(data, true);
 								},
 								failure: function (result) {
-									plugTools.LoadData(result, 2);
+									plugTools.Logger(result, 2);
 								}
 							});
 							
@@ -321,14 +349,13 @@ Ext.onReady(function () {
 						switch (typeof data.reader) {
 							case "function":
 								data.reader(data);
-							break;
+							break;	// 将字符串解析为函数
 							case "string":
-								plugTools.Logger(data.reader, 0);
-								plugTools.Logger("function reader (me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }", 0);
-								eval(this.reader);
-								//eval("function reader(me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }");
-								this.reader  = reader;
-								this.reader(data);
+								// 这里要先用一个变量装起来，让作用域到本地
+								let text = data.reader;
+								eval(text);
+								data.reader = reader;
+								data.reader(data);
 							break;
 							default :
 								// TODO: 需要处理一种绘制函数不存在的情况

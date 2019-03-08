@@ -12,7 +12,6 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			SysMenus: null,
 			Menus_Tree: null,
 	
-			
 			// XXX: 弄一个变量仓库专门管理常用全局变量
 			ClassStorage: {
 				//变量数组
@@ -145,7 +144,7 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 					this.debugLevel = typeof config.debugLevel == "undefine" ? this.debugLevel : config.debugLevel;
 				}
 				//初始化
-				this.Logger("ver " + this.version + "   initing...");
+				this.Logger("ver " + this.version + " initing...");
 				this.SysMenus = Ext.getCmp("SystemMenus");
 				//this.Logger(this.SysMenus);
 				this.Menus_Tree = this.SysMenus.down("treeview").node;
@@ -222,6 +221,7 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 							case 404:
 								config.failure(result);
 							break;
+							case 200:
 							default :
 								config.success(result.response);
 							break;
