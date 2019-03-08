@@ -34,7 +34,7 @@ Ext.onReady(function () {
 	};
 	// 创建工具
 	let plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
+	if (!plugTools.inited) plugTools.init();
 	
 	// 创建并应用修改
 	var CourseSetNew = {
@@ -190,6 +190,7 @@ Ext.onReady(function () {
 								// 取课号
 								let coursenoKey = Ext.Array.intersect(Ext.Array.pluck(group, "name"), Ext.Array.pluck(coursenoList, "courseno"));
 								plugTools.Logger(coursenoKey, 0);
+								
 								coursenoKey.forEach(function (courseno) {
 									let item = group.find(function (item) { return courseno == item.name });
 									plugTools.LoadData({
