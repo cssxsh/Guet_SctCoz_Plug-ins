@@ -183,18 +183,37 @@ Ext.onReady(function () {
 						let group = me.getGroups();
 						// 获取有信息的课号列表
 						let coursenoList = [];
+						function fail (result) {
+							plugTools.Logger(result, 0);
+						}
 						plugTools.LoadData({
 							path: "CourseNoList.json",
 							success: function (response) {
 								coursenoList = Ext.isArray(response.data) ? response.data : [response.data];
+								// 取课号
+								let coursenoKey = Ext.Array.intersect(Ext.Array.pluck(group, "name"), Ext.Array.pluck(coursenoList, "courseno"));
+								plugTools.Logger(coursenoKey, 0);
+								coursenoKey.forEach(function (courseno) {
+									group.some(function (item) {
+										if (courseno == item.name) {
+											item.children.forEach(function (rec) {
+												plugTools.LoadData({
+													path: "Comm/" + courseno + ".json",
+													success: function (response) {
+														rec.set("spname", response.data.comm);
+													},
+													failure: fail
+												});
+											});
+											return true;
+										} else {
+											return false;
+										}
+									});
+								});
 							},
-							failure: function (result) {
-								plugTools.Logger(result, 0);
-							}
+							failure: fail
 						});
-						// 取课号
-						let coursenoKey = Ext.Array.intersect(Ext.Array.pluck(group, "name"), Ext.Array.pluck(coursenoList, "courseno"));
-						plugTools.Logger(Ext.Array.pluck(group, "name"), 0);
 					});
 					sto.load();
 				}
