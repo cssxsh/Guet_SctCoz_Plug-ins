@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.0.0
+// @version      0.3.0.1
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -356,10 +356,8 @@ Ext.onReady(function () {
 								data.reader(data);
 							break;	// 将字符串解析为函数
 							case "string":
-								// 这里要先用一个变量装起来，让作用域到本地
-								let text = data.reader;
-								eval(text);
-								data.reader = reader;
+								// 这里要封到一个字符串里执行
+								eval(data.reader + "data.reader = reader;");
 								data.reader(data);
 							break;
 							default :
