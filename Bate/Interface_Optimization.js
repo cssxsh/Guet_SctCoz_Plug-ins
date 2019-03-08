@@ -76,7 +76,6 @@ Ext.onReady(function () {
 								var courseno = sto.getAt(index).get("courseno");
 								sto.each( function (record) { if (record.get("courseno") == courseno) {
 									record.set("sct", checked);
-									//console.log(record.set);
 								}});
 							}
 						}},
@@ -123,13 +122,7 @@ Ext.onReady(function () {
 						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show()
-					/*
-					if (ctb.store.data.length == 0) {
-						ctb.store.proxy.type = "jsonp"
-						ctb.store.proxy.url = "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.json";
-						ctb.store.load();
-					}
-					*/
+					
 					if (ctb.store.data.length == 0) {
 						ctb.store.loadData([
 							{"term": "2018-2019_2", "nodeno": "1", "nodename": "<font size=1>上午第一节</font></br>", "memo": "08:25-10:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": ""},
@@ -154,10 +147,8 @@ Ext.onReady(function () {
 
 					text = form.findField("startweek").getValue();
 					if (reg1.test(text)) {
-						//console.log("1");
 						[params.startweek, params.endweek] = getSplitArray(text, "..");
 					} else if (reg2.test(text)) {
-						//console.log("2");
 						[params.startweek, params.endweek] = getSplitArray(text, "-");
 					}
 
@@ -176,10 +167,8 @@ Ext.onReady(function () {
 					}
 
 					sto.proxy.extraParams = params;
-					//Ext.apply(sto, { fields: [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term","courseid","coment","studentcount","credithour","teachperiod","labperiod","copperiod","maxperson"] });
 					
 					sto.load();
-					//console.log(newGrid.id);
 				}
 				var oldGrid = me.down("grid");
 				var panel = oldGrid.up("panel");
@@ -272,7 +261,7 @@ Ext.onReady(function () {
 							plugTools.LoadData({
 								path: "NewInfo.json",
 								success: function (response) {
-									plugTools.Logger(response, 0);
+									// plugTools.Logger(response, 0);
 									let data = Ext.isArray(response.data) ? response.data : [response.data];
 									me.loadData(data, true);
 								},
@@ -296,7 +285,7 @@ Ext.onReady(function () {
 								"ntype": null,
 								"reader": function (me) {
 									Ext.create("Ext.window.Window", {
-										title: this.title, width: "40%", height:"40%", modal: true, resizable: true, layout: "fit",
+										title: me.title, width: "40%", height:"40%", modal: true, resizable: true, layout: "fit",
 										// items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: this.content.replace(/\n/g, "<br/>") }]
 										items: [{xtype: "form", autoScroll: true, frame: true, padding: "1", html: me.content.replace(/\n/g, "<br/>")}]
 									}).show();
@@ -316,7 +305,7 @@ Ext.onReady(function () {
 				// XXX: 重写显示新信息的方式
 				function showMsg(data) {
 					let id = data.id;
-					// TODO：之后这里的判断方式要修改
+					// TODO: 之后这里的判断方式要修改
 					if (data.operator != "插件") {
 						editfrm.load({
 							url: "/comm/getnews/" + id, 
@@ -335,8 +324,10 @@ Ext.onReady(function () {
 							break;
 							case "string":
 								plugTools.Logger(data.reader, 0);
-								data.reader = eval(data.reader);
-								data.reader(data);
+								eval(this.reader);
+								// eval("function reader(me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }");
+								this.reader  = reader;
+								this.reader(data);
 							break;
 							default :
 								// TODO: 需要处理一种绘制函数不存在的情况

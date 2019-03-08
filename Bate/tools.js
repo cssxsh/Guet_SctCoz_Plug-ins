@@ -100,7 +100,8 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			},
 			getNewListeners: function (id) {
 				//this.Logger(this.ClassStorage.Get("menu", id));
-				let Listeners = this.ClassStorage.Get("menu", id).listeners;
+				let menu = this.ClassStorage.Get("menu", id);
+				let Listeners = (menu == null) ? {} : menu.listeners;
 		
 				if (Listeners.activate == null) {
 					Listeners.activate = function (me, opts) {

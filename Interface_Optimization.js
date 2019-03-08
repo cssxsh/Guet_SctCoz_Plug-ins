@@ -124,13 +124,7 @@ Ext.onReady(function () {
 						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show()
-					/*
-					if (ctb.store.data.length == 0) {
-						ctb.store.proxy.type = "jsonp"
-						ctb.store.proxy.url = "https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/GetHourInfo.json";
-						ctb.store.load();
-					}
-					*/
+
 					if (ctb.store.data.length == 0) {
 						ctb.store.loadData([
 							{"term": "2018-2019_2", "nodeno": "1", "nodename": "<font size=1>上午第一节</font></br>", "memo": "08:25-10:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": ""},
