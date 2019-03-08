@@ -4,13 +4,13 @@
     "data": [
         { 
             "id": "info-1",
-            "title": "test",
-            "content": "test",
+            "title": "功能介绍",
+            "content": "简单介绍一下脚本所拥有的功能: </br>",
             "postdate": null,
             "operator": "插件",
             "ntype": null,
-            "reader": "function reader (me) { Ext.create('Ext.window.Window', { title: me.title, width: '40%', height:'40%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content.replace(/\\n/g, '<br/>')}] }).show(); }",
-            "showdate": "2019年03月08日",
+            "reader": "function reader (me) { Ext.create('Ext.window.Window', { title: me.title, width: '60%', height:'60%', modal: true, resizable: true, layout: 'fit', items: [{xtype: 'form', autoScroll: true, frame: true, padding: '1', html: me.content }] }).show(); }",
+            "showdate": "2019年03月09日",
             "chk": null,
             "openshow": 0,
             "isPluger": true
