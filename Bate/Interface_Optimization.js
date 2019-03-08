@@ -316,7 +316,8 @@ Ext.onReady(function () {
 				// XXX: 重写显示新信息的方式
 				function showMsg(data) {
 					let id = data.id;
-					if (!data.isPluger) {
+					// TODO：之后这里的判断方式要修改
+					if (data.operator != "插件") {
 						editfrm.load({
 							url: "/comm/getnews/" + id, 
 							success: function sc(a, b) {
@@ -328,13 +329,18 @@ Ext.onReady(function () {
 							}
 						})
 					} else {
-						if (typeof data.reader == "function") {
-							data.reader(data);
-						} else if (typeof data.reader == "string") {
-							data.reader = eval("(" + data.reader + ")");
-							data.reader(data);
-						} else {
-							// TODO: 需要处理一种绘制函数不存在的情况
+						switch (typeof data.reader) {
+							case "function":
+								data.reader(data);
+							break;
+							case "string":
+								plugTools.Logger(data.reader, 0);
+								data.reader = eval(data.reader);
+								data.reader(data);
+							break;
+							default :
+								// TODO: 需要处理一种绘制函数不存在的情况
+							break;
 						}
 					}
 				}
