@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.4.0.0
+// @version      0.4.0.1
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -606,9 +606,9 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			},
 			init: function (config) {
 				// config 参数赋值
-				if (typeof config != "undefine"){
+				if (typeof config != "undefined"){
 					// this.id = config.id|"plug";
-					this.debugLevel = typeof config.debugLevel == "undefine" ? this.debugLevel : config.debugLevel;
+					this.debugLevel = typeof config.debugLevel == "undefined" ? this.debugLevel : config.debugLevel;
 				}
 				//初始化
 				this.Logger("ver " + this.version + " initing...");
