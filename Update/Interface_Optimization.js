@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.0.5
+// @version      0.3.0.6
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -36,7 +36,7 @@ Ext.onReady(function () {
 	let plugTools = SctCoz.tools;
 	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
 	if (plugTools.ClassStorage.Get("value", "I_O_Col") == null) {
-		col = lugTools.ClassStorage.Get("value", "I_O_Col");
+		col = plugTools.ClassStorage.Get("value", "I_O_Col");
 	} else {
 		plugTools.ClassStorage.Save("value", col, "I_O_Col");
 	}
