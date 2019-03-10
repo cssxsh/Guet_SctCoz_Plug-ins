@@ -1,12 +1,12 @@
 //这是一个接口库
-//version 0.3.0
+//version 0.3.1
 if (typeof SctCoz == "undefined") {//防止重复定义
 	Ext.define("SctCoz.tools", {
 		config: {
 			id: "plug",
 		},
 		statics: {
-			version: "0.3.0",
+			version: "0.3.1",
 			inited: false,
 			debugLevel: 2,
 			SysMenus: null,

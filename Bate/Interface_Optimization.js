@@ -339,6 +339,7 @@ Ext.onReady(function () {
 						let data;
 
 						// 获取教师信息
+						// XXX: 写一个显示老师的方法，http://172.16.13.22/student/getstutable
 						Ext.Ajax.request({
 							url: "/student/getstutable",    
 							method: "GET",
@@ -371,7 +372,6 @@ Ext.onReady(function () {
 						f.findField("CompulsoryCredit").setValue(Compulsory);
 						f.findField("ElectiveCredits").setValue(Elective);
 						f.findField("GeneralCredits").setValue(General);
-						// TODO: 写一个显示老师的方法，http://172.16.13.22/student/getstutable
 					});
 					sto.load();
 				}
@@ -396,7 +396,7 @@ Ext.onReady(function () {
 			}
 		});
 	});
-	// FIXME: 首页的情况比较特殊这里特殊处理
+	// FIXME: 首页的情况比较特殊，这里特殊处理
 	Ext.getCmp("First").close();
 	panel.add({
 		id: "First",
