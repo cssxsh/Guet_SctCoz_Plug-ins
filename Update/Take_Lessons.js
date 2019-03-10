@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.4.0.1
+// @version      0.4.0.5
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -36,9 +36,13 @@ Ext.onReady(function () {
 	};
 	// 创建工具
 	let plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init();
+	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
+	if (plugTools.ClassStorage.Get("value", "T_L_Col") == null) {
+		col = lugTools.ClassStorage.Get("value", "T_L_Col");
+	} else {
+		plugTools.ClassStorage.Save("value", col, "T_L_Col");
+	}
 
-	plugTools.ClassStorage.Save("value", col, "T_L_Col");
 	var StuSctNew = {
 		action: "StuSct",
 		text: "选课",
@@ -60,7 +64,6 @@ Ext.onReady(function () {
 	plugTools.menuChange(StuSctNew);
 	plugTools.menuChange(StuSctCxNew);
 });
-
 function Rreplace_StuSct (module, col) {
 	//判断模块是否符合
 	let scttype = "";
@@ -474,7 +477,7 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			id: "plug",
 		},
 		statics: {
-			version: "0.3.0",
+			version: "0.3.1",
 			inited: false,
 			debugLevel: 2,
 			SysMenus: null,
