@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.0.6
+// @version      0.3.1.0
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -206,7 +206,7 @@ Ext.onReady(function () {
 					ctb.render(panView.body, gRec);
 				}
 				function queryStore() {
-					let form = me.down("fieldset").up("panel").getForm();
+					let form = qryfrm.up("panel").getForm();
 					let params = form.getValues();
 					let sto = newGrid.getStore();
 					let text;
@@ -308,8 +308,9 @@ Ext.onReady(function () {
 				plugTools.Logger(grid, 0);
 				grid.columns[3].width = 75;
 				grid.columns[4].maxWidth = 240;
-				grid.getStore().model.setFields([{name: "teacher", type: "string", defaultValue: "佚名"}, "xf","classno", "spno","spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
+				grid.getStore().model.setFields([{name: "teacherno", type: "string", defaultValue: ""}, {name: "teacher", type: "string", defaultValue: "佚名"}, "xf","classno", "spno","spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师", dataIndex: "teacher", width: 100 }));
+				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师号", dataIndex: "teacherno", width: 100 , hidden: true}));
 				// 修改 fieldset
 				let field = me.down("fieldset");
 				let Label = [
@@ -372,10 +373,115 @@ Ext.onReady(function () {
 				}
 			}
 		}
-	}
+	};
+	var StuPlanNew = {
+		action: "StuPlan",
+		text: "已选课程",
+		id: "StuPlan",
+		listeners: {
+			add: function (me, opt) {
+				// 创建新的qryfrm
+				let dptSto =Ext.data.StoreManager.lookup("dptSto");
+        		let tmSto = Ext.data.StoreManager.lookup("xqSto");
+				let spSto = Ext.data.StoreManager.lookup("spSto");
+				let tpAry = [[0, '百分制'], [1, '五级制'], [2, '二级制']];
+				let sctDptListeners = {
+					select: function (cmb, rec) {
+						let dpt = rec[0].data.dptno;
+						spSto.clearFilter();
+						spSto.filter("dptno", new RegExp("^" + dpt + "$"));
+						qryfrmNew.getForm().findField("spno").setValue("");
+					},
+					change: function (me, newValue, oldValue) {
+						if (oldValue == null) {
+							spSto.filter("dptno", new RegExp("^" + newValue + "$"));
+						}
+					}
+				};
+				function queryStore() {
+					let sto = me.down("grid").getStore();
+					sto.proxy.extraParams = qryfrmNew.getForm().getValues();
+					sto.load();
+				}
+				var qryfrmNew = Ext.create("Edu.view.QueryForm", {
+					url: "/student/StuInfo",
+					labelWidth: 60, 
+					region: "north",
+            		argcols: [
+						{ xtype: "termcombo", store: tmSto, allowBlank: false, labelWidth:30, value: getTerm()[1] }, 
+						{ xtype: "gradecombo", labelWidth: 30, width:120, allowBlank: false, size: 6},
+						{ xtype: "dptcombo", store: dptSto, fieldLabel: "开课学院", editable: false, listeners: sctDptListeners}, 
+						{ xtype: "kscombo", store: spSto, width: 240, allowBlank: false },
+						{ xtype: 'combo', store: [[0,'执行计划'],[1,'培养计划']], name: 'plan', fieldLabel: "计划选择", queryMode: "local", value: 0, editable: false, blankText: "请选择学院"},
+						{ margin: "0 3", xtype: "button", text: "查询", handler: queryStore}
+					]
+				});
+				qryfrmNew.load()
+				
+				// 创建新grid
+				let sto = Ext.create("Ext.data.Store", {
+					fields: ["term", "spno", "grade", "courseid", "cname", "tname", "examt", "xf", "llxs", "syxs", "qtxs", "sjxs", "type", "mustsct", "xjcl", "comm"],
+					proxy: {
+						url: "/Query/GetCoursePlan",
+						type: "ajax",
+						reader: { 
+							type: "json", 
+							root: "data" 
+						}
+					}
+				});
+				var gridNew = Ext.create("Edu.view.ShowGrid", {
+					region: "center",
+					store: sto,
+            		columns: [
+                		{ header: "序号", xtype: "rownumberer", width: 35 },
+                		{ header: "学期", dataIndex: "term", width: 90 },
+                		{ header: "专业", dataIndex: "spno", width: 160, renderer: function (v) { return spSto.findRecord("spno", v).data.spname; } },
+                		{ header: "年级", dataIndex: "grade", width: 40 },
+                		{ header: "课程代号", dataIndex: "courseid", width: 90 },
+                		{ header: "课程名称", dataIndex: "cname", minWidth: 160},
+						{ header: "课程性质", dataIndex: "tname", width: 100 }, 
+						{ header: "考核<br/>方式", dataIndex: "examt", width: 40 },
+                		{ header: "学分", dataIndex: "xf", width: 40},
+                		{ header: "理论<br/>学时", dataIndex: "llxs", width: 40},
+               	 		{ header: "实验<br/>学时", dataIndex: "syxs", width: 40},
+                		{ header: "上机<br/>学时", dataIndex: "qtxs", width: 40},
+                		{ header: "实践<br/>学时", dataIndex: "sjxs", width: 40},
+                		{ header: "成绩类型", dataIndex: "type", width: 80, renderer: function (v) { return tpAry[v][1]; } },
+                		{ header: "应选课", dataIndex: "mustsct", xtype: "checkcolumn", width: 60 },
+                		{ header: "学籍<br/>处理", dataIndex: "xjcl", xtype: "checkcolumn", width: 40},
+                		{ header: "备注", dataIndex: "comm", width: 60, flex: .6}
+            		],
+					tbar:[
+						{ xtype: "button", text: "打印", formBind: true, iconCls: "print", handler: printGrid },
+						{ xtype: "button", text: "导出Excel", formBind: true, iconCls: "excel", handler: expandGrid }
+					]
+				});
+				function printGrid (me, opt) {
+					var grid = me.up("grid");
+					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
+					Ext.ux.grid.Printer.print(grid);
+				}
+				function expandGrid (me, opt) {
+					var grid = me.up("grid");
+					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
+					Ext.ux.grid.Printer.ToExcel(grid);
+				}
+
+				// 修改组件
+				let pan = me.down("panel");
+				pan.down("queryform").close();
+				pan.add(qryfrmNew);
+				pan.down("grid").close();
+				pan.add(gridNew);
+			
+			}
+		}
+	};
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
+	plugTools.menuChange(StuPlanNew);
 	plugTools.ClassStorage.Save("value", col, "I_O_Col");
 	let panel = Ext.getCmp("content_panel");
 	panel.addListener("add", function () {

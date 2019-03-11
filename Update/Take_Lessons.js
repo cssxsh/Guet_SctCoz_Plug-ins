@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.4.0.6
+// @version      0.4.1.0
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -86,12 +86,19 @@ function Rreplace_StuSct (module, col) {
 
 	var tmSto = Ext.data.StoreManager.lookup("xqSto");
 	var spSto = Ext.create("Edu.store.Spinfo");
-	function sctDpt(cmb, rec) {
-		var dpt = rec[0].data.dptno;
-		spSto.clearFilter();
-		spSto.filter("dptno", new RegExp("^" + dpt + "$"));
-		qryfrm.getForm().findField("spno").setValue("");
-	}
+	let sctDptListeners = {
+		select: function (cmb, rec) {
+			let dpt = rec[0].data.dptno;
+			spSto.clearFilter();
+			spSto.filter("dptno", new RegExp("^" + dpt + "$"));
+			qryfrmNew.getForm().findField("spno").setValue("");
+		},
+		change: function (me, newValue, oldValue) {
+			if (oldValue == null) {
+				spSto.filter("dptno", new RegExp("^" + newValue + "$"));
+			}
+		}
+	};
 	var qryfrm = Ext.create("Edu.view.QueryForm",{
 		url: "/student/StuInfo",
 		labelWidth: 60,
@@ -113,7 +120,7 @@ function Rreplace_StuSct (module, col) {
 			store: dptSto,
 			fieldLabel: "开课学院",
 			editable: false,
-			listeners: {select: sctDpt}
+			listeners: sctDptListeners
 		}, {
 			xtype: "kscombo",
 			store: spSto,
