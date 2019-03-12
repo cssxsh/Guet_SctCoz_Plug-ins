@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.4.1.0
+// @version      0.4.1.5
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -36,9 +36,9 @@ Ext.onReady(function () {
 	};
 	// 创建工具
 	let plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
+	if (!plugTools.inited) plugTools.init();
 	if (plugTools.ClassStorage.Get("value", "T_L_Col") == null) {
-		col = lugTools.ClassStorage.Get("value", "T_L_Col");
+		col = plugTools.ClassStorage.Get("value", "T_L_Col");
 	} else {
 		plugTools.ClassStorage.Save("value", col, "T_L_Col");
 	}

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.1.0
+// @version      0.3.5.0
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -27,7 +27,6 @@
 // 启动接口
 Ext.onReady(function () {
 	// 一些参数
-	// TODO: 既然GM的保存是直接保存到json文件, 那么就应该修改定义获取col的方式
 	let col = {
 		ver: "0.3",			//主要版本号
 		stid_hide: false,	//学号参数是否隐藏
@@ -309,7 +308,8 @@ Ext.onReady(function () {
 			add: function (me, opt) {
 				// 修改 Grid
 				let grid = me.down("showgrid");
-				plugTools.Logger(grid, 0);
+				let sto = grid.getStore();
+				// plugTools.Logger(grid, 0);
 				grid.columns[3].width = 75;
 				grid.columns[4].maxWidth = 240;
 				grid.getStore().model.setFields([{name: "teacherno", type: "string", defaultValue: ""}, {name: "teacher", type: "string", defaultValue: "佚名"}, "xf","classno", "spno","spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
@@ -317,6 +317,7 @@ Ext.onReady(function () {
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师号", dataIndex: "teacherno", width: 100 , hidden: true}));
 				// 修改 fieldset
 				let field = me.down("fieldset");
+				let form = me.down("queryform").getForm();
 				let Label = [
 					{ name: "TotalCredits", fieldLabel: "总计学分", width: 100, labelWidth: 60, editable: false, value: "???"},
 					{ name: "CompulsoryCredit", fieldLabel: "必修学分", width: 100, labelWidth: 60, editable: false, value: "???"},
@@ -324,61 +325,61 @@ Ext.onReady(function () {
 					{ name: "GeneralCredits", fieldLabel: "通识学分", width: 100, labelWidth: 60, editable: false, value: "???"},
 				];
 				field.add(Label);
-				field.down("button").handler = function (button, opt) {
-					let f = me.down("queryform").getForm();
-					let sto = me.down("grid").getStore();
-					sto.proxy.extraParams = f.getValues();
+				field.down("button").handler = function (me, opt) {
+					sto.proxy.extraParams = form.getValues();
 					delete sto.proxy.extraParams.TotalCredits;
 					delete sto.proxy.extraParams.CompulsoryCredit;
 					delete sto.proxy.extraParams.ElectiveCredits;
 					delete sto.proxy.extraParams.GeneralCredits;
-					sto.addListener("load", function (me, opt) {
-						let Total = 0;
-						let Compulsory = 0;
-						let Elective = 0;
-						let General = 0;
-						let data;
-
-						// 获取教师信息
-						// XXX: 写一个显示老师的方法，http://172.16.13.22/student/getstutable
-						Ext.Ajax.request({
-							url: "/student/getstutable",    
-							method: "GET",
-							dataType: "json",
-							async: false,
-							params: {term: f.getValues().term},
-							success: function(response, opts) {
-								// plugTools.Logger(response, 0);
-								data = Ext.decode(response.responseText).data;
-							}, 
-							failure: function(response, opts) {
-								plugTools.Logger(response, 0);
-							}
-						});
-						sto.each(function (rec) {
-							// 计算学分
-							let Credit = parseFloat(rec.data.xf)
-							let item;
-							Total += Credit;
-							Compulsory += rec.data.courseid.charAt(0) == "B" ? Credit : 0;
-							Elective += rec.data.courseid.charAt(0) == "X" ? Credit : 0;
-							Elective += rec.data.courseid.charAt(0) == "R" ? Credit : 0;
-							General += rec.data.courseid.charAt(0) == "T" ? Credit : 0;
-							item = data.find(function (i) { return i.courseno == rec.data.courseno;});
-							rec.set("teacher", item.name);
-							rec.set("teacherno", item.teacherno);
-							// plugTools.Logger(item.teacherno, 0);
-							// 处理单元格左上角小红框
-							rec.commit();
-							return true;
-						});
-						f.findField("TotalCredits").setValue(Total);
-						f.findField("CompulsoryCredit").setValue(Compulsory);
-						f.findField("ElectiveCredits").setValue(Elective);
-						f.findField("GeneralCredits").setValue(General);
-					});
 					sto.load();
 				}
+				// 添加新信息
+				grid.getStore().addListener("load", function (me, opt) {
+					let Total = 0;
+					let Compulsory = 0;
+					let Elective = 0;
+					let General = 0;
+
+					// 获取教师信息
+					// XXX: 写一个显示老师的方法，http://172.16.13.22/student/getstutable
+					Ext.Ajax.request({
+						url: "/student/getstutable",    
+						method: "GET",
+						dataType: "json",
+						params: { 
+							term: form.getValues().term 
+						},
+						success: function(response, opts) {
+							// plugTools.Logger(response, 0);
+							let data = Ext.decode(response.responseText).data;
+									
+							sto.each(function (rec) {
+								// 计算学分
+								let Credit = parseFloat(rec.data.xf)
+								let item;
+								Total += Credit;
+								Compulsory += rec.data.courseid.charAt(0) == "B" ? Credit : 0;
+								Elective += rec.data.courseid.charAt(0) == "X" ? Credit : 0;
+								Elective += rec.data.courseid.charAt(0) == "R" ? Credit : 0;
+								General += rec.data.courseid.charAt(0) == "T" ? Credit : 0;
+								item = data.find(function (i) { return i.courseno == rec.data.courseno;});
+								rec.set("teacher", item.name);
+								rec.set("teacherno", item.teacherno);
+								// plugTools.Logger(item.teacherno, 0);
+								// 处理单元格左上角小红标
+								rec.commit();
+								return true;
+							});
+							form.findField("TotalCredits").setValue(Total);
+							form.findField("CompulsoryCredit").setValue(Compulsory);
+							form.findField("ElectiveCredits").setValue(Elective);
+							form.findField("GeneralCredits").setValue(General);
+						}, 
+						failure: function(response, opts) {
+							plugTools.Logger(response, 0);
+						}
+					});
+				});
 			}
 		}
 	};
@@ -443,7 +444,7 @@ Ext.onReady(function () {
 					store: sto,
             		columns: [
                 		{ header: "序号", xtype: "rownumberer", width: 35 },
-                		{ header: "学期", dataIndex: "term", width: 90 },
+                		{ header: "学期", dataIndex: "term", width: 120 , renderer: function (v) { return tmSto.findRecord("term", v).data.termname; } },
                 		{ header: "专业", dataIndex: "spno", width: 160, renderer: function (v) { return spSto.findRecord("spno", v).data.spname; } },
                 		{ header: "年级", dataIndex: "grade", width: 40 },
                 		{ header: "课程代号", dataIndex: "courseid", width: 90 },
@@ -490,7 +491,6 @@ Ext.onReady(function () {
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
 	plugTools.menuChange(StuPlanNew);
-	plugTools.ClassStorage.Save("value", col, "I_O_Col");
 	// FIXME: 这里没有用通用方法，所以之后可能要把这种批量处理情况加入SctCoz.tools的处理中
 	let panel = Ext.getCmp("content_panel");
 	panel.addListener("add", function () {
