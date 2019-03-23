@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      0.3.5.0
+// @version      3.5.7
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -13,6 +13,7 @@
 // @license      MIT
 // @run-at       document-end
 // @connect      raw.githubusercontent.com
+// @connect      experiment.guet.edu.cn
 // @grant        GM_xmlhttpRequest
 // @grant		 GM_deleteValue
 // @grant		 GM_listValues
@@ -28,7 +29,7 @@
 Ext.onReady(function () {
 	// 一些参数
 	let col = {
-		ver: "0.3",			//主要版本号
+		ver: "3.5",			//主要版本号
 		stid_hide: false,	//学号参数是否隐藏
 		sct_hide: false,	//已选控制是否隐藏
 	};
@@ -78,61 +79,47 @@ Ext.onReady(function () {
 					autoLoad: false,
 					listeners: {
 						load: function (me, data) {
+							function fail (result) {
+								plugTools.Logger(result, 2, "By [Get info of courses]"); 
+							};
 							// 课号分组
-							let gkeys = [];
+							me.GroupsByNo.clear();
 							me.each(function (rec) {
-								me.GroupsByNo.save(rec);
-								gkeys.push(rec.data.courseno);
+								key = rec.data.courseno;
+								if (me.GroupsByNo.containsKey(key)) {
+									let group = me.GroupsByNo.get(key);
+									group.push(rec); // 返回值是新的数组长度
+									me.GroupsByNo.replace(key, group); 
+								} else {
+									me.GroupsByNo.add(key, [rec]);
+								}
 							});
-
 							// 获取有信息的课号列表
 							let coursenoList = [];
-							function fail (result) {
-								plugTools.Logger(result, 0);
-							}
 							plugTools.LoadData({
 								path: "CourseNoList.json",
 								success: function (response) {
 									coursenoList = Ext.isArray(response.data) ? response.data : [response.data];
-									// 取课号
-									let coursenoKey = Ext.Array.intersect(Ext.Array.union(gkeys), Ext.Array.pluck(coursenoList, "courseno"));
-									plugTools.Logger(coursenoKey, 0);
-									coursenoKey.forEach(function (courseno) {
-										let group = me.GroupsByNo.get(courseno);
-										plugTools.LoadData({
-											// TODO: 这里之后要修改
-											path: "Comm/" + courseno + ".json",
-											success: function (response) {
-												plugTools.Logger(response.data, 0);
-												group.forEach(function (rec) { rec.set("comment", response.data.comm); });
-											},
-											failure: fail
-										});
+									coursenoList.forEach(function (Info) {
+										let key = Info.courseno;
+										let group = me.GroupsByNo.get(key);
+										if (group != null) {
+											plugTools.LoadData({
+												path: Info.path,
+												success: function (response) {
+													group.forEach(function (rec) { rec.set("comment", response.data.comm); });
+												},
+												failure: fail
+											});
+										}
 									});
 								},
 								failure: fail
 							});
 						}
 					},
-					GroupsByNo: {
-						get: function (courseno) {
-							if (typeof this["NO_" + courseno] == "undefined") {
-								return null;
-							} else {
-								return this["NO_" + courseno]
-							}
-						}, 
-						save: function (rec) {
-							//plugTools.Logger(rec, 0);
-							if (typeof this["NO_" + rec.data.courseno] == "undefined") {
-								this["NO_" + rec.data.courseno] = [rec];
-							} else {
-								this["NO_" + rec.data.courseno].push(rec);
-							}
-						}
-					}
+					GroupsByNo: Ext.create("Ext.util.HashMap")
 				});
-				//newStore.fields = newFields;
 
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
@@ -143,11 +130,10 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40, sortable: false},
 						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: {
-							// XXX: 使用分组功能做了优化
 							checkchange: function (me, index, checked) {
 								let sto = me.up("grid").getStore();
-								let courseno = sto.getAt(index).get("courseno");
-								let Group = sto.GroupsByNo.get(courseno);
+								let key = sto.getAt(index).get("courseno");
+								let Group = sto.GroupsByNo.get(key);
 								Group.forEach(function (record) { record.set("sct", checked); });
 							}
 						}},
@@ -194,7 +180,7 @@ Ext.onReady(function () {
 						title: "课程表", width: "80%", height:"80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show()
-					
+					// 如果没有数据本地加载
 					if (ctb.store.data.length == 0) {
 						ctb.store.loadData([
 							{"term": "2018-2019_2", "nodeno": "1", "nodename": "<font size=1>上午第一节</font></br>", "memo": "08:25-10:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": ""},
@@ -208,74 +194,32 @@ Ext.onReady(function () {
 					ctb.render(panView.body, gRec);
 				}
 				function queryStore() {
-					let form = qryfrm.up("panel").getForm();
-					let params = form.getValues();
+					let params = qryfrm.up("panel").getForm().getValues();
 					let sto = newGrid.getStore();
-					// XXX: 或许应该看一下正则表达式
-					let text;
-					let reg1 = /^[0-9]*\.\.[0-9]*$/;
-					let reg2 = /^[0-9]*-[0-9]*$/;
-
-					text = form.findField("startweek").getValue();
-					if (reg1.test(text)) {
-						[params.startweek, params.endweek] = getSplitArray(text, "..");
-					} else if (reg2.test(text)) {
-						[params.startweek, params.endweek] = getSplitArray(text, "-");
-					}
-
-					text = form.findField("fromweek").getValue();
-					if (reg1.test(text)) {
-						[params.fromweek, params.toweek] = getSplitArray(text, "..");
-					} else if (reg2.test(text)) {
-						[params.fromweek, params.toweek] = getSplitArray(text, "-");
-					}
-
-					text = form.findField("startsequence").getValue();
-					if (reg1.test(text)) {
-						[params.startsequence, params.endsequence] = getSplitArray(text, "..");
-					} else if (reg2.test(text)) {
-						[params.startsequence, params.endsequence] = getSplitArray(text, "-");
-					}
+					// 或许应该看一下正则表达式
+					function Split(a,b) {
+						let text = params[a].toString();
+						let reg = /(^[0-9]*)|([0-9]*$)/g;
+						// plugTools.Logger(text.match(reg), 2, 'sss');
+						[params[a], params[b]] = text.match(reg);
+					};
+					Split("startweek", "endweek");
+					Split("fromweek", "toweek");
+					Split("startsequence", "endsequence");
+					params.tname = params.tname.trim();
+					params.courseno = params.courseno.trim();
+					params.courseid = params.courseid.trim();
+					params.cname = params.cname.trim();
 
 					sto.proxy.extraParams = params;
 					sto.load();
 				}
-				var oldGrid = me.down("grid");
-				var panel = oldGrid.up("panel");
-				var queryButton = me.down("fieldset").down("button");
+				let oldGrid = me.down("grid");
+				let panel = oldGrid.up("panel");
+				let queryButton = me.down("fieldset").down("button");
 				queryButton.handler = queryStore;
 				panel.remove(oldGrid);
 				panel.add(newGrid);
-				/*
-				//修正Grid功能
-				var grid = me.down("grid");
-				grid.columns.forEach(function (c) {
-					c.sortable = true;
-				});
-				grid.columns[2].width = 120;
-				var gridView = grid.getView();
-				gridView.enableTextSelection = true;
-				// -TODO: 为columns添加checkcolumn， 不过看样子要之接重写Grid
-				var p = Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 });
-				grid.headerCt.insert(1, Ext.create("Ext.grid.column.Column", { header: "有效", dataIndex: "enabled", xtype: "checkcolumn", editor: { xtype: "checkbox", inputValue: 1 } }));
-
-				//grid.headerCt.addPlugin(p);
-				//添加日程表功能
-				var ctb = Ext.create("Edu.view.coursetable");
-				var toolTbar = grid.down("toolbar");// 获取工具栏
-				toolTbar.add({ xtype: "button", text: "转为课表", formBind: true, icon: "/images/0775.gif", handler: openTimeTable});
-				function openTimeTable (me, opt) {
-					var grid = me.up("grid");
-					var gRec = grid.getStore().data.items;
-					var panView = Ext.create("Ext.panel.Panel", {layout: "fit", autoScroll: true, frame: true});
-					Ext.create("Ext.window.Window", {
-						title: "课程表",
-						width: "80%", height:"80%",modal: true, resizable: false, layout: "fit",
-						items: [panView]
-					}).show();
-					ctb.render(panView.body, gRec);
-				}
-				*/
 			},
 			activate: null
 		}
@@ -312,9 +256,10 @@ Ext.onReady(function () {
 				// plugTools.Logger(grid, 0);
 				grid.columns[3].width = 75;
 				grid.columns[4].maxWidth = 240;
-				grid.getStore().model.setFields([{name: "teacherno", type: "string", defaultValue: ""}, {name: "teacher", type: "string", defaultValue: "佚名"}, "xf","classno", "spno","spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
+				grid.getStore().model.setFields(["teacherno", "teacher", "xf","classno", "spno","spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师", dataIndex: "teacher", width: 100 }));
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师号", dataIndex: "teacherno", width: 100 , hidden: true}));
+				
 				// 修改 fieldset
 				let field = me.down("fieldset");
 				let form = me.down("queryform").getForm();
@@ -323,62 +268,77 @@ Ext.onReady(function () {
 					{ name: "CompulsoryCredit", fieldLabel: "必修学分", width: 100, labelWidth: 60, editable: false, value: "???"},
 					{ name: "ElectiveCredits", fieldLabel: "选修学分", width: 100, labelWidth: 60, editable: false, value: "???"},
 					{ name: "GeneralCredits", fieldLabel: "通识学分", width: 100, labelWidth: 60, editable: false, value: "???"},
+					{ name: "CourseFee", fieldLabel: "选课费", width: 120, labelWidth: 60, editable: false, value: "???"}
 				];
 				field.add(Label);
 				field.down("button").handler = function (me, opt) {
-					sto.proxy.extraParams = form.getValues();
-					delete sto.proxy.extraParams.TotalCredits;
-					delete sto.proxy.extraParams.CompulsoryCredit;
-					delete sto.proxy.extraParams.ElectiveCredits;
-					delete sto.proxy.extraParams.GeneralCredits;
+					sto.proxy.extraParams = { term: form.getValues().term, comm: form.getValues().comm};
 					sto.load();
 				}
+				
 				// 添加新信息
 				grid.getStore().addListener("load", function (me, opt) {
 					let Total = 0;
 					let Compulsory = 0;
 					let Elective = 0;
 					let General = 0;
+					let CourseFee = 0;
+					let data;
 
 					// 获取教师信息
-					// XXX: 写一个显示老师的方法，http://172.16.13.22/student/getstutable
 					Ext.Ajax.request({
 						url: "/student/getstutable",    
 						method: "GET",
 						dataType: "json",
-						params: { 
-							term: form.getValues().term 
-						},
-						success: function(response, opts) {
-							// plugTools.Logger(response, 0);
-							let data = Ext.decode(response.responseText).data;
-									
-							sto.each(function (rec) {
-								// 计算学分
-								let Credit = parseFloat(rec.data.xf)
-								let item;
-								Total += Credit;
-								Compulsory += rec.data.courseid.charAt(0) == "B" ? Credit : 0;
-								Elective += rec.data.courseid.charAt(0) == "X" ? Credit : 0;
-								Elective += rec.data.courseid.charAt(0) == "R" ? Credit : 0;
-								General += rec.data.courseid.charAt(0) == "T" ? Credit : 0;
-								item = data.find(function (i) { return i.courseno == rec.data.courseno;});
-								rec.set("teacher", item.name);
-								rec.set("teacherno", item.teacherno);
-								// plugTools.Logger(item.teacherno, 0);
-								// 处理单元格左上角小红标
-								rec.commit();
-								return true;
-							});
-							form.findField("TotalCredits").setValue(Total);
-							form.findField("CompulsoryCredit").setValue(Compulsory);
-							form.findField("ElectiveCredits").setValue(Elective);
-							form.findField("GeneralCredits").setValue(General);
-						}, 
-						failure: function(response, opts) {
-							plugTools.Logger(response, 0);
-						}
+						async: false,
+						params: { term: form.getValues().term },
+						success: function(response, opts) { data = Ext.Array.clone(Ext.decode(response.responseText).data); }, 
+						failure: function(response, opts) { plugTools.Logger(response, 2, "By [Get info of teachers]"); }
 					});
+							
+					sto.each(function (rec) {
+						// 计算学分, 选课费
+						let Credit = parseFloat(rec.data.xf)
+						let item = { name: "佚名", teacherno: "?" };
+						Total += Credit;
+						let c  = [rec.data.courseid.charAt(0), rec.data.courseid.charAt(1)];
+						switch (c[0]) {
+							case "B":
+								Compulsory += Credit;
+								CourseFee += Credit * (c[1] == "G" ? 80 : 120);
+							break;
+							case "X":
+							case "R":
+								Elective += Credit;
+								CourseFee += Credit * 120;
+							break;
+							case "T":
+								General += Credit;
+								CourseFee += Credit * 80;
+							break;
+							default:
+								//
+							break;
+						}
+
+						data.forEach(function (i, index) {
+							if (i.courseno == rec.data.courseno) {
+								item.name = i.name.toString();
+								item.courseno = i.courseno.toString();
+								data.splice(index, 1);
+							}
+						});
+						rec.set("teacher", item.name);
+						rec.set("teacherno", item.teacherno);
+						return true;
+					});
+					// 处理单元格左上角小红标, 即提交更改
+					sto.commitChanges();
+					form.findField("TotalCredits").setValue(Total);
+					form.findField("CompulsoryCredit").setValue(Compulsory);
+					form.findField("ElectiveCredits").setValue(Elective);
+					form.findField("GeneralCredits").setValue(General);
+					form.findField("CourseFee").setValue(CourseFee);
 				});
 			}
 		}
@@ -396,7 +356,7 @@ Ext.onReady(function () {
 				let tpAry = [[0, '百分制'], [1, '五级制'], [2, '二级制']];
 				let sctDptListeners = {
 					select: function (cmb, rec) {
-						let dpt = rec[0].data.dptno;
+						let dpt = rec[0].get("dptno");
 						spSto.clearFilter();
 						spSto.filter("dptno", new RegExp("^" + dpt + "$"));
 						qryfrmNew.getForm().findField("spno").setValue("");
@@ -444,22 +404,22 @@ Ext.onReady(function () {
 					store: sto,
             		columns: [
                 		{ header: "序号", xtype: "rownumberer", width: 35 },
-                		{ header: "学期", dataIndex: "term", width: 120 , renderer: function (v) { return tmSto.findRecord("term", v).data.termname; } },
+                		{ header: "学期", dataIndex: "term", width: 120, renderer: function (v) { return tmSto.findRecord("term", v).data.termname; } },
                 		{ header: "专业", dataIndex: "spno", width: 160, renderer: function (v) { return spSto.findRecord("spno", v).data.spname; } },
                 		{ header: "年级", dataIndex: "grade", width: 40 },
                 		{ header: "课程代号", dataIndex: "courseid", width: 90 },
-                		{ header: "课程名称", dataIndex: "cname", minWidth: 160},
+                		{ header: "课程名称", dataIndex: "cname", minWidth: 160 },
 						{ header: "课程性质", dataIndex: "tname", width: 100 }, 
 						{ header: "考核<br/>方式", dataIndex: "examt", width: 40 },
-                		{ header: "学分", dataIndex: "xf", width: 40},
-                		{ header: "理论<br/>学时", dataIndex: "llxs", width: 40},
-               	 		{ header: "实验<br/>学时", dataIndex: "syxs", width: 40},
-                		{ header: "上机<br/>学时", dataIndex: "qtxs", width: 40},
-                		{ header: "实践<br/>学时", dataIndex: "sjxs", width: 40},
+                		{ header: "学分", dataIndex: "xf", width: 40 },
+                		{ header: "理论<br/>学时", dataIndex: "llxs", width: 40 },
+               	 		{ header: "实验<br/>学时", dataIndex: "syxs", width: 40 },
+                		{ header: "上机<br/>学时", dataIndex: "qtxs", width: 40 },
+                		{ header: "实践<br/>学时", dataIndex: "sjxs", width: 40 },
                 		{ header: "成绩类型", dataIndex: "type", width: 80, renderer: function (v) { return tpAry[v][1]; } },
                 		{ header: "应选课", dataIndex: "mustsct", xtype: "checkcolumn", width: 60 },
                 		{ header: "学籍<br/>处理", dataIndex: "xjcl", xtype: "checkcolumn", width: 40},
-                		{ header: "备注", dataIndex: "comm", width: 60, flex: .6}
+                		{ header: "备注", dataIndex: "comm", width: 60, flex: .6 }
             		],
 					tbar:[
 						{ xtype: "button", text: "打印", formBind: true, iconCls: "print", handler: printGrid },
@@ -491,21 +451,21 @@ Ext.onReady(function () {
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
 	plugTools.menuChange(StuPlanNew);
-	// FIXME: 这里没有用通用方法，所以之后可能要把这种批量处理情况加入SctCoz.tools的处理中
+
 	let panel = Ext.getCmp("content_panel");
+	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 
 	panel.addListener("add", function () {
 		let lastTab = panel.items.last();
-		lastTab.addListener("add", function () {
-			// TODO: 这里用ExtJs ComponentQuery 组件选择器 重写一下
-			let grid = lastTab.down("grid");
-			if (grid != null) {
-				grid.columns.forEach(function (c) { c.sortable = true; });
-				let gridView = grid.getView();
+		lastTab.addListener("add", function (me, opt) {
+			let grids = Ext.ComponentQuery.query("#First > grid,showgrid");
+			grids.forEach(function (item) {
+				item.columns.forEach(function (c) { c.sortable = true; });
+				let gridView = item.getView();
 				gridView.enableTextSelection = true;
-			}
+			});
 		});
 	});
-	// FIXME: 首页的情况比较特殊，这里特殊处理
+	// FIXME: [2] <添加首页处理> {特殊处理应该交给tools}
 	Ext.getCmp("First").close();
 	panel.add({
 		id: "First",
@@ -514,13 +474,15 @@ Ext.onReady(function () {
 		closable: false, 
 		autoDestroy: true,
 		listeners: {
-			afterrender: function () {
+			afterrender: function (me, opt) {
 				Ext.QuickTips.init();
 				Ext.form.Field.prototype.MsgTarget = "side";
 				
 				// XXX: 重写加载新信息的方式
 				var gdSto = Ext.create("Edu.store.NewsInfo", {
 					autoLoad: true, 
+					// 添加了一个新的属性isPluger
+					fields: ["id", "title", "content", "postdate", "operator", "ntype", "reader", "showdate", "chk","openshow", "isPluger"],
 					listeners: {
 						"load": function (me, data) {
 							grid.setVisible(data.length > 0);
@@ -530,16 +492,14 @@ Ext.onReady(function () {
 							plugTools.LoadData({
 								path: "NewInfo.json",
 								success: function (response) {
-									// plugTools.Logger(response, 0);
 									let data = Ext.isArray(response.data) ? response.data : [response.data];
 									me.loadData(data, true);
 								},
 								failure: function (result) {
-									plugTools.Logger(result, 2);
+									plugTools.Logger(result, 2, "By [Get NewInfo]");
 								}
 							});
 							
-							// XXX: 添加一下必要的须知
 							me.loadData([{ 
 								"id": "info-0",
 								"title": "插件用户须知",
@@ -573,44 +533,40 @@ Ext.onReady(function () {
 
 				// XXX: 重写显示新信息的方式
 				function showMsg(data) {
+					function showdata(data) {
+						Ext.create("Ext.window.Window", {
+							title: data.title, width: "70%", height:"70%", modal: true, resizable: true, layout: "fit",
+							items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: data.content.replace(/\n/g, "<br/>") }]
+						}).show();
+					};
 					let id = data.id;
-					// TODO: 之后这里的判断方式要修改
-					if (data.operator != "插件") {
+					if (!data.isPluger) {
 						editfrm.load({
 							url: "/comm/getnews/" + id, 
 							success: function sc(a, b) {
-								var rc = b.result.data;
-								Ext.create("Ext.window.Window", {
-									title: rc.title, width: "70%", height:"70%", modal: true, resizable: true, layout: "fit",
-									items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: rc.content.replace(/\n/g, "<br/>") }]
-								}).show();
+								showdata(b.result.data)
 							}
 						})
 					} else {
 						switch (typeof data.reader) {
 							case "function":
 								data.reader(data);
-							break;	// 将字符串解析为函数
+							break;	
 							case "string":
-								// 这里要封到一个字符串里执行
-								eval(data.reader + "data.reader = reader;");
+								// 将字符串解析为函数,这里要封到一个字符串里执行
+								eval("data.reader = " + data.reader, this);
 								data.reader(data);
 							break;
-							default :
-								// TODO: 需要处理一种绘制函数不存在的情况
+							default:
+							showdata(data)
 							break;
 						}
 					}
-				}
+				};
 				var grid = Ext.create("Edu.view.ShowGrid",{
 					store: gdSto, region: "center", hidden: true, title: "公共信息",
-					columns: [{
-						xtype: "actioncolumn", width: 30, header: "查阅", icon: "/images/0775.gif", tooltip: "阅读",
-						handler: function (grid, rowIndex, colIndex) {
-							var rec = grid.getStore().getAt(rowIndex);
-							showMsg(rec.data);
-						}
-					},
+					columns: [
+						{ header: "查阅", xtype: "actioncolumn", width: 30, icon: "/images/0775.gif", tooltip: "阅读", handler: function (grid, rowIndex, colIndex) { var rec = grid.getStore().getAt(rowIndex); showMsg(rec.data); } },
 						{ header: "序号", xtype: "rownumberer", width: 40 },
 						{ header: "标题", dataIndex: "title", width: 400 },
 						{ header: "发布来源", dataIndex: "operator" },
@@ -623,8 +579,7 @@ Ext.onReady(function () {
 				});
 			
 				var pan = Ext.create("Edu.view.ShowPanel", { items:[grid] });
-				var tab = Ext.getCmp("First");
-				tab.add(pan);
+				me.add(pan);
 			}
 		}
 	});
