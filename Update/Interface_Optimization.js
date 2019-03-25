@@ -81,7 +81,7 @@ Ext.onReady(function () {
 							// 课号分组
 							me.GroupsByNo.clear();
 							me.each(function (rec) {
-								key = rec.data.courseno;
+								let key = rec.data.courseno;
 								if (me.GroupsByNo.containsKey(key)) {
 									me.GroupsByNo.get(key).push(rec);
 								} else {
