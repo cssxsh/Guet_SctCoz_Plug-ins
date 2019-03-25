@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.6.0
+// @version      3.6.1
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -83,9 +83,7 @@ Ext.onReady(function () {
 							me.each(function (rec) {
 								key = rec.data.courseno;
 								if (me.GroupsByNo.containsKey(key)) {
-									let group = me.GroupsByNo.get(key);
-									group.push(rec); // 返回值是新的数组长度
-									me.GroupsByNo.replace(key, group);
+									me.GroupsByNo.get(key).push(rec);
 								} else {
 									me.GroupsByNo.add(key, [rec]);
 								}
