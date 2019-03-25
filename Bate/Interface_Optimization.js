@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.0
+// @version      3.7.2
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -65,7 +65,32 @@ Ext.onReady(function () {
 				// 重写Grid
 				// FIXME: [8] <重写课程表格> {添加和规范化课程表格功能和格式} (教务自带的模块不够好用)
 				var ctb = Ext.create("Edu.view.coursetable");
+				//				var coursenoList = [];
 				let newFields = [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term", "courseid", "coment", "studentcount", "credithour", "teachperiod", "labperiod", "copperiod", "maxperson"];
+				let fail = function (result) {
+					plugTools.Logger(result, 2, "By [Get info of courses]");
+				};
+				let Checkchange = function (me, index, checked) {
+					let sto = me.up("grid").getStore();
+					let key = sto.getAt(index).get("courseno");
+					let Group = sto.GroupsByNo.get(key);
+					Group.forEach(function (record) { record.set("sct", checked); });
+				};
+				let ShowComm = function (grid, rowIndex, colIndex) {
+					let sto = grid.getStore();
+					let info = sto.getAt(rowIndex).get("comment");
+					plugTools.LoadData({
+						path: info.path,
+						success: function (response) {
+							let data = response.data;
+							Ext.create("Ext.window.Window", {
+								title: data.title||("课号：" + data.courseno), width: "40%", height: "40%", modal: true, resizable: true, layout: "fit",
+								items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: data.html||data.comm }]
+							}).show();
+						},
+						failure: fail
+					});
+				};
 				var newStore = Ext.create("Ext.data.Store", {
 					pageSize: 500,
 					fields: newFields,
@@ -78,38 +103,25 @@ Ext.onReady(function () {
 					autoLoad: false,
 					listeners: {
 						load: function (me, data) {
-							function fail(result) {
-								plugTools.Logger(result, 2, "By [Get info of courses]");
-							};
 							// 课号分组
 							me.GroupsByNo.clear();
 							me.each(function (rec) {
-								key = rec.data.courseno;
+								let key = rec.data.courseno;
 								if (me.GroupsByNo.containsKey(key)) {
-									let group = me.GroupsByNo.get(key);
-									group.push(rec); // 返回值是新的数组长度
-									me.GroupsByNo.replace(key, group);
+									me.GroupsByNo.get(key).push(rec);
 								} else {
 									me.GroupsByNo.add(key, [rec]);
 								}
 							});
 							// 获取有信息的课号列表
-							let coursenoList = [];
 							plugTools.LoadData({
 								path: "CourseNoList.json",
 								success: function (response) {
-									coursenoList = Ext.isArray(response.data) ? response.data : [response.data];
-									coursenoList.forEach(function (Info) {
+									(Ext.isArray(response.data) ? response.data : [response.data]).forEach(function (Info) {
 										let key = Info.courseno;
 										let group = me.GroupsByNo.get(key);
 										if (group != null) {
-											plugTools.LoadData({
-												path: Info.path,
-												success: function (response) {
-													group.forEach(function (rec) { rec.set("comment", response.data.comm); });
-												},
-												failure: fail
-											});
+											group.forEach(function (rec) { rec.set("comment", Info); });
 										}
 									});
 								},
@@ -119,7 +131,6 @@ Ext.onReady(function () {
 					},
 					GroupsByNo: Ext.create("Ext.util.HashMap")
 				});
-
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
 					width: "100%", height: "100%", minHeight: 400, layout: "fit",
@@ -128,16 +139,7 @@ Ext.onReady(function () {
 					store: newStore,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40, sortable: false },
-						{
-							header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: {
-								checkchange: function (me, index, checked) {
-									let sto = me.up("grid").getStore();
-									let key = sto.getAt(index).get("courseno");
-									let Group = sto.GroupsByNo.get(key);
-									Group.forEach(function (record) { record.set("sct", checked); });
-								}
-							}
-						},
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: { checkchange: Checkchange } },
 						{ header: "年级", dataIndex: "grade", width: 50 },
 						{ header: "专业", dataIndex: "spname", width: 120 },
 						{ header: "课程序号", dataIndex: "courseno", width: 80 },
@@ -155,7 +157,8 @@ Ext.onReady(function () {
 						{ header: "上机学时", dataIndex: "copperiod", width: 40 },
 						{ header: "可选人数", dataIndex: "maxperson", width: 40 },
 						{ header: "已选人数", dataIndex: "studentcount", width: 40 },
-						{ header: "备注", dataIndex: "comment", flex: 1 }
+						// TODO: [8] <添加一个查看> {添加的信息不马上加载} (由【查看】接管信息的显示)
+						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", renderer: function (v, m, r) { return r.data.comment != null ? ["查看"] : []; }, items: [{ handler: ShowComm }], flex: 1 }
 					],
 					tbar: [
 						{ xtype: "button", text: "打印", formBind: true, iconCls: "print", handler: printGrid },
@@ -508,7 +511,7 @@ Ext.onReady(function () {
 										"当前优化插件版本为：" + col.ver + "<br/><br/>" +
 										"当前插件仍处于未完成的测试阶段。<br/>" +
 										"如果插件有问题或者对插件有什么建议或意见请到以下链接反馈或发送邮件到以下邮箱：<br/>" +
-										"<a href='https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues' target='_blank'>https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues</a><br/>" + 
+										"<a href='https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues' target='_blank'>https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues</a><br/>" +
 										"<a href='mailto:cssxsh@gmail.com' target='_blank'>cssxsh@gmail.com</a><br/>"
 									,
 									postdate: null,
