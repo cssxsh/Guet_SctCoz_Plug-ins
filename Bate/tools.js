@@ -6,18 +6,18 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			id: "plug",
 		},
 		statics: {
-			version: "3.5.1",
+			version: "3.5.4",
 			inited: false,
 			debugLevel: 2,
 			SysMenus: null,
 			Menus_Tree: null,
-	
+
 			// XXX: 弄一个变量仓库专门管理常用全局变量
 			ClassStorage: {
 				//变量数组
 				NewMenus: [],
 				NewMenusIdList: [],
-		
+
 				//操作方法
 				Save: function (type, value, id) {
 					if (type == "menu") {
@@ -61,6 +61,7 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 				}
 			},
 			// 用来操作菜单的函数
+			// XXX: 这个部分需要重写
 			menuAdd: function (config) {
 				this.Logger(config.action + " add...");
 				let menu_config = {
@@ -81,8 +82,8 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			},
 			getNewListeners: function (id) {
 				let menu = this.ClassStorage.Get("menu", id);
-				let Listeners = (menu == null) ? {} : menu.listeners;
-		
+				let Listeners = (menu == null) ? {} : menu.listeners || { activate: null };
+
 				if (Listeners.activate == null) {
 					Listeners.activate = function (me, opts) {
 						if (me.barChange) {
@@ -93,28 +94,40 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 				}
 				return Listeners;
 			},
+			getNewSetting: function (id) {
+				let menu = this.ClassStorage.Get("menu", id);
+				if (menu == null) {
+					return { isAutoLoad: true };
+				} else {
+					return menu;
+				}
+			},
 			// 新的启动模块函数, 用来配合menuChange使用
-			newOpenTab: function (panel, id, text, actid) {
+			newOpenTab: function (URL, id, text, actid) {
 				let tabPanel = Ext.getCmp("content_panel");
-				let tabNodeId = tabPanel.down("[id=' + actid + ']");
-				let Listeners = SctCoz.tools.getNewListeners(actid);
-				if (!tabNodeId) {
+				let tabNodeId = tabPanel.down("#" + actid);
+				let newConfig = SctCoz.tools.getNewSetting(actid);
+				if (tabNodeId == null) {
 					tabPanel.add({
 						id: actid,
-						title: text,
+						title: newConfig.text || text,
 						layout: "fit",
 						closable: true,
 						childActId: actid,
 						barChange: false,
 						loader: {
-							url: panel,
+							url: URL,
 							loadMask: "请稍等...",
-							// FIXME: [5] <修改判断方式> {规范化} (添加一个新属性用于判断) 
-							autoLoad: id != actid,
+							autoLoad: newConfig.isAutoLoad,
 							scripts: true
 						},
-						listeners: Listeners
-					}).show();
+						listeners: newConfig.listeners
+					}).show().addListener("activate", function (me, opts) {
+						if (me.barChange) {
+							me.barChange = false;
+							me.loader.load();
+						}
+					});
 				}
 				else {
 					tabPanel.setActiveTab(tabNodeId);
@@ -122,16 +135,18 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			},
 			init: function (config) {
 				// config 参数赋值
-				if (typeof config != "undefined"){
+				if (typeof config != "undefined") {
 					// this.id = config.id|"plug";
 					this.debugLevel = typeof config.debugLevel == "undefined" ? this.debugLevel : config.debugLevel;
 				}
-				//初始化
+				// 初始化
 				this.Logger("ver " + this.version + " initing...");
 				this.SysMenus = Ext.getCmp("SystemMenus");
 				this.Menus_Tree = this.SysMenus.down("treeview").node;
-				//重载打开Tab的方法
+				// 重载打开Tab的方法
 				this.SysMenus.openTab = this.newOpenTab;
+				// 注册Store
+				Ext.create("SctCoz.SpInfo", { id: "spnoSto" })
 				this.inited = true;
 			},
 			// 写一些调试用组件
@@ -149,48 +164,48 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 				switch (level) {
 					case 0:
 						console.log("%o", info);
-					break;		// 过程记录
+						break;		// 过程记录
 					case 1:
 						prefix = "@: ";
 						style = "color: green;";
 						console.info("%c" + prefix + info, style);
-					break;		// 运行异常
+						break;		// 运行异常
 					case 2:
 						prefix = "$: ";
 						style = "color: blue; font-size: 12px";
 						console.groupCollapsed("%c" + prefix + hint, style);
 						console.warn(info);
 						console.groupEnd();
-					break;		// 轻微警告
+						break;		// 轻微警告
 					case 3:
 						prefix = "#: ";
 						style = "color: yellow; font-size: 24px";
 						console.groupCollapsed("%c" + prefix + hint, style);
 						console.debug(info);
 						console.groupEnd();
-					break;		// 严重错误
-					case 4:	
+						break;		// 严重错误
+					case 4:
 						prefix = "!: ";
 						style = "color: red; font-size: 48px";
 						console.groupCollapsed("%c" + prefix + hint, style);
 						console.error(info);
 						console.groupEnd();
-					break;
+						break;
 					case 5:		// 回滚代码
 						prefix = "作者是个菜鸡！！！： ";
 						style = "color: black; font-size: 96px";
 						console.group("%c" + prefix + hint, style);
 						console.error(info);
 						console.groupEnd();
-					break;
+						break;
 					case -1:
 					default:	// 特殊处理
 						prefix = "?: ",
-						style = "color: green;";
+							style = "color: green;";
 						console.groupCollapsed("%c" + prefix + hint, style);
 						console[way](info);
 						console.groupEnd();
-					break;
+						break;
 				}
 			},
 			// 修复了问题,原因是没有添加连接名单
@@ -200,15 +215,15 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 				let url = (isByGit) ? ("https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/" + config.path) : ("http://experiment.guet.edu.cn/upfile/" + config.path.replace(/\//g, "_") + ".rar");
 				GM_xmlhttpRequest({
 					// GET, HEAD, POST, 默认GET
-					method: config.method||"GET",
+					method: config.method || "GET",
 					// 数据选项， 仅在POST情况下生效
 					data: config.data,
 					// 默认加载path
-					url: config.url||url,
+					url: config.url || url,
 					// arraybuffer, blob, json， 默认json
-					responseType: config.type||"json",
+					responseType: config.type || "json",
 					// 延迟上限， 默认3000ms
-					outtime: config.timeout||3000,
+					outtime: config.timeout || 3000,
 					// 加载失败的情况
 					ontimeout: config.failure,
 					onerror: config.failure,
@@ -217,16 +232,33 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 						switch (result.status) {
 							case 404:
 								config.failure(result);
-							break;
+								break;
 							case 200:
-							default :
+							default:
 								config.success(result.response);
-							break;
+								break;
 						}
 					}
 				});
 			}
 		}
+	});
+	Ext.define("SctCoz.SpInfo", {
+		extend: "Ext.data.Store",
+		fields: ["spno", "dptno", "spname", "code", "used", { name: "text", convert: function (v, rec) { return rec.data.spno + " " + rec.data.spname; } }],
+		proxy: {
+			type: "ajax",
+			url: "/Comm/GetSpno",
+			reader: {
+				type: "json",
+				root: "data"
+			}
+		},
+		autoLoad: true,
+		sorters: [
+			{ property: "dptno", direction: "ASC" },
+			{ property: "spno", direction: "ASC" }
+		]
 	});
 }
 
@@ -238,8 +270,10 @@ menu_config = {
 	text: "text",
 	id: "id",
 	listeners: {
-		afterrender function (me, opt) {},		//一般为修改模块使用，模块启动后执行
-		activate: function (me, opt) {}		//一般为加载自定义模块使用，将覆盖原有加载方式，定义为空，则不覆盖
-	}
+		afterrender function (me, opt) {},
+		activate: function (me, opt) {},
+		add: function (me, opt) {}
+	},
+	isAutoLoad: false
 }
 */
