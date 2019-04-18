@@ -160,7 +160,6 @@ Ext.onReady(function () {
 						{ header: "上机学时", dataIndex: "copperiod", width: 40 },
 						{ header: "可选人数", dataIndex: "maxperson", width: 40 },
 						{ header: "已选人数", dataIndex: "studentcount", width: 40 },
-						// TODO: [8] <添加一个查看> {添加的信息不马上加载} (由【查看】接管信息的显示)
 						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", renderer: function (v, m, r) { return r.data.comment != null ? ["查看"] : []; }, items: [{ handler: ShowComm }], flex: 1 }
 					],
 					tbar: [
@@ -207,7 +206,9 @@ Ext.onReady(function () {
 					function Split(a, b) {
 						let text = params[a].toString();
 						let reg = /(^[0-9]*)|([0-9]*$)/g;
-						[params[a], params[b]] = text.match(reg);
+						let p = text.match(reg);
+						[params[a], params[b]] = (p.length = 1) ? ["", p[0]] : p;
+						// 修复bug
 					};
 					Split("startweek", "endweek");
 					Split("fromweek", "toweek");
