@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.4
+// @version      3.7.5
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -280,7 +280,8 @@ Ext.onReady(function () {
 					{ name: "CourseFee", fieldLabel: "总选课费", width: 120, labelWidth: 60, editable: false, value: "???" }
 				];
 				field.add(Label);
-				// TODO: [7] <消除学期锁定> {可以使学期为空}
+				// TO-DO: [7] <消除学期锁定> {可以使学期为空}
+				// TODO: [7] <构建专用仓库> {用于整合两个接口的信息的stroe}
 				// field.query('[name=term]').forEach( function (item) {
 				// 	item.allowBlank = true;
 				// });
@@ -335,6 +336,7 @@ Ext.onReady(function () {
 								//
 								break;
 						}
+						Total += Credit;
 						item.cost *= (rec.data.stype == "重修") ? 0.7 : 1.0;
 						CourseFee += item.cost;
 
@@ -365,7 +367,7 @@ Ext.onReady(function () {
 	};
 	let StuPlanNew = {
 		action: "StuPlan",
-		text: "已选课程",
+		text: "计划查询",
 		id: "StuPlan",
 		listeners: {
 			afterrender: function (me, opt) {
