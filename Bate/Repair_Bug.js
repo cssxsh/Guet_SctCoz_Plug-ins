@@ -180,7 +180,8 @@ Ext.onReady(function () {
                     store: dlSto,
                     columns: [
                         {
-                            xtype: "actionrendercolumn", header: "操作", width: 70, renderer: function (v, m, r) { return (r.data.zt == 0) ? ["提交", "删除"] : []; },
+                            xtype: "actionrendercolumn", header: "操作", width: 70, 
+                            renderer: function (v, m, r) { return (r.data.zt == 0) ? ["提交", "删除"] : []; },
                             items: [{
                                 handler: function (grid, rowIndex, colIndex) {
                                     let sto = grid.getStore();

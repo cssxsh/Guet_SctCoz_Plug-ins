@@ -48,7 +48,7 @@ Ext.onReady(function () {
 	// 创建修改并应用
 	var StuSctNew = {
 		action: "StuSct",
-		text: "选课",
+		text: "选课【插件】",
 		id: "StuSct",
 		listeners: {
 			afterrender: function (me, opt) { Rreplace_StuSct("StuSct", col, me) }
@@ -57,7 +57,7 @@ Ext.onReady(function () {
 	}
 	var StuSctCxNew = {
 		action: "StuSctCx",
-		text: "重学选课",
+		text: "重学选课【插件】",
 		id: "StuSctCx",
 		listeners: {
 			afterrender: function (me, opt) { Rreplace_StuSct("StuSctCx", col, me) }

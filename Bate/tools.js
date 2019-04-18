@@ -6,7 +6,7 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 			id: "plug",
 		},
 		statics: {
-			version: "3.5.4",
+			version: "3.5.6",
 			inited: false,
 			debugLevel: 2,
 			SysMenus: null,
@@ -61,19 +61,12 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 				}
 			},
 			// 用来操作菜单的函数
-			// XXX: 这个部分需要重写
 			menuAdd: function (config) {
-				this.Logger(config.action + " add...");
-				let menu_config = {
-					id: config.id,
-					action: config.id,
-					children: config.children,
-					controller: "Pluger",
-					leaf: true,
-					text: config.text,
-					type: "action"
-				};
-				this.Menus_Tree.appendChild(menu_config);
+				let Config = config;
+				this.Logger(Config.action + " add...");
+				this.Menus_Tree.store.addListener("load",function once (sto) {
+					sto.tree.root.appendChild(Config);
+				});
 				this.ClassStorage.Save("menu", config);
 			},
 			menuChange: function (config) {
