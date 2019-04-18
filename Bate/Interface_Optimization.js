@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.3
+// @version      3.7.4
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -261,11 +261,13 @@ Ext.onReady(function () {
 				// 修改 Grid
 				let grid = me.down("showgrid");
 				let sto = grid.getStore();
+				grid.columns[1].hidden = true;
 				grid.columns[3].width = 75;
 				grid.columns[4].maxWidth = 240;
 				grid.getStore().model.setFields(["teacherno", "teacher", "xf", "classno", "spno", "spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师", dataIndex: "teacher", width: 100 }));
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师号", dataIndex: "teacherno", width: 100, hidden: true }));
+				grid.headerCt.insert(9, Ext.create("Ext.grid.column.Column", { header: "选课费", dataIndex: "cost", width: 80 }));
 
 				// 修改 fieldset
 				let field = me.down("fieldset");
@@ -275,7 +277,7 @@ Ext.onReady(function () {
 					{ name: "CompulsoryCredit", fieldLabel: "必修学分", width: 100, labelWidth: 60, editable: false, value: "???" },
 					{ name: "ElectiveCredits", fieldLabel: "选修学分", width: 100, labelWidth: 60, editable: false, value: "???" },
 					{ name: "GeneralCredits", fieldLabel: "通识学分", width: 100, labelWidth: 60, editable: false, value: "???" },
-					{ name: "CourseFee", fieldLabel: "选课费", width: 120, labelWidth: 60, editable: false, value: "???" }
+					{ name: "CourseFee", fieldLabel: "总选课费", width: 120, labelWidth: 60, editable: false, value: "???" }
 				];
 				field.add(Label);
 				// TODO: [7] <消除学期锁定> {可以使学期为空}
@@ -288,6 +290,7 @@ Ext.onReady(function () {
 				}
 
 				// 添加新信息
+				// TODO: [8] <显示单门学费> {}
 				grid.getStore().addListener("load", function (me, opt) {
 					let Total = 0;
 					let Compulsory = 0;
@@ -311,37 +314,41 @@ Ext.onReady(function () {
 					sto.each(function (rec) {
 						// 计算学分, 选课费
 						let Credit = parseFloat(rec.data.xf)
-						let item = { name: "佚名", teacherno: "?" };
+						let item = { name: "佚名", teacherno: "?" , cost: 0};
 						Total += Credit;
 						let c = [rec.data.courseid.charAt(0), rec.data.courseid.charAt(1)];
 						switch (c[0]) {
 							case "B":
 								Compulsory += Credit;
-								CourseFee += Credit * (c[1] == "G" ? 80 : 120);
+								item.cost = Credit * (c[1] == "G" ? 80 : 120);
 								break;
 							case "X":
 							case "R":
 								Elective += Credit;
-								CourseFee += Credit * 120;
+								item.cost = Credit * 120;
 								break;
 							case "T":
 								General += Credit;
-								CourseFee += Credit * 80;
+								item.cost = Credit * 80;
 								break;
 							default:
 								//
 								break;
 						}
+						item.cost *= (rec.data.stype == "重修") ? 0.7 : 1.0;
+						CourseFee += item.cost;
 
 						data.forEach(function (i, index) {
 							if (i.courseno == rec.data.courseno) {
 								item.name = i.name.toString();
+								item.teacherno = i.teacherno.toString();
 								item.courseno = i.courseno.toString();
 								data.splice(index, 1);
 							}
 						});
 						rec.set("teacher", item.name);
 						rec.set("teacherno", item.teacherno);
+						rec.set("cost", item.cost);
 					});
 					// 处理单元格左上角小红标, 即提交更改
 					sto.commitChanges();

@@ -60,6 +60,7 @@ if (typeof SctCoz == "undefined") {//防止重复定义
 					}
 				}
 			},
+			// TODO: [8] <当前用户信息> {弄一个获取当前用户信息的store}
 			// 用来操作菜单的函数
 			menuAdd: function (config) {
 				let Config = config;
