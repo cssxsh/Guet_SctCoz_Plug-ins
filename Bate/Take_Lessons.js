@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.0
+// @version      4.7.1
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -158,13 +158,14 @@ Ext.onReady(function () {
 			argcols: [
 				{ xtype: "termcombo", store: tmSto, value: getTerm()[1], allowBlank: false, labelWidth: 30, readOnly: true },
 				{ xtype: "gradecombo", allowBlank: false, labelWidth: 30, width: 120, size: 6 },
-				{ xtype: "dptcombo", store: dptSto, fieldLabel: "开课学院", editable: false, listeners: sctDptListeners },
-				{ xtype: "kscombo", store: spSto, width: 240, allowBlank: false },
+				{ xtype: "dptcombo", fieldLabel: "开课学院", editable: false, listeners: sctDptListeners },
+				{ xtype: "kscombo", width: 240, allowBlank: false },
 				{ xtype: "hidden", fieldLabel: "选课类别", name: "stype", value: scttype },
 				{ xtype: "button", handler: queryStore, text: "查询", margin: "0 3", formBind: true }
 			]
 		});
-		qryfrm.load();
+		// TODO: [8] <查询默认加载>
+		qryfrm.getForm().setValues(getzt());
 		let Items = [{ handler: function (grid, rowIndex, colIndex) { let rec = grid.getStore().getAt(rowIndex); grid.getSelectionModel().select(rec); sctcno(rec); } }];
 		var grid = Ext.create("Edu.view.ShowGrid", {
 			store: setSto,
