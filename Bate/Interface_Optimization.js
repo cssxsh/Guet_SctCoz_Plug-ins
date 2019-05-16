@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.7
+// @version      3.7.8
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -68,7 +68,7 @@ Ext.onReady(function () {
 						items: [// xtype里已经封装好了store。
 							{ fieldLabel: '开课学期', labelWidth: 60, width: 180, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
 							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
-							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { select: sctDpt, change: changeDpt }}, 
+							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
 							{ fieldLabel: '周次',     labelWidth: 35, width: 100, name: 'startweek'}, 
 							{ fieldLabel: '星期',     labelWidth: 35, width: 100, name: 'fromweek'}, 
@@ -106,17 +106,14 @@ Ext.onReady(function () {
 					sto.proxy.extraParams = params;
 					sto.load();
 				}
-				function sctDpt(cmb, rec) {
-					let dpt = rec[0].data.dptno;
-					let spno = qryfrm.down("[xtype='kscombo']");
-					spno.getStore().clearFilter();
-					spno.getStore().filter('dptno', new RegExp('^'+dpt+'$'));
-					spno.setValue("");
-				}
 				function changeDpt(cmb, newValue, oldValue) {
+					let spno = qryfrm.down("[xtype='kscombo']");
 					if (newValue == "") {
-						let spno = qryfrm.down("[xtype='kscombo']");
 						spno.getStore().clearFilter();
+					} else {
+						spno.getStore().clearFilter();
+						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
+						spno.setValue("");
 					}
 				}
 				// 表格
@@ -405,29 +402,11 @@ Ext.onReady(function () {
 		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opt) {
-				// 创建新的qryfrm
-				let dptSto = Ext.data.StoreManager.lookup("dptSto");
+				// 获取Store
 				let tmSto = Ext.data.StoreManager.lookup("xqSto");
 				let spSto = Ext.data.StoreManager.lookup("spSto");
+				// 创建新的qryfrm
 				let tpAry = [[0, "百分制"], [1, "五级制"], [2, "二级制"]];
-				let sctDptListeners = {
-					select: function (cmb, rec) {
-						let dpt = rec[0].get("dptno");
-						spSto.clearFilter();
-						spSto.filter("dptno", new RegExp("^" + dpt + "$"));
-						qryfrmNew.getForm().findField("spno").setValue("");
-					},
-					change: function (me, newValue, oldValue) {
-						if (oldValue == null) {
-							spSto.filter("dptno", new RegExp("^" + newValue + "$"));
-						}
-					}
-				};
-				function queryStore() {
-					let sto = me.down("grid").getStore();
-					sto.proxy.extraParams = qryfrmNew.getForm().getValues();
-					sto.load();
-				}
 				var qryfrmNew = Ext.create("Edu.view.QueryForm", {
 					url: "/student/StuInfo",
 					labelWidth: 60,
@@ -435,14 +414,28 @@ Ext.onReady(function () {
 					argcols: [
 						{ xtype: "termcombo", allowBlank: false, labelWidth: 30, value: getTerm()[1] },
 						{ xtype: "gradecombo", labelWidth: 30, width: 120, allowBlank: false, size: 6 },
-						{ xtype: "dptcombo", listeners: sctDptListeners },
+						{ xtype: "dptcombo", listeners: {change: changeDpt} },
 						{ xtype: "kscombo", width: 240, allowBlank: false },
 						{ xtype: "combo", store: [[0, "执行计划"], [1, "培养计划"]], name: "plan", fieldLabel: "计划选择", queryMode: "local", value: 0, editable: false, blankText: "请选择学院" },
 						{ xtype: "button", text: "查询", margin: "0 3", handler: queryStore }
 					]
 				});
 				qryfrmNew.getForm().setValues(getzt());
-
+				function queryStore() {
+					let sto = me.down("grid").getStore();
+					sto.proxy.extraParams = qryfrmNew.getForm().getValues();
+					sto.load();
+				}
+				function changeDpt(cmb, newValue, oldValue) {
+					let spno = qryfrmNew.down("[xtype='kscombo']");
+					if (newValue == "") {
+						spno.getStore().clearFilter();
+					} else {
+						spno.getStore().clearFilter();
+						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
+						spno.setValue("");
+					}
+				}
 				// 创建新grid
 				let sto = Ext.create("Ext.data.Store", {
 					fields: ["pid", "term", "spno", "grade", "courseid", "cname", "tname", "examt", "xf", "llxs", "syxs", "qtxs", "sjxs", "type", "mustsct", "xjcl", "comm"],
@@ -510,7 +503,7 @@ Ext.onReady(function () {
 		controller: "Plug-in",
 		id: "LabSctNew",
 		leaf: true,
-		text: "实验选课",
+		text: "实验选课【插件】",
 		type: "action",
 		isAutoLoad: false,
 		listeners: {
@@ -532,7 +525,7 @@ Ext.onReady(function () {
 						items: [// xtype里已经封装好了store。
 							{ fieldLabel: '开课学期', labelWidth: 60, width: 180, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
 							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
-							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { select: sctDpt, change: changeDpt }}, 
+							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
 							{ xtype: "button", text: "查询", formBind: true, handler: queryStore, margin: "0 3" }
 						]
@@ -544,17 +537,14 @@ Ext.onReady(function () {
 					sySto.proxy.extraParams = qryfrm.getForm().getValues();
 					sySto.load();
 				}
-				function sctDpt(cmb, rec) {
-					let dpt = rec[0].data.dptno;
-					let spno = qryfrm.down("[xtype='kscombo']");
-					spno.getStore().clearFilter();
-					spno.getStore().filter('dptno', new RegExp('^'+dpt+'$'));
-					spno.setValue("");
-				}
 				function changeDpt(cmb, newValue, oldValue) {
+					let spno = qryfrm.down("[xtype='kscombo']");
 					if (newValue == "") {
-						let spno = qryfrm.down("[xtype='kscombo']");
 						spno.getStore().clearFilter();
+					} else {
+						spno.getStore().clearFilter();
+						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
+						spno.setValue("");
 					}
 				}
 				// 实验计划
@@ -565,6 +555,7 @@ Ext.onReady(function () {
 					store: sySto,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 },
+						{ header: "计划序号", dataIndex: "planid" },
 						{ header: "年级", dataIndex: "grade", width: 60 },
 						{ header: "专业", dataIndex: "spname", width: 100 },
 						{ header: "课程代号", dataIndex: "courseid", width: 95 },
@@ -576,7 +567,7 @@ Ext.onReady(function () {
 						{ header: "备注", dataIndex: "comm", width: 160 }
 					],
 					listeners: {
-						"select": function (e, r) {
+						select: function (e, r) {
 							xmSto.proxy.extraParams.labid = r.data.planid;
 							xmSto.load();
 						}
@@ -601,12 +592,25 @@ Ext.onReady(function () {
 							}]
 						},
 						{ header: "已选", width: 40, xtype: "booleancolumn", trueText: "是", falseText: "否", dataIndex: "scted" },
-						{ header: "项目号", dataIndex: "xh", width: 90 },
-						{ header: "项目", dataIndex: "itemname", width: 180 },
+						{ header: "项目号", dataIndex: "xh", width: 90, 
+							doSort: function(state) {
+								let ds = this.up('grid').getStore();
+								let field = this.getSortParam();
+								ds.sort({
+									property: field, direction: state,
+									sorterFn: function(v1, v2) {
+										// console.log(state);
+										let n1 = parseInt(v1.raw.xh);
+										let n2 = parseInt(v2.raw.xh);
+										return n1 > n2 ? 1 : (n1 === n2) ? 0 : -1;
+									} 
+								});
+							}
+						},
+						{ header: "项目", dataIndex: "itemname", width: 360 },
 						{ header: "学时", dataIndex: "syxs", width: 40 },
 						{ header: "实验类别", dataIndex: "sylb", width: 140 },
 						{ header: "实验类型", dataIndex: "sylx", width: 100 },
-						//{ header: "实验室", dataIndex: "srid", width: 160 },
 						{ header: "备注", dataIndex: "comm", minWidth: 50, flex: 1 }
 					],
 					listeners: { "select": function (e, r) { pcSto.proxy.extraParams.xh = r.data.xh; pcSto.load(); } }
@@ -621,7 +625,6 @@ Ext.onReady(function () {
 						success: function (response, opts) {
 							var obj = Ext.decode(response.responseText);
 							if (obj.success) {
-								//var msg = "选课已经成功：" + rs[0].get("courseno");
 								Ext.Msg.alert("成功", obj.msg, function () {
 									var jg = xmGd.getSelectionModel().getSelection();
 									if (jg.length > 0) {
@@ -633,20 +636,17 @@ Ext.onReady(function () {
 							}
 						},
 						failure: function (response, opts) {
-							Ext.Msg.alert("错误",
-								"状态:" + response.status + ": " +
-								response.statusText);
+							Ext.Msg.alert("错误", "状态:" + response.status + ": " + response.statusText);
 						}
 					});
 				}
 				var pcSto = Ext.create("Edu.store.LabBatch");
+				Ext.apply(pcSto.proxy, { url: "/student/itembatch" });
 				var gdcno = Ext.create("Edu.view.ShowGrid", {
 					selType: "checkboxmodel",
 					store: pcSto,
 					columns: [
-						{
-							xtype: "actionrendercolumn", header: "操作",
-							width: 40,
+						{ header: "操作", xtype: "actionrendercolumn", width: 40,
 							renderer: function (v) { return ["提交"]; },
 							items: [{
 								handler: function (grid, rowIndex, colIndex) {
@@ -656,12 +656,14 @@ Ext.onReady(function () {
 								}
 							}]
 						},
-						{ header: "批次", dataIndex: "bno", width: 35, editor: { xtype: "numberfield", hideTrigger: true } },
-						{ header: "周次", dataIndex: "zc", width: 35 },
-						{ header: "星期", dataIndex: "xq", width: 35 },
-						{ header: "大节", dataIndex: "jc", width: 35 },
-						{ header: "人数", dataIndex: "persons", width: 35 },
-						{ header: "实验教师", dataIndex: "name", width: 60 },
+						{ header: "批次", dataIndex: "bno", width: 40, editor: { xtype: "numberfield", hideTrigger: true } },
+						{ header: "周次", dataIndex: "zc", width: 40 },
+						{ header: "星期", dataIndex: "xq", width: 40 },
+						{ header: "大节", dataIndex: "jc", width: 40 },
+						{ header: "人数", dataIndex: "persons", width: 40 },
+						{ header: "已选人数", dataIndex: "stusct", width: 80 },
+						{ header: "实验教师", dataIndex: "name", width: 80 },
+						{ header: "实验教室", dataIndex: "srdd", width: 80 },
 						{ header: "备注", dataIndex: "comm", minWidth: 50, flex: 1 }
 					]
 				});
@@ -673,7 +675,7 @@ Ext.onReady(function () {
 					sto.load();
 					if (!win) {
 						win = Ext.create("Ext.window.Window", {
-							modal: true, height: "80%", width: "80%", layout: "fit", closeAction: "hide",
+							modal: true, height: "60%", width: "60%", layout: "fit", closeAction: "hide",
 							items: [gdcno]
 						});
 					}
@@ -681,7 +683,7 @@ Ext.onReady(function () {
 					win.show();
 				}
 				let pan = Ext.create("Edu.view.ShowPanel", {
-					title: "实验选课【插件】",
+					title: "实验选课",
 					items: [qryfrm, grid, xmGd]
 				});
 
@@ -689,12 +691,16 @@ Ext.onReady(function () {
 			}
 		}
 	};
+	let labUnSctNew = {
+		"action":"LabUnSct","children":[],"command":null,"controller":"Student","id":"bstuk110","leaf":true,"text":"实验退课","type":"action"
+	}
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
 	plugTools.menuChange(StuPlanNew);
-	// TODO[9]: <添加实验选课> {添加对实验选课的支持}
+	// TO-DO[9]: <添加实验选课> {添加对实验选课的支持}
 	plugTools.menuAdd(LabSctNew);
+	plugTools.menuAdd(labUnSctNew);
 	// TODO[9]: <重写新课程表> {把实验课加入课程表}
 	let panel = Ext.getCmp("content_panel");
 	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 

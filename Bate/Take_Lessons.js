@@ -164,7 +164,6 @@ Ext.onReady(function () {
 				{ xtype: "button", handler: queryStore, text: "查询", margin: "0 3", formBind: true }
 			]
 		});
-		// TODO: [8] <查询默认加载>
 		qryfrm.getForm().setValues(getzt());
 		let Items = [{ handler: function (grid, rowIndex, colIndex) { let rec = grid.getStore().getAt(rowIndex); grid.getSelectionModel().select(rec); sctcno(rec); } }];
 		var grid = Ext.create("Edu.view.ShowGrid", {
