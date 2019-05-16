@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.6.2
+// @version      3.6.3
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -117,7 +117,7 @@ Ext.onReady(function () {
 
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
-					width: "100%", height: "100%", minHeight: 400, layout: "fit",
+					width: "100%", height: "100%", minHeight: 400, layout: "fit", region: "center",
 					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
 					viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
 					store: newStore,
