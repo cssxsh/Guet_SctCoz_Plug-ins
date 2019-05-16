@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.5
+// @version      3.7.6
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -48,21 +48,78 @@ Ext.onReady(function () {
 		action: "QryCourseSet",
 		text: "课程设置",
 		id: "QryCourseSet",
+		isAutoLoad: false,
 		listeners: {
-			add: function (me, opt) {
-				//修正面板功能
-				let qryfrm = me.down("fieldset"); //获取条件筛选面板
-				if (!col.stid_hide) qryfrm.add({ width: 120, labelWidth: 35, name: "stid", fieldLabel: "其他" });
-				let dptno = qryfrm.child("[name='dptno']");
-				let spno = qryfrm.child("[name='spno']");
-				qryfrm.items.items.forEach(function (item) { item.editable = true; });
-				dptno.addListener("change", function (me, newValue, oldValue) {
+			afterrender: function (me, opt) {
+				Ext.QuickTips.init();
+				Ext.form.Field.prototype.MsgTarget = "side";
+				// 查询面板
+				var qryfrm = Ext.create('Ext.form.Panel', {
+					alias: 'widget.queryform',
+					frame: true, layout: 'fit', region: 'north',
+					fieldDefaults: { labelAlign: 'right', labelWidth: 60, margin: '0 0 6 0' }, 
+					viewConfig: { forceFit: true, stripeRows: true },
+					items: [{
+						xtype: 'fieldset',
+						title: '请输入查询条件，按查询键开始',
+						layout: 'column',
+						defaultType: 'textfield',
+						margin: 0,
+						items: [// xtype里已经封装好了store。
+							{ fieldLabel: '开课学期', labelWidth: 60, width: 180, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
+							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
+							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { select: sctDpt, change: changeDpt }}, 
+							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
+							{ fieldLabel: '周次',     labelWidth: 35, width: 100, name: 'startweek'}, 
+							{ fieldLabel: '星期',     labelWidth: 35, width: 100, name: 'fromweek'}, 
+							{ fieldLabel: '节次',     labelWidth: 35, width: 100, name: 'startsequence'}, 
+							{ fieldLabel: '教室',     labelWidth: 40, width: 100, name: 'croomno'},
+							{ fieldLabel: '教师号',   labelWidth: 50, width: 110, name: 'teacherno'}, 
+							{ fieldLabel: '教师',     labelWidth: 35, width: 100, name: 'tname',}, 
+							{ fieldLabel: '课号',     labelWidth: 35, width: 110, name: 'courseno'}, 
+							{ fieldLabel: '课程代码', labelWidth: 60, width: 140, name: 'courseid' }, 
+							{ fieldLabel: '课程名称', labelWidth: 60, width: 200, name: 'cname' },
+							{ fieldLabel: '其他',     labelWidth: 35, width: 120, name: 'stid'},
+							{ margin: '0 3', xtype: 'button', text: '查询', formBind: true, handler: queryStore}
+						]
+					}]
+				});
+				function queryStore() {
+					let params = qryfrm.up("panel").getForm().getValues();
+					let sto = newGrid.getStore();
+					// 或许应该看一下正则表达式
+					function Split(a, b) {
+						let text = params[a].toString();
+						let reg = /(^[0-9]*)|([0-9]*$)/g;
+						let p = text.match(reg);
+						[params[a], params[b]] = (p.length = 1) ? ["", p[0]] : p;
+						// 修复bug
+					};
+					Split("startweek", "endweek");
+					Split("fromweek", "toweek");
+					Split("startsequence", "endsequence");
+					params.tname = params.tname.trim();
+					params.courseno = params.courseno.trim();
+					params.courseid = params.courseid.trim();
+					params.cname = params.cname.trim();
+
+					sto.proxy.extraParams = params;
+					sto.load();
+				}
+				function sctDpt(cmb, rec) {
+					let dpt = rec[0].data.dptno;
+					let spno = qryfrm.child("[name='spno']");
+					spno.getStore().clearFilter();
+					spno.getStore().filter('dptno', new RegExp('^'+dpt+'$'));
+					spno.findField("spno").setValue("");
+				}
+				function changeDpt(cmb, newValue, oldValue) {
 					if (newValue == "") {
+						let spno = qryfrm.child("[name='spno']");
 						spno.getStore().clearFilter();
 					}
-				});
-
-				// 重写Grid
+				}
+				// 表格
 				// FIXME: [8] <重写课程表格> {添加和规范化课程表格功能和格式} (教务自带的模块不够好用)
 				var ctb = Ext.create("Edu.view.coursetable");
 				let newFields = [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term", "courseid", "coment", "studentcount", "credithour", "teachperiod", "labperiod", "copperiod", "maxperson"];
@@ -136,7 +193,7 @@ Ext.onReady(function () {
 				});
 				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
-					width: "100%", height: "100%", minHeight: 400, layout: "fit",
+					width: "100%", height: "100%", minHeight: 400, layout: "fit", region: 'center',
 					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
 					viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
 					store: newStore,
@@ -199,37 +256,15 @@ Ext.onReady(function () {
 					}
 					ctb.render(panView.body, gRec);
 				}
-				function queryStore() {
-					let params = qryfrm.up("panel").getForm().getValues();
-					let sto = newGrid.getStore();
-					// 或许应该看一下正则表达式
-					function Split(a, b) {
-						let text = params[a].toString();
-						let reg = /(^[0-9]*)|([0-9]*$)/g;
-						let p = text.match(reg);
-						[params[a], params[b]] = (p.length = 1) ? ["", p[0]] : p;
-						// 修复bug
-					};
-					Split("startweek", "endweek");
-					Split("fromweek", "toweek");
-					Split("startsequence", "endsequence");
-					params.tname = params.tname.trim();
-					params.courseno = params.courseno.trim();
-					params.courseid = params.courseid.trim();
-					params.cname = params.cname.trim();
-
-					sto.proxy.extraParams = params;
-					sto.load();
-				}
-				let oldGrid = me.down("grid");
-				let panel = oldGrid.up("panel");
-				let queryButton = me.down("fieldset").down("button");
-				queryButton.handler = queryStore;
-				panel.remove(oldGrid);
-				panel.add(newGrid);
+				// 面板
+				var pan = Ext.create('Edu.view.ShowPanel', {
+					title: '<font size=4>课程设置</font>',
+					items: [qryfrm, newGrid]
+				});
+				// 添加到TAB
+				me.add(pan);
 			}
-		},
-		isAutoLoad: true
+		}
 	};
 	let StuScoreNew = {
 		action: "StuScore",
@@ -256,6 +291,7 @@ Ext.onReady(function () {
 		action: "StuScted",
 		text: "已选课程",
 		id: "StuScted",
+		isAutoLoad: true,
 		listeners: {
 			add: function (me, opt) {
 				// 修改 Grid
@@ -280,7 +316,6 @@ Ext.onReady(function () {
 					{ name: "CourseFee", fieldLabel: "总选课费", width: 120, labelWidth: 60, editable: false, value: "???" }
 				];
 				field.add(Label);
-				// TO-DO: [7] <消除学期锁定> {可以使学期为空}
 				// TODO: [7] <构建专用仓库> {用于整合两个接口的信息的stroe}
 				// field.query('[name=term]').forEach( function (item) {
 				// 	item.allowBlank = true;
@@ -362,13 +397,13 @@ Ext.onReady(function () {
 					form.findField("CourseFee").setValue(CourseFee);
 				});
 			}
-		},
-		isAutoLoad: true
+		}
 	};
 	let StuPlanNew = {
 		action: "StuPlan",
 		text: "计划查询",
 		id: "StuPlan",
+		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opt) {
 				// 创建新的qryfrm
@@ -466,8 +501,7 @@ Ext.onReady(function () {
 				// 加载组件
 				me.add(panNew);
 			}
-		},
-		isAutoLoad: false
+		}
 	};
 	// menu的对参数完整度要求比较高
 	let LabSctNew = {
@@ -721,8 +755,9 @@ Ext.onReady(function () {
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
 	plugTools.menuChange(StuPlanNew);
+	// TODO[9]: <添加实验选课> {添加对实验选课的支持}
 	// plugTools.menuAdd(LabSctNew);
-
+	// TODO[9]: <重写新课程表> {把实验课加入课程表}
 	let panel = Ext.getCmp("content_panel");
 	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 
 	panel.addListener("add", function (me, lastTab, opt) {
