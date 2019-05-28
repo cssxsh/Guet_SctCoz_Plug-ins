@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.8
+// @version      3.7.9
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -30,7 +30,7 @@
 Ext.onReady(function () {
 	// 一些参数
 	let col = {
-		ver: "3.5",			//主要版本号
+		ver: "3.7",			//主要版本号
 		stid_hide: false,	//学号参数是否隐藏
 		sct_hide: false,	//已选控制是否隐藏
 	};
@@ -66,7 +66,7 @@ Ext.onReady(function () {
 						defaultType: 'textfield',
 						margin: 0,
 						items: [// xtype里已经封装好了store。
-							{ fieldLabel: '开课学期', labelWidth: 60, width: 180, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
+							{ fieldLabel: '开课学期', labelWidth: 60, width: 200, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
 							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
 							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
@@ -108,10 +108,8 @@ Ext.onReady(function () {
 				}
 				function changeDpt(cmb, newValue, oldValue) {
 					let spno = qryfrm.down("[xtype='kscombo']");
-					if (newValue == "") {
-						spno.getStore().clearFilter();
-					} else {
-						spno.getStore().clearFilter();
+					spno.getStore().clearFilter();
+					if (newValue != "" && newValue != null) {
 						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
 						spno.setValue("");
 					}
@@ -219,7 +217,7 @@ Ext.onReady(function () {
 					tbar: [
 						{ xtype: "button", text: "打印", formBind: true, iconCls: "print", handler: printGrid },
 						{ xtype: "button", text: "导出Excel", formBind: true, iconCls: "excel", handler: expandGrid },
-						{ xtype: "button", text: "转为课表", formBind: true, icon: "/images/0775.gif", handler: openTimeTable }
+						{ xtype: "button", text: "转为课表", formBind: true, icon: "/images/date_magnify.png", handler: openTimeTable }
 					]
 				});
 				function printGrid(me, opt) {
@@ -323,7 +321,7 @@ Ext.onReady(function () {
 				}
 
 				// 添加新信息
-				// TODO: [8] <显示单门学费> {}
+				// TODO: [8] <显示单门学费> {需要了解各个专业的学分与学费对应关系。}
 				grid.getStore().addListener("load", function (me, opt) {
 					let Total = 0;
 					let Compulsory = 0;
@@ -488,7 +486,7 @@ Ext.onReady(function () {
 				}
 
 				let panNew = Ext.create("Edu.view.ShowPanel", {
-					title: "<font size=4>课程计划</font>",
+					title: "<font size=3>课程计划</font>",
 					items: [qryfrmNew, gridNew]
 				});
 				// 加载组件
@@ -496,7 +494,6 @@ Ext.onReady(function () {
 			}
 		}
 	};
-	// menu的对参数完整度要求比较高
 	let LabSctNew = {
 		action: "LabSctNew",
 		children: [],
@@ -523,7 +520,7 @@ Ext.onReady(function () {
 						defaultType: 'textfield',
 						margin: 0,
 						items: [// xtype里已经封装好了store。
-							{ fieldLabel: '开课学期', labelWidth: 60, width: 180, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
+							{ fieldLabel: '开课学期', labelWidth: 60, width: 200, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
 							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
 							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
@@ -555,14 +552,11 @@ Ext.onReady(function () {
 					store: sySto,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 },
-						{ header: "计划序号", dataIndex: "planid" },
-						{ header: "年级", dataIndex: "grade", width: 60 },
+						{ header: "计划序号", dataIndex: "planid", width: 80 },
+						{ header: "年级", dataIndex: "grade", width: 50 },
 						{ header: "专业", dataIndex: "spname", width: 100 },
 						{ header: "课程代号", dataIndex: "courseid", width: 95 },
 						{ header: "课程名称", dataIndex: "cname", width: 160 },
-						{ header: "实验学时", dataIndex: "syxs", width: 60 },
-						{ header: "上机学时", dataIndex: "qtxs", width: 60 },
-						{ header: "实践学时", dataIndex: "sjxs", width: 60 },
 						{ header: "实验室", dataIndex: "srname", width: 160 },
 						{ header: "备注", dataIndex: "comm", width: 160 }
 					],
@@ -582,7 +576,7 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 30 },
 						{ header: "操作", xtype: "actionrendercolumn", width: 40, dataIndex: "scted",
-							renderer: function (v) { if (!v) return ["选课"]; },
+							renderer: function (v) { if (!v) return ["选批次"]; },
 							items: [{
 								handler: function (grid, rowIndex, colIndex) {
 									var rec = grid.getStore().getAt(rowIndex);
@@ -599,7 +593,6 @@ Ext.onReady(function () {
 								ds.sort({
 									property: field, direction: state,
 									sorterFn: function(v1, v2) {
-										// console.log(state);
 										let n1 = parseInt(v1.raw.xh);
 										let n2 = parseInt(v2.raw.xh);
 										return n1 > n2 ? 1 : (n1 === n2) ? 0 : -1;
@@ -643,7 +636,7 @@ Ext.onReady(function () {
 				var pcSto = Ext.create("Edu.store.LabBatch");
 				Ext.apply(pcSto.proxy, { url: "/student/itembatch" });
 				var gdcno = Ext.create("Edu.view.ShowGrid", {
-					selType: "checkboxmodel",
+					// selType: "checkboxmodel",
 					store: pcSto,
 					columns: [
 						{ header: "操作", xtype: "actionrendercolumn", width: 40,
@@ -693,7 +686,7 @@ Ext.onReady(function () {
 	};
 	let labUnSctNew = {
 		"action":"LabUnSct","children":[],"command":null,"controller":"Student","id":"bstuk110","leaf":true,"text":"实验退课","type":"action"
-	}
+	};
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
@@ -701,7 +694,7 @@ Ext.onReady(function () {
 	// TO-DO[9]: <添加实验选课> {添加对实验选课的支持}
 	plugTools.menuAdd(LabSctNew);
 	plugTools.menuAdd(labUnSctNew);
-	// TODO[9]: <重写新课程表> {把实验课加入课程表}
+	// TODO[9]: <重写课表模块> {把实验课加入课程表}
 	let panel = Ext.getCmp("content_panel");
 	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 
 	panel.addListener("add", function (me, lastTab, opt) {
