@@ -76,6 +76,7 @@ Ext.onReady(function () {
 							{ fieldLabel: '课号', labelWidth: 35, width: 110, name: 'courseno'}, 
 							{ fieldLabel: '课程代码', labelWidth: 60, width: 150, name: 'courseid' }, 
 							{ fieldLabel: '课程名称', labelWidth: 60, width: 200, name: 'cname' },
+							{ fieldLabel: '日期', labelWidth: 35, width: 150, name: 'date', xtype: 'datefield'}, 
 							{ fieldLabel: '其他', labelWidth: 35, width: 120, name: 'stid', hidden: col.stid_hide },
 							{ margin: '0 3', xtype: 'button', text: '查询', formBind: true, handler: queryStore }
 						]
