@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.11
+// @version      3.7.12
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -41,9 +41,9 @@ Ext.onReady(function () {
 
 	// 创建并应用修改
 	let CourseSetNew = {
-		action: 'QryCourseSet',
-		text: '课程设置【插件】',
-		id: 'QryCourseSet',
+		action: "QryCourseSet",
+		text: "课程设置【插件】",
+		id: "QryCourseSet",
 		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opt) {
@@ -89,12 +89,12 @@ Ext.onReady(function () {
 						let text = params[a].toString();
 						let reg = /(^[0-9]*)|([0-9]*$)/g;
 						let p = text.match(reg);
-						[params[a], params[b]] = (p.length = 1) ? ['', p[0]] : p;
+						[params[a], params[b]] = (p.length = 1) ? ["", p[0]] : p;
 						// 修复bug
 					};
-					Split('startweek', 'endweek');
-					Split('fromweek', 'toweek');
-					Split('startsequence', 'endsequence');
+					Split("startweek", "endweek");
+					Split("fromweek", "toweek");
+					Split("startsequence", "endsequence");
 					*/
 					params.startweek = parseInt(params.startweek);
 					params.startweek = isNaN(params.startweek) ? 1 : params.startweek;
@@ -117,6 +117,7 @@ Ext.onReady(function () {
 					sto.proxy.extraParams = params;
 					sto.load(function () {
 						// 教务自带的过滤有问题，需要本地再次过滤
+						// TODO: [7] <完善条件过滤> {应该让被过滤的记录以学号相关联}
 						sto.filterBy(function (rec) {
 							s = parseInt(rec.get('startweek')) < params.startweek;
 							t = parseInt(rec.get('endweek')) > params.endweek;
@@ -129,155 +130,150 @@ Ext.onReady(function () {
 					});
 				}
 				function changeDpt(cmb, newValue, oldValue) {
-					let spno = qryfrm.down('[xtype="kscombo"]');
+					let spno = qryfrm.down("[xtype='kscombo']");
 					spno.getStore().clearFilter();
-					if (newValue != '' && newValue != null) {
+					if (newValue != "" && newValue != null) {
 						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
-						spno.setValue('');
+						spno.setValue("");
 					}
 				}
 				// 表格
 				// FIXME: [8] <重写课程表格> {添加和规范化课程表格功能和格式} (教务自带的模块不够好用)
-				var ctb = Ext.create('Edu.view.coursetable');
-				let newFields = [{ name: 'sct', type: 'boolean', defaultValue: true }, 'dptname', 'spname', 'grade', 'cname', 'courseno', 'name', 'startweek', 'endweek', 'oddweek', 'croomno', 'week', 'sequence', 'term', 'courseid', 'coment', 'studentcount', 'credithour', 'teachperiod', 'labperiod', 'copperiod', 'maxperson'];
+				var ctb = Ext.create("Edu.view.coursetable");
+				let newFields = [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term", "courseid", "coment", "studentcount", "credithour", "teachperiod", "labperiod", "copperiod", "maxperson"];
 				let Checkchange = function (me, index, checked) {
-					let sto = me.up('grid').getStore();
-					let key = sto.getAt(index).get(sto.groupers.keys[0]);
-					// let Group = sto.GroupsByNo.get(key);
-					// Group.forEach(function (record) { record.set('sct', checked); });
-					if (key != null) {
-						sto.getGroups(key).children.forEach(function (record) { record.set('sct', checked); });
-					} else {
-						sto.getAt(index).set('sct', checked);
-					}
+					let sto = me.up("grid").getStore();
+					let key = sto.getAt(index).get("courseno");
+					let Group = sto.GroupsByNo.get(key);
+					Group.forEach(function (record) { record.set("sct", checked); });
 				};
 				let ShowComm = function (grid, rowIndex, colIndex) {
 					let sto = grid.getStore();
-					let info = sto.getAt(rowIndex).get('comment');
+					let info = sto.getAt(rowIndex).get("comment");
 					plugTools.LoadData({
 						path: info.path,
 						success: function (response) {
 							let data = response.data;
-							Ext.create('Ext.window.Window', {
-								title: data.title || ('课号：' + data.courseno), width: '40%', height: '40%', modal: true, resizable: true, layout: 'fit',
-								items: [{ xtype: 'form', autoScroll: true, frame: true, padding: '1', loader: data.loader, html: data.html || data.comm }]
+							Ext.create("Ext.window.Window", {
+								title: data.title || ("课号：" + data.courseno), width: "40%", height: "40%", modal: true, resizable: true, layout: "fit",
+								items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", loader: data.loader, html: data.html || data.comm }]
 							}).show();
 						},
 						failure: function (result) {
-							plugTools.Logger(result, 2, 'By [Get info of courses]');
+							plugTools.Logger(result, 2, "By [Get info of courses]");
 						}
 					});
 				};
-				var newStore = Ext.create('Ext.data.Store', {
+				var newStore = Ext.create("Ext.data.Store", {
 					pageSize: 500,
 					fields: newFields,
 					filterOnLoad: true,
 					// 用课号做分组依据方便后面处理, 但这样有问题
-					groupField: 'courseno',
+					// groupField: "courseno",
 					proxy: {
-						type: 'ajax', url: '/Query/GetCourseTable',
-						reader: { type: 'json', root: 'data' }
+						type: "ajax", url: "/Query/GetCourseTable",
+						reader: { type: "json", root: "data" }
 					},
 					autoLoad: false,
 					listeners: {
 						load: function (me, data) {
-							// 	课号分组
-							// 	me.GroupsByNo.clear();
-							// 	me.each(function (rec) {
-							// 		let key = rec.data.courseno;
-							// 		if (me.GroupsByNo.containsKey(key)) {
-							// 			me.GroupsByNo.get(key).push(rec);
-							// 		} else {
-							// 			me.GroupsByNo.add(key, [rec]);
-							// 		}
-							// 	});
-							// 	获取有信息的课号列表
+							// 课号分组
+							me.GroupsByNo.clear();
+							me.each(function (rec) {
+								let key = rec.data.courseno;
+								if (me.GroupsByNo.containsKey(key)) {
+									me.GroupsByNo.get(key).push(rec);
+								} else {
+									me.GroupsByNo.add(key, [rec]);
+								}
+							});
+							// 获取有信息的课号列表
 							if (col.info_load) {
-								let Loading = newGrid.setLoading('加载课程信息中...');
+								let Loading = newGrid.setLoading("加载课程信息中...");
 								plugTools.LoadData({
-									path: 'CourseNoList.json',
+									path: "CourseNoList.json",
 									success: function (response) {
 										(Ext.isArray(response.data) ? response.data : [response.data]).forEach(function (Info) {
 											let key = Info.courseno;
 											let group = me.GroupsByNo.get(key);
 											if (group != null) {
-												group.forEach(function (rec) { rec.set('comment', Info); });
+												group.forEach(function (rec) { rec.set("comment", Info); });
 											}
 										});
 										Loading.hide();
 									},
 									failure: function (result) {
-										plugTools.Logger(result, 2, 'By [Get info of courses]');
+										plugTools.Logger(result, 2, "By [Get info of courses]");
 										Loading.hide();
 									}
 								});
 							}
 						}
-					}
+					},
+					GroupsByNo: Ext.create("Ext.util.HashMap")
 				});
-				var newGrid = Ext.create('Ext.grid.Panel', {
+				var newGrid = Ext.create("Ext.grid.Panel", {
 					columnLines: true,
-					width: '100%', height: '100%', minHeight: 400, layout: 'fit', region: 'center',
-					plugins: [Ext.create('Ext.grid.plugin.CellEditing', { clicksToEdit: 1 })],
+					width: "100%", height: "100%", minHeight: 400, layout: "fit", region: 'center',
+					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
 					viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
 					features: [{ ftype: 'grouping', id: 'groupFea' }],
 					store: newStore,
 					columns: [
-						{ header: '序号', xtype: 'rownumberer', width: 40, sortable: false },
-						{ header: '选中', dataIndex: 'sct', width: 40, xtype: 'checkcolumn', hidden: col.sct_hide, editor: { xtype: 'checkbox' }, listeners: { checkchange: Checkchange } },
-						{ header: '年级', dataIndex: 'grade', width: 50 },
-						{ header: '专业', dataIndex: 'spname', width: 120 },
-						{ header: '课程序号', dataIndex: 'courseno', width: 80 },
-						{ header: '课程代码', dataIndex: 'courseid', width: 94 },
-						{ header: '课程名称', dataIndex: 'cname', minWidth: 180, flex: 1 },
-						{ header: '星期', dataIndex: 'week', width: 40 },
-						{ header: '节次', dataIndex: 'sequence', width: 40 },
-						{ header: '开始周', dataIndex: 'startweek', width: 40 },
-						{ header: '结束周', dataIndex: 'endweek', width: 40 },
-						{ header: '教室', dataIndex: 'croomno', width: 70 },
-						{ header: '教师', dataIndex: 'name', width: 70 },
-						{ header: '学分', dataIndex: 'credithour', width: 40 },
-						{ header: '理论学时', dataIndex: 'teachperiod', width: 40 },
-						{ header: '实验学时', dataIndex: 'labperiod', width: 40 },
-						{ header: '上机学时', dataIndex: 'copperiod', width: 40 },
-						{ header: '可选人数', dataIndex: 'maxperson', width: 40 },
-						{ header: '已选人数', dataIndex: 'studentcount', width: 40 },
-						{ header: '备注', dataIndex: 'comment', xtype: 'actionrendercolumn', renderer: function (v, m, r) { return r.data.comment != null ? ['查看'] : []; }, items: [{ handler: ShowComm }], flex: 1 }
+						{ header: "序号", xtype: "rownumberer", width: 40, sortable: false },
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: { checkchange: Checkchange } },
+						{ header: "年级", dataIndex: "grade", width: 50 },
+						{ header: "专业", dataIndex: "spname", width: 120 },
+						{ header: "课程序号", dataIndex: "courseno", width: 80 },
+						{ header: "课程代码", dataIndex: "courseid", width: 94 },
+						{ header: "课程名称", dataIndex: "cname", minWidth: 180, flex: 1 },
+						{ header: "星期", dataIndex: "week", width: 40 },
+						{ header: "节次", dataIndex: "sequence", width: 40 },
+						{ header: "开始周", dataIndex: "startweek", width: 40 },
+						{ header: "结束周", dataIndex: "endweek", width: 40 },
+						{ header: "教室", dataIndex: "croomno", width: 70 },
+						{ header: "教师", dataIndex: "name", width: 70 },
+						{ header: "学分", dataIndex: "credithour", width: 40 },
+						{ header: "理论学时", dataIndex: "teachperiod", width: 40 },
+						{ header: "实验学时", dataIndex: "labperiod", width: 40 },
+						{ header: "上机学时", dataIndex: "copperiod", width: 40 },
+						{ header: "可选人数", dataIndex: "maxperson", width: 40 },
+						{ header: "已选人数", dataIndex: "studentcount", width: 40 },
+						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", renderer: function (v, m, r) { return r.data.comment != null ? ["查看"] : []; }, items: [{ handler: ShowComm }], flex: 1 }
 					],
 					tbar: [
-						{ xtype: 'button', text: '打印', formBind: true, iconCls: 'print', handler: printGrid },
-						{ xtype: 'button', text: '导出Excel', formBind: true, iconCls: 'excel', handler: expandGrid },
-						{ xtype: 'button', text: '转为课表', formBind: true, icon: '/images/date_magnify.png', handler: openTimeTable }
+						{ xtype: "button", text: "打印", formBind: true, iconCls: "print", handler: printGrid },
+						{ xtype: "button", text: "导出Excel", formBind: true, iconCls: "excel", handler: expandGrid },
+						{ xtype: "button", text: "转为课表", formBind: true, icon: "/images/date_magnify.png", handler: openTimeTable }
 					]
 				});
-				// 工具按钮响应
 				function printGrid(me, opt) {
-					var grid = me.up('grid');
-					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + '课程设置';
+					var grid = me.up("grid");
+					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
 					Ext.ux.grid.Printer.print(grid);
 				}
 				function expandGrid(me, opt) {
-					var grid = me.up('grid');
-					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + '课程设置';
+					var grid = me.up("grid");
+					Ext.ux.grid.Printer.mainTitle = grid.getStore().getProxy().extraParams.term + "课程设置";
 					Ext.ux.grid.Printer.ToExcel(grid);
 				}
 				function openTimeTable(me, opt) {
-					var grid = me.up('grid');
+					var grid = me.up("grid");
 					var gRec = grid.getStore().data.items.filter(function (item) { return item.data.sct; });
-					var panView = Ext.create('Ext.panel.Panel', { layout: 'fit', autoScroll: true, frame: true });
-					Ext.create('Ext.window.Window', {
-						title: '课程表', width: '80%', height: '80%', modal: true, resizable: false, layout: 'fit',
+					var panView = Ext.create("Ext.panel.Panel", { layout: "fit", autoScroll: true, frame: true });
+					Ext.create("Ext.window.Window", {
+						title: "课程表", width: "80%", height: "80%", modal: true, resizable: false, layout: "fit",
 						items: [panView]
 					}).show()
 					// 如果没有数据本地加载
 					if (ctb.store.data.length == 0) {
 						ctb.store.loadData([
-							{ 'term': '2018-2019_2', 'nodeno': '1', 'nodename': '<font size=1>上午第一节</font></br>', 'memo': '08:25-10:00', 'xq1': '', 'xq2': '', 'xq3': '', 'xq4': '', 'xq5': '', 'xq5': '', 'xq6': '', 'xq7': '' },
-							{ 'term': '2018-2019_2', 'nodeno': '2', 'nodename': '<font size=1>上午第二节</font></br>', 'memo': '10:25-12:00', 'xq1': '', 'xq2': '', 'xq3': '', 'xq4': '', 'xq5': '', 'xq5': '', 'xq6': '', 'xq7': '' },
-							{ 'term': '2018-2019_2', 'nodeno': '3', 'nodename': '<font size=1>下午第一节</font></br>', 'memo': '14:30-16:05', 'xq1': '', 'xq2': '', 'xq3': '', 'xq4': '', 'xq5': '', 'xq5': '', 'xq6': '', 'xq7': '' },
-							{ 'term': '2018-2019_2', 'nodeno': '4', 'nodename': '<font size=1>下午第二节</font></br>', 'memo': '16:30-18:05', 'xq1': '', 'xq2': '', 'xq3': '', 'xq4': '', 'xq5': '', 'xq5': '', 'xq6': '', 'xq7': '' },
-							{ 'term': '2018-2019_2', 'nodeno': '5', 'nodename': '<font size=1>晚上第一节</font></br>', 'memo': '19:00-20:35', 'xq1': '', 'xq2': '', 'xq3': '', 'xq4': '', 'xq5': '', 'xq5': '', 'xq6': '', 'xq7': '' },
-							{ 'term': '2018-2019_2', 'nodeno': '6', 'nodename': '<font size=1>晚上第二节</font></br>', 'memo': '21:00-22:35', 'xq1': '', 'xq2': '', 'xq3': '', 'xq4': '', 'xq5': '', 'xq5': '', 'xq6': '', 'xq7': '' }
+							{ "term": "2018-2019_2", "nodeno": "1", "nodename": "<font size=1>上午第一节</font></br>", "memo": "08:25-10:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
+							{ "term": "2018-2019_2", "nodeno": "2", "nodename": "<font size=1>上午第二节</font></br>", "memo": "10:25-12:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
+							{ "term": "2018-2019_2", "nodeno": "3", "nodename": "<font size=1>下午第一节</font></br>", "memo": "14:30-16:05", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
+							{ "term": "2018-2019_2", "nodeno": "4", "nodename": "<font size=1>下午第二节</font></br>", "memo": "16:30-18:05", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
+							{ "term": "2018-2019_2", "nodeno": "5", "nodename": "<font size=1>晚上第一节</font></br>", "memo": "19:00-20:35", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
+							{ "term": "2018-2019_2", "nodeno": "6", "nodename": "<font size=1>晚上第二节</font></br>", "memo": "21:00-22:35", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" }
 						], true);
 					}
 					ctb.render(panView.body, gRec);
