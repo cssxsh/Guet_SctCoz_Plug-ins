@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.9
+// @version      3.7.10
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -52,7 +52,7 @@ Ext.onReady(function () {
 		listeners: {
 			afterrender: function (me, opt) {
 				Ext.QuickTips.init();
-				Ext.form.Field.prototype.MsgTarget = "side";
+				Ext.form.Field.prototype.MsgTarget = 'side';
 				// 查询面板
 				var qryfrm = Ext.create('Ext.form.Panel', {
 					alias: 'widget.queryform',
@@ -67,19 +67,19 @@ Ext.onReady(function () {
 						margin: 0,
 						items: [// xtype里已经封装好了store。
 							{ fieldLabel: '开课学期', labelWidth: 60, width: 200, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
-							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
+							{ fieldLabel: '开课年级', labelWidth: 60, width: 150, xtype: 'gradecombo' },
 							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
-							{ fieldLabel: '周次',     labelWidth: 35, width: 100, name: 'startweek'}, 
-							{ fieldLabel: '星期',     labelWidth: 35, width: 100, name: 'fromweek'}, 
-							{ fieldLabel: '节次',     labelWidth: 35, width: 100, name: 'startsequence'}, 
-							{ fieldLabel: '教室',     labelWidth: 40, width: 100, name: 'croomno'},
-							{ fieldLabel: '教师号',   labelWidth: 50, width: 110, name: 'teacherno'}, 
-							{ fieldLabel: '教师',     labelWidth: 35, width: 100, name: 'tname',}, 
-							{ fieldLabel: '课号',     labelWidth: 35, width: 110, name: 'courseno'}, 
-							{ fieldLabel: '课程代码', labelWidth: 60, width: 140, name: 'courseid' }, 
+							{ fieldLabel: '周次', labelWidth: 35, width: 85, name: 'startweek'}, { labelWidth: 0, width: 50, name: 'endweek'}, 
+							{ fieldLabel: '星期', labelWidth: 35, width: 85, name: 'fromweek'}, { labelWidth: 0, width: 50, name: 'toweek'}, 
+							{ fieldLabel: '节次', labelWidth: 35, width: 85, name: 'startsequence'}, { labelWidth: 0, width: 50, name: 'endsequence'}, 
+							{ fieldLabel: '教室', labelWidth: 40, width: 100, name: 'croomno'},
+							{ fieldLabel: '教师号', labelWidth: 50, width: 110, name: 'teacherno'}, 
+							{ fieldLabel: '教师', labelWidth: 35, width: 100, name: 'tname',}, 
+							{ fieldLabel: '课号', labelWidth: 35, width: 110, name: 'courseno'}, 
+							{ fieldLabel: '课程代码', labelWidth: 60, width: 150, name: 'courseid' }, 
 							{ fieldLabel: '课程名称', labelWidth: 60, width: 200, name: 'cname' },
-							{ fieldLabel: '其他',     labelWidth: 35, width: 120, name: 'stid'},
+							{ fieldLabel: '其他', labelWidth: 35, width: 120, name: 'stid'},
 							{ margin: '0 3', xtype: 'button', text: '查询', formBind: true, handler: queryStore}
 						]
 					}]
@@ -88,6 +88,7 @@ Ext.onReady(function () {
 					let params = qryfrm.getForm().getValues();
 					let sto = newGrid.getStore();
 					// 或许应该看一下正则表达式
+					/* 之间添加新的文本框
 					function Split(a, b) {
 						let text = params[a].toString();
 						let reg = /(^[0-9]*)|([0-9]*$)/g;
@@ -98,13 +99,37 @@ Ext.onReady(function () {
 					Split("startweek", "endweek");
 					Split("fromweek", "toweek");
 					Split("startsequence", "endsequence");
+					*/
+					params.startweek = parseInt(params.startweek);
+					params.startweek = isNaN(params.startweek) ? 1 : params.startweek;
+					params.endweek = parseInt(params.endweek);
+					params.endweek =  isNaN(params.endweek) ? 20 : params.endweek;
+					params.fromweek = parseInt(params.fromweek);
+					params.fromweek =  isNaN(params.fromweek) ? 1 : params.fromweek;
+					params.toweek = parseInt(params.toweek);
+					params.toweek =  isNaN(params.toweek) ? 7 : params.toweek;
+					params.startsequence = parseInt(params.startsequence);
+					params.startsequence =  isNaN(params.startsequence) ? 1 : params.startsequence;
+					params.endsequence = parseInt(params.endsequence);
+					params.endsequence =  isNaN(params.endsequence) ? 6 : params.endsequence;
 					params.tname = params.tname.trim();
 					params.courseno = params.courseno.trim();
 					params.courseid = params.courseid.trim();
 					params.cname = params.cname.trim();
-
+					
+					
 					sto.proxy.extraParams = params;
-					sto.load();
+					sto.load(function () {
+						sto.filterBy(function (rec) {
+							s = parseInt(rec.get('startweek')) < params.startweek;
+							t = parseInt(rec.get('endweek')) > params.endweek;
+							if (s || t) {
+								return false;
+							} else {
+								return true;
+							}
+						});
+					});
 				}
 				function changeDpt(cmb, newValue, oldValue) {
 					let spno = qryfrm.down("[xtype='kscombo']");
@@ -144,6 +169,7 @@ Ext.onReady(function () {
 				var newStore = Ext.create("Ext.data.Store", {
 					pageSize: 500,
 					fields: newFields,
+					filterOnLoad: true,
 					// 用课号做分组依据方便后面处理, 但这样有问题
 					// groupField: "courseno",
 					proxy: {
@@ -663,7 +689,7 @@ Ext.onReady(function () {
 				var win;
 				function sctcno(rec) {
 					pcSto.removeAll();
-					var sto = gdcno.getStore();
+					let sto = gdcno.getStore();
 					sto.proxy.extraParams.xh = rec.data.xh;
 					sto.load();
 					if (!win) {
