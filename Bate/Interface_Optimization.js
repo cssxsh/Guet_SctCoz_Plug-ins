@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.10
+// @version      3.7.11
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -30,18 +30,14 @@
 Ext.onReady(function () {
 	// 一些参数
 	let col = {
-		ver: "3.7",			//主要版本号
-		stid_hide: false,	//学号参数是否隐藏
-		sct_hide: false,	//已选控制是否隐藏
+		ver: "3.7",			// 主要版本号
+		stid_hide: false,	// 学号参数是否隐藏
+		sct_hide: false,	// 已选控制是否隐藏
+		info_load: false	// 是否加载课程信息
 	};
 	// 创建工具
 	let plugTools = SctCoz.tools;
 	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
-	// if (plugTools.ClassStorage.Get("value", "I_O_Col") == null) {
-	// 	col = plugTools.ClassStorage.Get("value", "I_O_Col");
-	// } else {
-	// 	plugTools.ClassStorage.Save("value", col, "I_O_Col");
-	// }
 
 	// 创建并应用修改
 	let CourseSetNew = {
@@ -70,9 +66,9 @@ Ext.onReady(function () {
 							{ fieldLabel: '开课年级', labelWidth: 60, width: 150, xtype: 'gradecombo' },
 							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
-							{ fieldLabel: '周次', labelWidth: 35, width: 85, name: 'startweek'}, { labelWidth: 0, width: 50, name: 'endweek'}, 
-							{ fieldLabel: '星期', labelWidth: 35, width: 85, name: 'fromweek'}, { labelWidth: 0, width: 50, name: 'toweek'}, 
-							{ fieldLabel: '节次', labelWidth: 35, width: 85, name: 'startsequence'}, { labelWidth: 0, width: 50, name: 'endsequence'}, 
+							{ fieldLabel: '周次', labelWidth: 35, width: 85, name: 'startweek'}, { labelWidth: 0, width: 50, name: 'endweek' }, 
+							{ fieldLabel: '星期', labelWidth: 35, width: 85, name: 'fromweek'}, { labelWidth: 0, width: 50, name: 'toweek' }, 
+							{ fieldLabel: '节次', labelWidth: 35, width: 85, name: 'startsequence'}, { labelWidth: 0, width: 50, name: 'endsequence' }, 
 							{ fieldLabel: '教室', labelWidth: 40, width: 100, name: 'croomno'},
 							{ fieldLabel: '教师号', labelWidth: 50, width: 110, name: 'teacherno'}, 
 							{ fieldLabel: '教师', labelWidth: 35, width: 100, name: 'tname',}, 
@@ -80,7 +76,7 @@ Ext.onReady(function () {
 							{ fieldLabel: '课程代码', labelWidth: 60, width: 150, name: 'courseid' }, 
 							{ fieldLabel: '课程名称', labelWidth: 60, width: 200, name: 'cname' },
 							{ fieldLabel: '其他', labelWidth: 35, width: 120, name: 'stid'},
-							{ margin: '0 3', xtype: 'button', text: '查询', formBind: true, handler: queryStore}
+							{ margin: '0 3', xtype: 'button', text: '查询', formBind: true, handler: queryStore }
 						]
 					}]
 				});
@@ -120,6 +116,7 @@ Ext.onReady(function () {
 					
 					sto.proxy.extraParams = params;
 					sto.load(function () {
+						// 教务自带的过滤有问题，需要本地再次过滤
 						sto.filterBy(function (rec) {
 							s = parseInt(rec.get('startweek')) < params.startweek;
 							t = parseInt(rec.get('endweek')) > params.endweek;
@@ -190,24 +187,26 @@ Ext.onReady(function () {
 								}
 							});
 							// 获取有信息的课号列表
-							let Loading = newGrid.setLoading("加载课程信息中...");
-							plugTools.LoadData({
-								path: "CourseNoList.json",
-								success: function (response) {
-									(Ext.isArray(response.data) ? response.data : [response.data]).forEach(function (Info) {
-										let key = Info.courseno;
-										let group = me.GroupsByNo.get(key);
-										if (group != null) {
-											group.forEach(function (rec) { rec.set("comment", Info); });
-										}
-									});
-									Loading.hide();
-								},
-								failure: function (result) {
-									plugTools.Logger(result, 2, "By [Get info of courses]");
-									Loading.hide();
-								}
-							});
+							if (info_load) {
+								let Loading = newGrid.setLoading("加载课程信息中...");
+								plugTools.LoadData({
+									path: "CourseNoList.json",
+									success: function (response) {
+										(Ext.isArray(response.data) ? response.data : [response.data]).forEach(function (Info) {
+											let key = Info.courseno;
+											let group = me.GroupsByNo.get(key);
+											if (group != null) {
+												group.forEach(function (rec) { rec.set("comment", Info); });
+											}
+										});
+										Loading.hide();
+									},
+									failure: function (result) {
+										plugTools.Logger(result, 2, "By [Get info of courses]");
+										Loading.hide();
+									}
+								});
+							}
 						}
 					},
 					GroupsByNo: Ext.create("Ext.util.HashMap")
