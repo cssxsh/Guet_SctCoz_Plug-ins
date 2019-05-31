@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.1
+// @version      4.7.2
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -132,33 +132,21 @@ Ext.onReady(function () {
 		// 取新写的store
 		let spSto = Ext.data.StoreManager.lookup("spnoSto");
 
-		let sctDptListeners = {
-			select: function (cmb, rec) {
-				let dpt = rec[0].get("dptno");
-				spSto.clearFilter();
-				spSto.filter([
-					{ property: "dptno", value: new RegExp("^" + dpt + "$") },
-					// 过滤不启用专业
-					{ property: "used", value: "1" }
-				]);
-				qryfrm.getForm().findField("spno").setValue("");
-			},
-			change: function (me, newValue, oldValue) {
-				if (oldValue == null) {
-					spSto.filter([
-						{ property: "dptno", value: new RegExp("^" + newValue + "$") },
-						{ property: "used", value: "1" }
-					]);
-				}
+		function changeDpt(cmb, newValue, oldValue) {
+			let spno = qryfrm.down("[xtype='kscombo']");
+			spno.getStore().clearFilter();
+			if (newValue != "" && newValue != null) {
+				spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
+				spno.setValue("");
 			}
-		};
+		}
 		var qryfrm = Ext.create("Edu.view.QueryForm", {
 			url: "/student/StuInfo",
 			labelWidth: 60,
 			argcols: [
 				{ xtype: "termcombo", store: tmSto, value: getTerm()[1], allowBlank: false, labelWidth: 30, readOnly: true },
 				{ xtype: "gradecombo", allowBlank: false, labelWidth: 30, width: 120, size: 6 },
-				{ xtype: "dptcombo", fieldLabel: "开课学院", editable: false, listeners: sctDptListeners },
+				{ xtype: "dptcombo", fieldLabel: "开课学院", editable: false, listeners: { change: changeDpt } },
 				{ xtype: "kscombo", width: 240, allowBlank: false },
 				{ xtype: "hidden", fieldLabel: "选课类别", name: "stype", value: scttype },
 				{ xtype: "button", handler: queryStore, text: "查询", margin: "0 3", formBind: true }

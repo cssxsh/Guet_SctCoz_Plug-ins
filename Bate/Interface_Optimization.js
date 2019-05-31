@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.12
+// @version      3.7.13
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -66,9 +66,9 @@ Ext.onReady(function () {
 							{ fieldLabel: '开课年级', labelWidth: 60, width: 150, xtype: 'gradecombo' },
 							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
 							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
-							{ fieldLabel: '周次', labelWidth: 35, width: 85, name: 'startweek'}, { labelWidth: 0, width: 50, name: 'endweek' }, 
-							{ fieldLabel: '星期', labelWidth: 35, width: 85, name: 'fromweek'}, { labelWidth: 0, width: 50, name: 'toweek' }, 
-							{ fieldLabel: '节次', labelWidth: 35, width: 85, name: 'startsequence'}, { labelWidth: 0, width: 50, name: 'endsequence' }, 
+							{ fieldLabel: '周次', labelWidth: 35, width: 65, name: 'startweek'}, { labelWidth: 0, width: 30, name: 'endweek' }, 
+							{ fieldLabel: '星期', labelWidth: 35, width: 65, name: 'fromweek'}, { labelWidth: 0, width: 30, name: 'toweek' }, 
+							{ fieldLabel: '节次', labelWidth: 35, width: 65, name: 'startsequence'}, { labelWidth: 0, width: 30, name: 'endsequence' }, 
 							{ fieldLabel: '教室', labelWidth: 40, width: 100, name: 'croomno'},
 							{ fieldLabel: '教师号', labelWidth: 50, width: 110, name: 'teacherno'}, 
 							{ fieldLabel: '教师', labelWidth: 35, width: 100, name: 'tname',}, 
@@ -452,11 +452,9 @@ Ext.onReady(function () {
 					sto.load();
 				}
 				function changeDpt(cmb, newValue, oldValue) {
-					let spno = qryfrmNew.down("[xtype='kscombo']");
-					if (newValue == "") {
-						spno.getStore().clearFilter();
-					} else {
-						spno.getStore().clearFilter();
+					let spno = qryfrm.down("[xtype='kscombo']");
+					spno.getStore().clearFilter();
+					if (newValue != "" && newValue != null) {
 						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
 						spno.setValue("");
 					}
@@ -563,10 +561,8 @@ Ext.onReady(function () {
 				}
 				function changeDpt(cmb, newValue, oldValue) {
 					let spno = qryfrm.down("[xtype='kscombo']");
-					if (newValue == "") {
-						spno.getStore().clearFilter();
-					} else {
-						spno.getStore().clearFilter();
+					spno.getStore().clearFilter();
+					if (newValue != "" && newValue != null) {
 						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
 						spno.setValue("");
 					}
