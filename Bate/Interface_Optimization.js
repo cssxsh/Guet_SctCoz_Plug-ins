@@ -47,6 +47,7 @@ Ext.onReady(function () {
 		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opt) {
+				// 提示设置
 				Ext.QuickTips.init();
 				Ext.form.Field.prototype.MsgTarget = 'side';
 				// 查询面板
@@ -452,7 +453,7 @@ Ext.onReady(function () {
 					sto.load();
 				}
 				function changeDpt(cmb, newValue, oldValue) {
-					let spno = qryfrm.down("[xtype='kscombo']");
+					let spno = qryfrmNew.down("[xtype='kscombo']");
 					spno.getStore().clearFilter();
 					if (newValue != "" && newValue != null) {
 						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
