@@ -262,7 +262,7 @@ Ext.onReady(function () {
         isAutoLoad: false
     }
     plugTools.menuChange(StuPersonNew);
-    plugTools.menuChange(StuLabNew);
-    plugTools.menuChange(StuLvlNew);
+    // plugTools.menuChange(StuLabNew);
+    // plugTools.menuChange(StuLvlNew);
     plugTools.menuChange(StuDelayNew);
 });

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.14
+// @version      3.7.15
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -325,19 +325,19 @@ Ext.onReady(function () {
 				grid.columns[3].width = 75;
 				grid.columns[4].maxWidth = 240;
 				grid.getStore().model.setFields(["teacherno", "teacher", "xf", "classno", "spno", "spname", "tname", "tname1", "grade", "cname", "pycc", "dptno", "xm", "stid", "name", "term", "courseid", "courseno", "stype", "khsj", "state", "xksj", "ip", "comm", "checked", "pscj", "khzt", "cjf", "setjc", "textnum"]);
-				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师", dataIndex: "teacher", width: 100 }));
+				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师",   dataIndex: "teacher",   width: 100 }));
 				grid.headerCt.insert(4, Ext.create("Ext.grid.column.Column", { header: "教师号", dataIndex: "teacherno", width: 100, hidden: true }));
-				grid.headerCt.insert(9, Ext.create("Ext.grid.column.Column", { header: "选课费", dataIndex: "cost", width: 80 }));
+				grid.headerCt.insert(9, Ext.create("Ext.grid.column.Column", { header: "选课费", dataIndex: "cost",      width: 80  }));
 
 				// 修改 fieldset
 				let field = me.down("fieldset");
 				let form = me.down("queryform").getForm();
 				let Label = [
-					{ name: "TotalCredits", fieldLabel: "总计学分", width: 100, labelWidth: 60, editable: false, value: "???" },
+					{ name: "TotalCredits",     fieldLabel: "总计学分", width: 100, labelWidth: 60, editable: false, value: "???" },
 					{ name: "CompulsoryCredit", fieldLabel: "必修学分", width: 100, labelWidth: 60, editable: false, value: "???" },
-					{ name: "ElectiveCredits", fieldLabel: "选修学分", width: 100, labelWidth: 60, editable: false, value: "???" },
-					{ name: "GeneralCredits", fieldLabel: "通识学分", width: 100, labelWidth: 60, editable: false, value: "???" },
-					{ name: "CourseFee", fieldLabel: "总选课费", width: 120, labelWidth: 60, editable: false, value: "???" }
+					{ name: "ElectiveCredits",  fieldLabel: "选修学分", width: 100, labelWidth: 60, editable: false, value: "???" },
+					{ name: "GeneralCredits",   fieldLabel: "通识学分", width: 100, labelWidth: 60, editable: false, value: "???" },
+					{ name: "CourseFee",        fieldLabel: "总选课费", width: 120, labelWidth: 60, editable: false, value: "???" }
 				];
 				field.add(Label);
 				// TODO: [7] <构建专用仓库> {用于整合两个接口的信息的stroe}
@@ -350,7 +350,7 @@ Ext.onReady(function () {
 				}
 
 				// 添加新信息
-				// TODO: [8] <显示单门学费> {需要了解各个专业的学分与学费对应关系。}
+				// TO-DO: [8] <显示单门学费> {需要了解各个专业的学分与学费对应关系。}
 				grid.getStore().addListener("load", function (me, opt) {
 					let Total = 0;
 					let Compulsory = 0;
@@ -443,7 +443,8 @@ Ext.onReady(function () {
 						{ xtype: "gradecombo", labelWidth: 30, width: 120, allowBlank: false, size: 6 },
 						{ xtype: "dptcombo", listeners: {change: changeDpt} },
 						{ xtype: "kscombo", width: 240, allowBlank: false },
-						{ xtype: "combo", store: [[0, "执行计划"], [1, "培养计划"]], name: "plan", fieldLabel: "计划选择", queryMode: "local", value: 0, editable: false, blankText: "请选择学院" },
+						{ fieldLabel: '课程代码', labelWidth: 60, width: 150, name: 'courseid' }, 
+						{ xtype: "combo", store: [[0, "执行计划"], [1, "培养计划"]], name: "plan", fieldLabel: "计划选择", queryMode: "local", value: 0, editable: false, blankText: "请选择计划" },
 						{ xtype: "button", text: "查询", margin: "0 3", handler: queryStore }
 					]
 				});
@@ -482,7 +483,7 @@ Ext.onReady(function () {
 						{ header: "学期", dataIndex: "term", width: 120, renderer: function (v) { return sctDropDown(v, tmSto, "term", "termname") } },
 						{ header: "专业", dataIndex: "spno", width: 160, renderer: function (v) { return sctDropDown(v, spSto, "spno", "spname") } },
 						{ header: "年级", dataIndex: "grade", width: 40 },
-						{ header: "课程代号", dataIndex: "courseid", width: 90 },
+						{ header: "课程代码", dataIndex: "courseid", width: 90 },
 						{ header: "课程名称", dataIndex: "cname", minWidth: 160 },
 						{ header: "课程性质", dataIndex: "tname", width: 100 },
 						{ header: "考核<br/>方式", dataIndex: "examt", width: 40 },
