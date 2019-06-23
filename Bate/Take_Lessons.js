@@ -99,7 +99,7 @@ Ext.onReady(function () {
 			},
 			groupField: "spno"
 		});
-		let setSto = Ext.create("Ext.data.Store", {
+		var setSto = Ext.create("Ext.data.Store", {
 			fields: ["id", "term", "courseid", "cname", "spno", "grade", "tname", "xf", "scted"],
 			proxy: {
 				type: "ajax",
@@ -158,7 +158,7 @@ Ext.onReady(function () {
 			store: setSto,
 			columns: [
 				{ xtype: "rownumberer", header: "序号", width: 40 },
-				{ dataIndex: "scted", header: "操作", xtype: "actionrendercolumn", width: 40, renderer: function (v) { if (!v) { return ["选课"]; } }, items: Items },
+				{ dataIndex: "scted", header: "操作", xtype: "actionrendercolumn", width: 40, renderer: function (v) { return v ? [] : ["选课"]; }, items: Items },
 				{ dataIndex: "scted", header: "已选", xtype: "booleancolumn", trueText: "是", falseText: "否", width: 40 },
 				{ dataIndex: "courseid", header: "课程代码", width: 95 },
 				{ dataIndex: "cname", header: "课程名称", width: 240 },
