@@ -644,6 +644,45 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			}
 		}
 	});
+	Ext.define("SctCoz.Student.CourseEvalNo", {
+		// 
+		extend: "Ext.data.Store",
+		fields: [
+			"term", "stid", "courseid", "teacherno", "courseno", "cname", "name", "lb", "chk",
+			{ name: "type", convert: function (value, record) { return (record.get("lb") == 1 ? "理论课" : "实验课"); } }
+		],
+		proxy: {
+			url: "/student/getpjcno",
+			type: "ajax",
+			reader: {
+				type: "json",
+				root: "data"
+			},
+			extraParams: {
+				// 计划序号
+				term: ""
+			}
+		}
+	});
+	Ext.define("SctCoz.Student.Evaluation", {
+		// 
+		extend: "Ext.data.Store",
+		fields: [
+			"term", "id", "courseid", "lb", "score", "teacherno","courseno",
+			"dja", "afz", "djb", "bfz", "djc", "cfz", "djd", "dfz", "dje", "efz", "nr", "zbnh", "qz"
+		],
+		proxy: {
+			type: "ajax", 
+			url: "/student/jxpgdata", 
+			reader: { 
+				type: "json", 
+				root: "data" 
+			},
+			api: {
+				update: "/student/SaveJxpg" 
+			}
+        }
+	});
 	Ext.define("SctCoz.Student.Score", {
 		extend: "Ext.data.Store",
 		fields: [
@@ -681,7 +720,7 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			this.title = "<font size=3>" + this.TitleText + "</font>";
 			this.callParent(arguments);
 		}
-	})
+	});
 	Ext.define("SctCoz.Query.QueryForm", {
 		extend: "Ext.form.Panel",
 		xtype: ["query-form"],
@@ -749,7 +788,7 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			]);
 			this.callParent(arguments);
 		}
-	})
+	});
 	Ext.define("SctCoz.Query.Schedule", {
 		extend: "Ext.panel.Panel", 
 		xtype: ["query-schedule"],
@@ -760,7 +799,6 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			Ext.apply(this, Ext.apply({}, config));
 			// 组件
 			var timeGrid = Ext.create("SctCoz.Query.QueryGrid", {
-				id: "card-0",
 				autoScroll: false, height: "100%",
 				store: Ext.create("SctCoz.Comm.HourInfo", { fields: [
 					"term", "nodeno", "xss", "nodename", "memo",
@@ -783,7 +821,6 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			});
 			// var infoGrid = Ext.create
 			var form = Ext.create("Ext.form.Panel", {
-				id: "card-1",
 				title: "课程信息",
 				bodyPadding: 2, margin: 1, width: "100%", autoScroll: true,
 				defaultType: "displayfield",
@@ -865,11 +902,18 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			}];
 			this.callParent(arguments);
 		}
-	})
+	});
 	Ext.define("SctCoz.Query.CoursePlan", {
 		extend: "Ext.data.Store",
 		alias: ["CoursePlan"],
-		fields: ["pid", "term", "spno", "grade", "courseid", "cname", "tname", "examt", "xf", "llxs", "syxs", "qtxs", "sjxs", "type", "mustsct", "xjcl", "comm"],
+		fields: [
+			"pid", "term", "spno", "grade", "courseid", "cname", "tname", 
+			"examt", "xf", "llxs", "syxs", "qtxs", "sjxs", "type", "mustsct", "xjcl", "comm",
+			{ name: "typeText", convert: function (value, record) {
+				let typeArray = [[0, "百分制"], [1, "五级制"], [2, "二级制"]];
+				return typeArray[record.get("type")][1];
+			}}
+		],
 		proxy: {
 			url: "/Query/GetCoursePlan",
 			type: "ajax",

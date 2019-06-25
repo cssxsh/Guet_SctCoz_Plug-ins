@@ -446,7 +446,7 @@ Ext.onReady(function () {
 						{ header: "实验<br/>学时", dataIndex: "syxs", width: 40 },
 						{ header: "上机<br/>学时", dataIndex: "qtxs", width: 40 },
 						{ header: "实践<br/>学时", dataIndex: "sjxs", width: 40 },
-						{ header: "成绩类型", dataIndex: "type", width: 80, renderer: function (value) { let tpArray = [[0, "百分制"], [1, "五级制"], [2, "二级制"]]; return tpArray[value][1]; } },
+						{ header: "成绩类型", dataIndex: "typeText", width: 80 },
 						{ header: "应选课", dataIndex: "mustsct", xtype: "checkcolumn", width: 60 },
 						{ header: "学籍<br/>处理", dataIndex: "xjcl", xtype: "checkcolumn", width: 40 },
 						{ header: "备注", dataIndex: "comm", width: 60, flex: .6 }
@@ -462,10 +462,9 @@ Ext.onReady(function () {
 		}
 	};
 	var LabSctNew = {
-		action: "LabSctNew",
-		children: [],
+		action: "LabSct",
 		controller: "Plug-in",
-		id: "LabSctNew",
+		id: "LabSct",
 		leaf: true,
 		text: "实验选课【插件】",
 		type: "action",
@@ -653,7 +652,98 @@ Ext.onReady(function () {
 		"action":"LabUnSct","children":[],"command":null,"controller":"Student","id":"bstuk110","leaf":true,"text":"实验退课","type":"action"
 	};
 	var StuTEMSNew = {
-		"action":"StuTEMS","children":[],"command":null,"controller":"Student","id":"bstuk140","leaf":true,"text":"评教","type":"action"
+		action: "StuTEMS",
+		text: "学生评教【插件】",
+		id: "StuTEMS",
+		leaf: true,
+		type: "action",
+		isAutoLoad: false,
+		listeners: {
+			afterrender: function (me, opt) {
+				// 
+				Ext.QuickTips.init();
+				Ext.form.Field.prototype.MsgTarget = "side";
+				// 查询部分
+				var queryByStore = function (button, event) {
+					let panel = button.up("[xtype='query-panel']");
+					let grid =  panel.down("[xtype='query-grid']");
+					let store = grid.getStore();
+					let formSet = panel.down("[xtype='query-form']").getForm();
+					store.getProxy().extraParams = formSet.getValues();
+					store.load();
+					// 设置打印标题
+					grid.printTitle = formSet.findField("term").getDisplayValue() + "评教列表";
+				};
+				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
+					argcols: [// xtype里已经封装好了store。
+						{ fieldLabel: "开课学期", xtype: "TermCombo" }
+					],
+					QueryByStore: queryByStore
+				});
+				// 
+				var loadCourseEvalNo = function (record) {
+					// 
+					evalStore.getProxy().extraParams = record.get("term");
+					evalStore.getProxy().extraParams = record.get("courseno");
+					evalStore.getProxy().extraParams = record.get("teacherno");
+
+					// 切换到输入页
+					panel.getLayout().next();
+					Ext.getCmp("card-prev").setDisabled(false);
+				};
+				var queryGrid = Ext.create("SctCoz.Query.QueryGrid", {
+					store: Ext.create("SctCoz.Student.CourseEvalNo"),
+					columns: [
+						{ header: "序号", xtype: "rownumberer", width: 36 },
+						{ header: "操作", xtype: "actiontextcolumn", width: 48, items: [{
+							text: "评教", handler: function (grid, rowIndex, colIndex) {
+									let record = grid.getStore().getAt(rowIndex);
+									loadCourseEvalNo(record); 
+								}
+							}]
+						},
+						{ header: "课程代码", dataIndex: "courseid", width: 96 },
+						{ header: "课程序号", dataIndex: "courseno", width: 96 },
+						{ header: "教师号", dataIndex: "teacherno", width: 96 },
+						{ header: "教师", dataIndex: "name", width: 96 },
+						{ header: "类型", dataIndex: "type", width: 96},
+						{ header: "课程名称", dataIndex: "cname",  minWidth: 240, flex: 1 }
+					]
+				});
+				var qureyCard = Ext.create("Ext.container.Container", { 
+					region: "center", layout: "border", items: [queryForm, queryGrid] 
+				});
+				// 输入部分
+				var evalStore = Ext.create("SctCoz.Student.Evaluation");
+				var evalCard = Ext.create("Ext.container.Container", { 
+					region: "center", layout: "border", items: [] 
+				});
+				var navigate = function(button){
+					let layout = button.up("[xtype='query-panel']").getLayout();
+					layout[button.direction]();
+					Ext.getCmp("card-prev").setDisabled(!layout.getPrev());
+					Ext.getCmp("card-next").setDisabled(!layout.getNext());
+				};
+				var panel = Ext.create("SctCoz.Query.QueryPanel", {
+					TitleText: "学生评教",  layout: "card",
+					items: [qureyCard, evalCard],
+					bbar: [{
+						id: "card-prev",
+						direction: "prev",
+						text: "<< 评教查询",
+						handler: navigate,
+						disabled: true
+					}, "->", {
+						id: "card-next",
+						direction: "next",
+						text: "评教输入 >>",
+						handler: navigate,
+						disabled: true
+					}]
+				});
+				me.add(panel);
+			}
+		}
 	};
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
