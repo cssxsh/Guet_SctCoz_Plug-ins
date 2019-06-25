@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.15
+// @version      3.7.21
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -36,21 +36,62 @@ Ext.onReady(function () {
 		info_load: false	// 是否加载课程信息
 	};
 	// 创建工具
-	let plugTools = SctCoz.tools;
+	var plugTools = SctCoz.tools;
 	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
 
 	// 创建并应用修改
-	let CourseSetNew = {
+	var CourseSetNew = {
 		action: "QryCourseSet",
 		text: "课程设置【插件】",
 		id: "QryCourseSet",
 		isAutoLoad: false,
 		listeners: {
-			afterrender: function (me, opt) {
+			afterrender: function (me, opts) {
 				// 提示设置
 				Ext.QuickTips.init();
 				Ext.form.Field.prototype.MsgTarget = "side";
 				// 查询面板
+				var queryByStore = function (button, event) {
+					let panel = button.up("[xtype='query-panel']");
+					let grid =  panel.down("[xtype='query-grid']");
+					let store = grid.getStore();
+					let formSet = panel.down("[xtype='query-form']").getForm();
+					let params = formSet.getValues();
+					let weeknum = Ext.data.StoreManager.lookup("TermStore").findRecord("term", params.term).get("weeknum");
+
+					params.startweek = parseInt(params.startweek);
+					params.startweek = isNaN(params.startweek) ? 1 : params.startweek;
+					params.endweek = parseInt(params.endweek);
+					params.endweek =  isNaN(params.endweek) ? weeknum : params.endweek;
+					params.fromweek = parseInt(params.fromweek);
+					params.fromweek =  isNaN(params.fromweek) ? 1 : params.fromweek;
+					params.toweek = parseInt(params.toweek);
+					params.toweek =  isNaN(params.toweek) ? 7 : params.toweek;
+					params.startsequence = parseInt(params.startsequence);
+					params.startsequence =  isNaN(params.startsequence) ? 1 : params.startsequence;
+					params.endsequence = parseInt(params.endsequence);
+					params.endsequence =  isNaN(params.endsequence) ? 6 : params.endsequence;
+					params.tname = params.tname.trim();
+					params.courseno = params.courseno.trim();
+					params.courseid = params.courseid.trim();
+					params.cname = params.cname.trim();
+					
+					store.getProxy().extraParams = params;
+					store.load(function () {
+						// 教务自带的过滤有问题，需要本地再次过滤
+						// TODO: [7] <完善条件过滤> {应该让被过滤的记录以课号相关联}
+						store.filterBy(function (rec) {
+							s = parseInt(rec.get('startweek')) < params.startweek;
+							t = parseInt(rec.get('endweek')) > params.endweek;
+							if (s || t) {
+								return false;
+							} else {
+								return true;
+							}
+						});
+					});
+					grid.printTitle = formSet.findField("term").getDisplayValue() + "课程设置";
+				};
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
 						{ fieldLabel: "开课学期", xtype: "TermCombo" }, 
@@ -71,47 +112,8 @@ Ext.onReady(function () {
 					],
 					QueryByStore: queryByStore
 				});
-				function queryByStore(button, event) {
-					let grid =  me.down("grid");
-					let store = me.down("grid").getStore();
-					let params = me.down("form").getForm().getValues();
-					let weeknum = Ext.data.StoreManager.lookup("TermStore").findRecord("term", params.term).get("weeknum");
-
-					params.startweek = parseInt(params.startweek);
-					params.startweek = isNaN(params.startweek) ? 1 : params.startweek;
-					params.endweek = parseInt(params.endweek);
-					params.endweek =  isNaN(params.endweek) ? weeknum : params.endweek;
-					params.fromweek = parseInt(params.fromweek);
-					params.fromweek =  isNaN(params.fromweek) ? 1 : params.fromweek;
-					params.toweek = parseInt(params.toweek);
-					params.toweek =  isNaN(params.toweek) ? 7 : params.toweek;
-					params.startsequence = parseInt(params.startsequence);
-					params.startsequence =  isNaN(params.startsequence) ? 1 : params.startsequence;
-					params.endsequence = parseInt(params.endsequence);
-					params.endsequence =  isNaN(params.endsequence) ? 6 : params.endsequence;
-					params.tname = params.tname.trim();
-					params.courseno = params.courseno.trim();
-					params.courseid = params.courseid.trim();
-					params.cname = params.cname.trim();
-					
-					store.proxy.extraParams = params;
-					store.load(function () {
-						// 教务自带的过滤有问题，需要本地再次过滤
-						// TODO: [7] <完善条件过滤> {应该让被过滤的记录以课号相关联}
-						store.filterBy(function (rec) {
-							s = parseInt(rec.get('startweek')) < params.startweek;
-							t = parseInt(rec.get('endweek')) > params.endweek;
-							if (s || t) {
-								return false;
-							} else {
-								return true;
-							}
-						});
-					});
-					grid.printTitle = me.down("form").getForm().findField("term").getDisplayValue() + "课程设置";
-				}
 				// 表格
-				let showComm = function (grid, rowIndex, colIndex) {
+				var showComm = function (grid, rowIndex, colIndex) {
 					let store = grid.getStore();
 					let info = store.getAt(rowIndex).get("comment");
 					plugTools.LoadData({
@@ -128,65 +130,35 @@ Ext.onReady(function () {
 						}
 					});
 				};
-				let newFields = [{ name: "sct", type: "boolean", defaultValue: true }, "dptname", "spname", "grade", "cname", "courseno", "name", "startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term", "courseid", "coment", "studentcount", "credithour", "teachperiod", "labperiod", "copperiod", "maxperson"];
-				let checkChange = function (me, index, checked) {
+				var checkChange = function (me, index, checked) {
 					let store = me.up("grid").getStore();
 					let key = store.getAt(index).get("courseno");
 					let Group = store.GroupsByNo.get(key);
 					Group.forEach(function (record) { record.set("sct", checked); });
 				};
 				// 日程表
-				// FIXME: [8] <重写课程表格> {添加和规范化课程表格功能和格式} (教务自带的模块不够好用)
-				var ctb = Ext.create("Edu.view.coursetable");
-				function openTimeTable(me, opt) {
-					// var grid = me.up("grid");
-					// var gRec = grid.getStore().data.items.filter(function (item) { return item.data.sct; });
-					// var panView = Ext.create("Ext.panel.Panel", { layout: "fit", autoScroll: true, frame: true });
-					// Ext.create("Ext.window.Window", {
-					// 	title: "课程表", width: "80%", height: "80%", modal: true, layout: "fit",
-					// 	items: [panView]
-					// }).show()
-					// // 如果没有数据本地加载
-					// if (ctb.store.data.length == 0) {
-					// 	ctb.store.loadData([
-					// 		{ "term": "2018-2019_2", "nodeno": "1", "nodename": "<font size=1>上午第一节</font></br>", "memo": "08:25-10:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
-					// 		{ "term": "2018-2019_2", "nodeno": "2", "nodename": "<font size=1>上午第二节</font></br>", "memo": "10:25-12:00", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
-					// 		{ "term": "2018-2019_2", "nodeno": "3", "nodename": "<font size=1>下午第一节</font></br>", "memo": "14:30-16:05", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
-					// 		{ "term": "2018-2019_2", "nodeno": "4", "nodename": "<font size=1>下午第二节</font></br>", "memo": "16:30-18:05", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
-					// 		{ "term": "2018-2019_2", "nodeno": "5", "nodename": "<font size=1>晚上第一节</font></br>", "memo": "19:00-20:35", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" },
-					// 		{ "term": "2018-2019_2", "nodeno": "6", "nodename": "<font size=1>晚上第二节</font></br>", "memo": "21:00-22:35", "xq1": "", "xq2": "", "xq3": "", "xq4": "", "xq5": "", "xq5": "", "xq6": "", "xq7": "" }
-					// 	], true);
-					// }
-					// ctb.render(panView.body, gRec);
-					
+				// FIX-ME: [8] <重写课程表格> {添加和规范化课程表格功能和格式} (教务自带的模块不够好用)
+				var openTimeTable = function (button, opts) {
 					var panView = Ext.create("SctCoz.Query.Schedule");
-					panView.LoadSchedule(true, "2018-2019_2");
+					panView.LoadSchedule(false, queryGrid.getStore().getRange().filter(function (record, index, array) {
+						return record.get("sct");
+					}));
 					Ext.create("Ext.window.Window", {
 						title: "课程表", width: "85%", height: "85%", modal: true, layout: "fit",
 						items: [panView]
 					}).show()
-				}
-				var newStore = Ext.create("Ext.data.Store", {
-					pageSize: 500,
-					fields: newFields,
-					filterOnLoad: true,
-					// 用课号做分组依据方便后面处理, 但这样有问题
-					// groupField: "courseno",
-					proxy: {
-						type: "ajax", url: "/Query/GetCourseTable",
-						reader: { type: "json", root: "data" }
-					},
-					autoLoad: false,
+				};
+				var newStore = Ext.create("SctCoz.Query.CourseSetTable", {
 					listeners: {
-						load: function (me, data) {
+						load: function (me, records, successful, opts) {
 							// 课号分组
 							me.GroupsByNo.clear();
-							me.each(function (rec) {
-								let key = rec.data.courseno;
+							records.forEach(function (record, index, array) {
+								let key = record.get("courseno");
 								if (me.GroupsByNo.containsKey(key)) {
 									me.GroupsByNo.get(key).push(rec);
 								} else {
-									me.GroupsByNo.add(key, [rec]);
+									me.GroupsByNo.add(key, [record]);
 								}
 							});
 							// 获取有信息的课号列表
@@ -236,44 +208,84 @@ Ext.onReady(function () {
 						{ header: "上机学时", dataIndex: "copperiod", width: 40 },
 						{ header: "可选人数", dataIndex: "maxperson", width: 40 },
 						{ header: "已选人数", dataIndex: "studentcount", width: 40 },
-						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", renderer: function (v, m, r) { return r.data.comment != null ? ["查看"] : []; }, items: [{ handler: showComm }], flex: 1 }
+						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", 
+							renderer: function (value, metaData, record) { return (record.get("comment") != null ? ["查看"] : [""]); }, 
+							items: [{ handler: showComm }], flex: 1 
+						}
 					],
 					newTbar: [
 						{ xtype: "button", text: "转为课表", formBind: true, icon: "/images/date_magnify.png", handler: openTimeTable }
 					]
 				});
 				// 面板
-				var pan = Ext.create("SctCoz.Query.QueryPanel", {
+				var queryPanel = Ext.create("SctCoz.Query.QueryPanel", {
 					TitleText: "课程设置",
 					items: [queryForm, queryGrid]
 				});
 				// 添加到TAB
-				me.add(pan);
+				me.add(queryPanel);
 			}
 		}
 	};
-	let StuScoreNew = {
+	var StuScoreNew = {
 		action: "StuScore",
-		text: "成绩查询",
+		text: "成绩查询【插件】",
 		id: "StuScore",
 		listeners: {
-			add: function (me, opt) {
-				// 修正Grid功能
-				let grid = me.down("grid");
-				grid.columns.forEach(function (c) { c.sortable = true; });
-				grid.columns[3].width = 60;
-				grid.columns[4].minWidth = 120;
-				grid.columns[4].width = 120;
-				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "考核成绩", dataIndex: "khcj", minWidth: 30 }));
-				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "期中成绩", dataIndex: "qzcj", minWidth: 30, hidden: true }));
-				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "平时成绩", dataIndex: "pscj", minWidth: 30 }));
-				grid.headerCt.insert(5, Ext.create("Ext.grid.column.Column", { header: "实验成绩", dataIndex: "sycj", minWidth: 30, hidden: true }));
-				grid.getView().enableTextSelection = true;
+			afterrender: function (me, opts) {
+				// 提示设置
+				Ext.QuickTips.init();
+				Ext.form.Field.prototype.MsgTarget = "side";
+				// 查询面板
+				var queryByStore = function (button, event) {
+					let panel = button.up("[xtype='query-panel']");
+					let grid =  panel.down("[xtype='query-grid']");
+					let store = grid.getStore();
+					let formSet = panel.down("[xtype='query-form']").getForm();
+					let params = formSet.getValues();
+
+					store.getProxy().extraParams = params;
+					grid.printTitle = formSet.findField("term").getDisplayValue() + "学生成绩";
+					store.load();
+				};
+				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
+					argcols: [// xtype里已经封装好了store。
+						{ fieldLabel: "开课学期", xtype: "TermCombo", allowBlank: true , value: "" }, 
+						{ fieldLabel: "课号", labelWidth: 32, width: 110, name: "courseno"}, 
+						{ fieldLabel: "课程代码", labelWidth: 64, width: 150, name: "courseid" }, 
+						{ fieldLabel: "课程名称", labelWidth: 64, width: 200, name: "cname" }
+					],
+					QueryByStore: queryByStore
+				});
+				// 表格
+				var queryGrid = Ext.create("SctCoz.Query.QueryGrid", {
+					store: Ext.create("SctCoz.Student.Score"),
+					columns: [
+						{ header: "序号", xtype: "rownumberer", width: 40 },
+						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return plugTools.transvalue(value, "TermStore", "term", "termname") } },
+						{ header: "课程代码", dataIndex: "cid", width: 96 },
+						{ header: "课号", dataIndex: "cno", width: 64 },
+						{ header: "课程名称", dataIndex: "cname", minWidth: 120, width: 120, flex: 1 },
+						{ header: "考核成绩", dataIndex: "khcj", minWidth: 32 },
+						{ header: "期中成绩", dataIndex: "qzcj", minWidth: 32, hidden: true },
+						{ header: "平时成绩", dataIndex: "pscj", minWidth: 32 },
+						{ header: "实验成绩", dataIndex: "sycj", minWidth: 32, hidden: true },
+						{ header: "成绩", dataIndex: "zpxs", minWidth: 64 },
+						{ header: "学分", dataIndex: "xf", width: 64 },
+						{ header: "课程性质", dataIndex: "kctype", minWidth: 64, flex: 1 }
+					]
+				});
+				
+				var queryPanel = Ext.create("SctCoz.Query.QueryPanel", {
+					TitleText: "学生成绩",
+					items: [queryForm, queryGrid]
+				});
+				me.add(queryPanel);
 			}
 		},
-		isAutoLoad: true
+		isAutoLoad: false
 	};
-	let SutSctedNew = {
+	var SutSctedNew = {
 		action: "StuScted",
 		text: "已选课程",
 		id: "StuScted",
@@ -384,7 +396,7 @@ Ext.onReady(function () {
 			}
 		}
 	};
-	let StuPlanNew = {
+	var StuPlanNew = {
 		action: "StuPlan",
 		text: "计划查询【插件】",
 		id: "StuPlan",
@@ -392,28 +404,31 @@ Ext.onReady(function () {
 		listeners: {
 			afterrender: function (me, opt) {
 				// 创建新的查询表单
+				var queryByStore = function (button, event) {
+					let panel = button.up("[xtype='query-panel']");
+					let grid =  panel.down("[xtype='query-grid']");
+					let store = grid.getStore();
+					let formSet = panel.down("[xtype='query-form']").getForm();
+					store.getProxy().extraParams = formSet.getValues();
+					store.load();
+					// 设置打印标题
+					grid.printTitle = formSet.findField("term").getDisplayValue() + formSet.findField("plan").getDisplayValue();
+				}
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
-						{ fieldLabel: '开课学期', xtype: 'TermCombo' }, 
-						{ fieldLabel: '开课年级', xtype: 'GradesCombo' },
-						{ fieldLabel: "开课学院", xtype: 'CollegeCombo' }, 
-						{ fieldLabel: '开课专业', xtype: 'MajorCombo' },
-						{ fieldLabel: '课程代码', labelWidth: 60, width: 150, name: 'courseid' }, 
-						{ xtype: "combo", store: [[0, "执行计划"], [1, "培养计划"]], name: "plan", fieldLabel: "计划选择", queryMode: "local", value: 0, editable: false, blankText: "请选择计划" }
+						{ fieldLabel: "开课学期", xtype: "TermCombo" }, 
+						{ fieldLabel: "开课年级", xtype: "GradesCombo" },
+						{ fieldLabel: "开课学院", xtype: "CollegeCombo" }, 
+						{ fieldLabel: "开课专业", xtype: "MajorCombo" },
+						{ fieldLabel: "课程代码", labelWidth: 60, width: 150, name: "courseid" }, 
+						{ fieldLabel: "计划选择", xtype: "combo", store: [[0, "执行计划"], [1, "培养计划"]], 
+							name: "plan", queryMode: "local", value: 0, editable: false, blankText: "请选择计划" 
+						}
 					],
 					QueryByStore: queryByStore
 				});
 				queryForm.getForm().setValues(SctCoz.Student.getUserInfo());
-				function queryByStore(button, event) {
-					let grid =  me.down("grid");
-					let store = me.down("grid").getStore();
-					store.proxy.extraParams = me.down("form").getForm().getValues();
-					store.load();
-					// 设置打印标题
-					grid.printTitle = me.down("form").getForm().findField("term").getDisplayValue() + "课程计划";
-				}
 				// 创建新grid
-				let tpArray = [[0, "百分制"], [1, "五级制"], [2, "二级制"]];
 				var queryGrid = Ext.create("SctCoz.Query.QueryGrid", {
 					store: Ext.create("SctCoz.Query.CoursePlan"),
 					columns: [
@@ -431,22 +446,22 @@ Ext.onReady(function () {
 						{ header: "实验<br/>学时", dataIndex: "syxs", width: 40 },
 						{ header: "上机<br/>学时", dataIndex: "qtxs", width: 40 },
 						{ header: "实践<br/>学时", dataIndex: "sjxs", width: 40 },
-						{ header: "成绩类型", dataIndex: "type", width: 80, renderer: function (value) { return tpArray[value][1]; } },
+						{ header: "成绩类型", dataIndex: "type", width: 80, renderer: function (value) { let tpArray = [[0, "百分制"], [1, "五级制"], [2, "二级制"]]; return tpArray[value][1]; } },
 						{ header: "应选课", dataIndex: "mustsct", xtype: "checkcolumn", width: 60 },
 						{ header: "学籍<br/>处理", dataIndex: "xjcl", xtype: "checkcolumn", width: 40 },
 						{ header: "备注", dataIndex: "comm", width: 60, flex: .6 }
 					]
 				});
-				var pan = Ext.create("SctCoz.Query.QueryPanel", {
+				var queryPanel = Ext.create("SctCoz.Query.QueryPanel", {
 					TitleText: "课程计划",
 					items: [queryForm, queryGrid]
 				});
 				// 加载组件
-				me.add(pan);
+				me.add(queryPanel);
 			}
 		}
 	};
-	let LabSctNew = {
+	var LabSctNew = {
 		action: "LabSctNew",
 		children: [],
 		controller: "Plug-in",
@@ -634,8 +649,11 @@ Ext.onReady(function () {
 			}
 		}
 	};
-	let labUnSctNew = {
+	var labUnSctNew = {
 		"action":"LabUnSct","children":[],"command":null,"controller":"Student","id":"bstuk110","leaf":true,"text":"实验退课","type":"action"
+	};
+	var StuTEMSNew = {
+		"action":"StuTEMS","children":[],"command":null,"controller":"Student","id":"bstuk140","leaf":true,"text":"评教","type":"action"
 	};
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
@@ -644,7 +662,8 @@ Ext.onReady(function () {
 	// TO-DO[9]: <添加实验选课> {添加对实验选课的支持}
 	plugTools.menuAdd(LabSctNew);
 	plugTools.menuAdd(labUnSctNew);
-	// TODO[9]: <重写课表模块> {把实验课加入课程表}
+	plugTools.menuAdd(StuTEMSNew);
+	// TODO[9]: <重写课表模块> {把实验课加入课程表, 可以使用评教接口}
 	let panel = Ext.getCmp("content_panel");
 	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 
 	panel.addListener("add", function (me, lastTab, opt) {
