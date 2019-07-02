@@ -119,10 +119,10 @@ Ext.onReady(function () {
 					sctStore.getProxy().extraParams = record.data;
 					sctStore.load();
 				}
-				sctGrid.setTitle(cname + "(" + courseid + ")");
+				sctGrid.setTitle(cname + "[" + courseid + "]");
 			}
 		};
-		var selectCourse = function (button, opts) {
+		var selectCourse = function (button, event) {
 			let grid = button.up("[xtype='select-grid']");
 			let selectRecord = grid.SelectRecord;
 			let records = grid.getSelectionModel().getSelection();
@@ -153,15 +153,19 @@ Ext.onReady(function () {
 				Ext.Msg.alert("提示", "请选择一个课号提交。");
 			}
 		};
-		var takeCourse = function (button, opts) {
+		var takeCourse = function (button, event) {
 			let grid = button.up("[xtype='select-grid']");
 			let selectRecord = grid.SelectRecord;
 			let records = grid.getSelectionModel().getSelection();
-			let col = plugTools.ClassStorage.Load("value", "T_L_Col");
+			var col = plugTools.ClassStorage.Load("value", "T_L_Col");
 
 			if (records.length > 0) {
-				let params = records[0].getData();
+				var params = records[0].getData();
 				params.stype = sctType;
+				
+				// plugTools.Logger("抢课开始，课号：" + params.courseno, 2, "By takeCourse");
+				
+				
 				var task = {
 					run: function () {
 						Ext.Ajax.request({
@@ -178,10 +182,12 @@ Ext.onReady(function () {
 										selectRecord.set("scted", true);
 										selectRecord.commit();
 										loadCourseNo(selectRecord);
+										// plugTools.Logger("抢课结束，课号：" + params.courseno, 2, "By takeCourse");
 									});
 									// 下面这句判断应该用正则表达式
 								} else if ("课程:" + params.courseno + "选择失败，选课人数已满!" == result.msg || col.overflow) {
 									Ext.Msg.updateProgress(Ext.TaskManager.timerId % 100 / 100);
+									// plugTools.Logger("抢课进行中，课号：" + params.courseno, 2, "By takeCourse");
 								} else {
 									Ext.TaskManager.stop(task);
 									Ext.Msg.hide();
@@ -198,6 +204,17 @@ Ext.onReady(function () {
 					interval: col.time
 				};
 				Ext.TaskManager.start(task);
+				Ext.Msg.show({
+					title: "提示",
+					msg: "点击提示框左上角停止选课。",
+					icon: Ext.Msg.INFO,
+					closable: true,// Ext控件好像没有办法同时显示进度框和按钮
+					progress: true,
+					progressText: "课号: " + params.courseno + " 正在抢课！",
+					fn: function () {
+						Ext.TaskManager.stop(task);
+					}
+				});
 			} else {
 				Ext.Msg.alert("提示", "请选择一个课号提交。");
 			}
@@ -237,7 +254,7 @@ Ext.onReady(function () {
 					}}]
 				},
 				{ dataIndex: "scted", header: "已选", xtype: "booleancolumn", trueText: "是", falseText: "否", width: 40 },
-				{ header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return plugTools.transvalue(value, "TermStore", "term", "termname") } },
+				// { header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return plugTools.transvalue(value, "TermStore", "term", "termname") } },
 				{ header: "课程代码", dataIndex: "courseid", width: 95 },
 				{ header: "课程名称", dataIndex: "cname",  width: 160 },
 				{ header: "课程性质", dataIndex: "tname", minWidth: 60 },
@@ -268,12 +285,11 @@ Ext.onReady(function () {
 				]
 			}],
 			columns: [
-				{ header: "序号", xtype: "rownumberer", width: 40 },
 				{ header: "课程序号", dataIndex: "courseno",  width: 70 },
-				{ header: "容量", dataIndex: "maxstu", width: 64 },
+				{ header: "容量", dataIndex: "maxstu", width: 56 },
 				{ header: "已选", dataIndex: "sctcnt", width: 48 },
 				{ header: "抽签", dataIndex: "lot", width: 48, xtype: "booleancolumn", trueText: "是", falseText: "否" },
-				{ header: "教师", dataIndex: "name", width: 96 },
+				{ header: "教师", dataIndex: "name", width: 72 },
 				{ header: "时间安排", dataIndex: "ap", width: 96, flex: 1 }
 			],
 			SelectFn: selectCourse,

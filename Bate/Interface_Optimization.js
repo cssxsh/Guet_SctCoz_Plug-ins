@@ -801,10 +801,10 @@ Ext.onReady(function () {
 				});
 				var evalSave = function (button, event) {
 					evalStore.sync(); 
-					let form = button.up("[xtype='form']").getForm();
-					let params = form.getValues();
-					params.courseid = form.findField("courseid").getValue();
-					params.courseno = form.findField("courseno").getValue();
+					let form = button.up("[xtype='form']");
+					let params = form.getForm().getValues();
+					params.courseid = form.getForm().findField("courseid").getValue();
+					params.courseno = form.getForm().findField("courseno").getValue();
 
 					switch (button.action) {
 						case "save": 
@@ -826,8 +826,8 @@ Ext.onReady(function () {
 							let result = Ext.decode(response.responseText);
 							if (result.success) {
 								Ext.Msg.alert("成功", result.msg);
-								form.down("button[action='save']").setVisible(false);
-								form.down("button[action='submit']").setVisible(false);
+								form.down("button[action='save']").setVisible(!params.chk);
+								form.down("button[action='submit']").setVisible(!params.chk);
 							} else {
 								Ext.Msg.alert("失败", result.msg);
 							}
@@ -843,7 +843,7 @@ Ext.onReady(function () {
                     bodypadding: "2",
                     defaultType: "displayfield",
                     fieldDefaults: { labelSeparator: ":", margin: 2, labelAlign: "right", hideEmptyLabel: false, labelWidth: 90, anchor: "0" },
-                    layout: { type: "table", columns: 5 },
+                    layout: { type: "table", columns: 3 },
                     viewConfig: { forceFit: true, stripeRows: true, },
 					items: [
 						{ xtype: "hidden", name: "lb"},
@@ -855,8 +855,8 @@ Ext.onReady(function () {
 						{ fieldLabel: "课程序号", name: "courseno", width: 120 },
 						{ fieldLabel: "教师", name: "name", width: 180 },
 						{ fieldLabel: "类型", name: "type", width: 180 },
-						{ fieldLabel: "课程名称", name: "cname",  minWidth: 240, flex: 1 },
-						{ fieldLabel: "评语", rows: 24, cols: 96, colspan: 5, xtype: "textarea", name: "bz" }
+						{ fieldLabel: "课程名称", name: "cname",  colspan: 2, minWidth: 240, flex: 1 },
+						{ fieldLabel: "评语", rows: 24, cols: 64, colspan: 5, xtype: "textarea", name: "bz" }
 					],
 					dockedItems: [
 						{ xtype: "toolbar", dock: "bottom", layout: { pack: "center" },
