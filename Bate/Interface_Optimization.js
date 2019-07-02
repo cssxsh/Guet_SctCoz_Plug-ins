@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.21
+// @version      3.7.25
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -44,6 +44,7 @@ Ext.onReady(function () {
 		action: "QryCourseSet",
 		text: "课程设置【插件】",
 		id: "QryCourseSet",
+		leaf: true,
 		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opts) {
@@ -226,11 +227,13 @@ Ext.onReady(function () {
 				me.add(queryPanel);
 			}
 		}
-	};
+	};// 重写完毕
 	var StuScoreNew = {
 		action: "StuScore",
 		text: "成绩查询【插件】",
 		id: "StuScore",
+		leaf: true,
+		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opts) {
 				// 提示设置
@@ -262,7 +265,9 @@ Ext.onReady(function () {
 					store: Ext.create("SctCoz.Student.Score"),
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 },
-						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return plugTools.transvalue(value, "TermStore", "term", "termname") } },
+						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value, metaData, record) { 
+							return plugTools.transvalue(value, "TermStore", "term", "termname"); } 
+						},
 						{ header: "课程代码", dataIndex: "cid", width: 96 },
 						{ header: "课号", dataIndex: "cno", width: 64 },
 						{ header: "课程名称", dataIndex: "cname", minWidth: 120, width: 120, flex: 1 },
@@ -282,13 +287,13 @@ Ext.onReady(function () {
 				});
 				me.add(queryPanel);
 			}
-		},
-		isAutoLoad: false
-	};
+		}
+	};// 重写完毕
 	var SutSctedNew = {
 		action: "StuScted",
 		text: "已选课程",
 		id: "StuScted",
+		leaf: true,
 		isAutoLoad: true,
 		listeners: {
 			add: function (me, opt) {
@@ -400,6 +405,7 @@ Ext.onReady(function () {
 		action: "StuPlan",
 		text: "计划查询【插件】",
 		id: "StuPlan",
+		leaf: true,
 		isAutoLoad: false,
 		listeners: {
 			afterrender: function (me, opt) {
@@ -434,8 +440,12 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 35 },
 						{ header: "计划序号", dataIndex: "pid", width: 80 },
-						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return plugTools.transvalue(value, "TermStore", "term", "termname") } },
-						{ header: "专业", dataIndex: "spno", width: 160, renderer: function (value) { return plugTools.transvalue(value, "MajorNoStore", "spno", "text") } },
+						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value, metaData, record) {
+							return plugTools.transvalue(value, "TermStore", "term", "termname") 
+						}},
+						{ header: "专业", dataIndex: "spno", width: 160, renderer: function (value, metaData, record) { 
+							return plugTools.transvalue(value, "MajorNoStore", "spno", "text") 
+						}},
 						{ header: "年级", dataIndex: "grade", width: 40 },
 						{ header: "课程代码", dataIndex: "courseid", width: 90 },
 						{ header: "课程名称", dataIndex: "cname", minWidth: 160 },
@@ -460,7 +470,7 @@ Ext.onReady(function () {
 				me.add(queryPanel);
 			}
 		}
-	};
+	};// 重写完毕
 	var LabSctNew = {
 		action: "LabSct",
 		controller: "Plug-in",
@@ -652,9 +662,9 @@ Ext.onReady(function () {
 		"action":"LabUnSct","children":[],"command":null,"controller":"Student","id":"bstuk110","leaf":true,"text":"实验退课","type":"action"
 	};
 	var StuTEMSNew = {
-		action: "StuTEMS",
+		action: "StuTEMSNew",
 		text: "学生评教【插件】",
-		id: "StuTEMS",
+		id: "StuTEMSNew",
 		leaf: true,
 		type: "action",
 		isAutoLoad: false,
@@ -676,16 +686,28 @@ Ext.onReady(function () {
 				};
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
-						{ fieldLabel: "开课学期", xtype: "TermCombo" }
+						{ fieldLabel: "开课学期", xtype: "TermCombo" , readOnly: true}
 					],
 					QueryByStore: queryByStore
 				});
 				// 
 				var loadCourseEvalNo = function (record) {
 					// 
-					evalStore.getProxy().extraParams = record.get("term");
-					evalStore.getProxy().extraParams = record.get("courseno");
-					evalStore.getProxy().extraParams = record.get("teacherno");
+					evalStore.getProxy().extraParams.term = record.get("term");
+					evalStore.getProxy().extraParams.courseno = record.get("courseno");
+					evalStore.getProxy().extraParams.teacherno = record.get("teacherno");
+					evalStore.load();
+					evalFrom.load({ 
+						url: '/student/JxpgJg', 
+						params: evalStore.getProxy().extraParams,
+						success: function (me, action) {
+							me.reset();
+							me.findField("name").setValue(record.get("name"));
+							me.findField("type").setValue(record.get("type"));
+							me.findField("cname").setValue(record.get("cname"));
+							me.setValues(action.result.data[0]);
+						}
+					});
 
 					// 切换到输入页
 					panel.getLayout().next();
@@ -704,7 +726,7 @@ Ext.onReady(function () {
 						},
 						{ header: "课程代码", dataIndex: "courseid", width: 96 },
 						{ header: "课程序号", dataIndex: "courseno", width: 96 },
-						{ header: "教师号", dataIndex: "teacherno", width: 96 },
+						{ header: "教师号", dataIndex: "teacherno", width: 96, hidden: true },
 						{ header: "教师", dataIndex: "name", width: 96 },
 						{ header: "类型", dataIndex: "type", width: 96},
 						{ header: "课程名称", dataIndex: "cname",  minWidth: 240, flex: 1 }
@@ -715,9 +737,129 @@ Ext.onReady(function () {
 				});
 				// 输入部分
 				var evalStore = Ext.create("SctCoz.Student.Evaluation");
-				var evalCard = Ext.create("Ext.container.Container", { 
-					region: "center", layout: "border", items: [] 
+				var evalGrid = Ext.create("Ext.grid.Panel", {
+					//
+					region: "center",
+					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
+					store: evalStore,
+					columns: [
+						{ header: "序号", xtype: "rownumberer", width: 30 },
+						{ header: "指标", dataIndex: "xh", width: 64, renderer: function (value, metaData, record) { return record.get("nr"); } },
+						{ header: "内容", dataIndex: "zbnh", width: 350 },
+						{ header: "评价结果", dataIndex: "score", width: 100, 
+							editor: { 
+								xtype: "combo", valueField: "value", displayField: "text",
+								allowBlank: false, queryMode: "local",
+								store: Ext.create("Ext.data.Store", {
+									id: "test",
+									fields: ["value", "text"],
+									data: []
+								}),
+								listeners: {
+									"expand": function (me, opts) {
+										let grid = me.up("[xtype='grid']");
+										let record = grid.getSelectionModel().getLastSelected();
+
+										me.clearValue();
+										me.getStore().loadData(record.get("grades"));
+									}
+								}
+							},
+							renderer: function (score, metaData, record, rowIndex, colIndex, store, view) { 
+								let grade = record.get("grades");
+								let text = score;
+								grade.forEach(function (items, index, array) {
+									if (items.value == score) {
+										text = items.text;
+										return true;
+									}
+								});
+								return text;
+							}
+						}
+					]
 				});
+				var evalSave = function (button, event) {
+					evalStore.sync(); 
+					let form = button.up("[xtype='form']").getForm();
+					let params = form.getValues(false, true);
+					params.courseid = form.findField("courseid").getValue();
+					params.courseno = form.findField("courseno").getValue();
+
+					Ext.Ajax.request({
+						url: "/student/SaveJxpgJg", // 保存评语接口
+						params: params,
+						method: "POST",
+						success: function (response, opts) {
+							let result = Ext.decode(response.responseText);
+							if (result.success) {
+								Ext.Msg.alert("成功", result.msg);
+							} else {
+								Ext.Msg.alert("失败", result.msg);
+							}
+						},
+						failure: function (response, opts) {
+							Ext.Msg.alert("网络错误", response.status + ": " + response.statusText);
+						}
+					});
+				};
+				var evalSet = function (button, event) {
+					let form = button.up("[xtype='form']").getForm();
+					let params = form.getValues(false, true);
+					params.courseid = form.findField("courseid").getValue();
+					params.courseno = form.findField("courseno").getValue();
+
+					Ext.Ajax.request({
+						url: "/student/SaveJxpgJg/1", // 保存评语接口
+						params: params,
+						method: "POST",
+						success: function (response, opts) {
+							let result = Ext.decode(response.responseText);
+							if (result.success) {
+								Ext.Msg.alert("成功", result.msg);
+							} else {
+								Ext.Msg.alert("失败", result.msg);
+							}
+						},
+						failure: function (response, opts) {
+							Ext.Msg.alert("网络错误", response.status + ": " + response.statusText);
+						}
+					});
+				};
+				var evalFrom = Ext.create("Ext.form.Panel", {
+					region: "east",
+					frame: true, 
+                    bodypadding: "2",
+                    defaultType: "displayfield",
+                    fieldDefaults: { labelSeparator: ":", margin: 2, labelAlign: "right", hideEmptyLabel: false, labelWidth: 90, anchor: "0" },
+                    layout: { type: "table", columns: 5 },
+                    viewConfig: { forceFit: true, stripeRows: true, },
+					items: [
+						{ xtype: "hidden", name: "lb"},
+						{ xtype: "hidden", name: "teacherno"},
+						{ xtype: "hidden", name: "term"},
+						{ xtype: "hidden", name: "chk"},
+						{ xtype: "hidden", name: "stid"},
+						{ fieldLabel: "课程代码", name: "courseid", width: 160 },
+						{ fieldLabel: "课程序号", name: "courseno", width: 120 },
+						{ fieldLabel: "教师", name: "name", width: 180 },
+						{ fieldLabel: "类型", name: "type", width: 180 },
+						{ fieldLabel: "课程名称", name: "cname",  minWidth: 240, flex: 1 },
+						{ fieldLabel: "评语", rows: 24, cols: 96, colspan: 5, xtype: "textarea", name: "bz" }
+					],
+					dockedItems: [
+						{ xtype: "toolbar", dock: "bottom", layout: { pack: "center" },
+							items: [
+								{ text: "保存", disabled: true, formBind: true, handler: evalSave }, 
+								{ text: "提交", disabled: true, formBind: true, handler: evalSet }
+							]
+						}
+					]
+				});
+				var evalCard = Ext.create("Ext.container.Container", { 
+					region: "center", layout: "border", items: [evalGrid, evalFrom] 
+				});
+				// 面板
 				var navigate = function(button){
 					let layout = button.up("[xtype='query-panel']").getLayout();
 					layout[button.direction]();
@@ -725,7 +867,7 @@ Ext.onReady(function () {
 					Ext.getCmp("card-next").setDisabled(!layout.getNext());
 				};
 				var panel = Ext.create("SctCoz.Query.QueryPanel", {
-					TitleText: "学生评教",  layout: "card",
+					TitleText: "学生评教【插件】",  layout: "card",
 					items: [qureyCard, evalCard],
 					bbar: [{
 						id: "card-prev",
@@ -744,14 +886,14 @@ Ext.onReady(function () {
 				me.add(panel);
 			}
 		}
-	};
+	};// 重写完毕
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
 	plugTools.menuChange(StuPlanNew);
 	// TO-DO[9]: <添加实验选课> {添加对实验选课的支持}
 	plugTools.menuAdd(LabSctNew);
-	plugTools.menuAdd(labUnSctNew);
+	// plugTools.menuAdd(labUnSctNew);
 	plugTools.menuAdd(StuTEMSNew);
 	// TODO[9]: <重写课表模块> {把实验课加入课程表, 可以使用评教接口}
 	let panel = Ext.getCmp("content_panel");

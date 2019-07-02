@@ -89,7 +89,7 @@ Ext.onReady(function () {
 		});
 		let user = SctCoz.Student.getUserInfo();
 		// 用户信息里有
-		user.xtype = sctType;
+		user.stype = sctType;
 		queryForm.getForm().setValues(user);
 		
 		
@@ -100,6 +100,7 @@ Ext.onReady(function () {
 			let selfMajor = record.get("spno");
 			let cname = record.get("cname");
 			let courseid = record.get("courseid");
+			let col = plugTools.ClassStorage.Load("value", "T_L_Col");
 
 			if (record.get("scted")) {
 				// 已选课的情况
@@ -141,13 +142,13 @@ Ext.onReady(function () {
 								loadCourseNo(selectRecord);
 							});
 						} else {
-							Ext.Msg.alert("错误", result.msg);
+							Ext.Msg.alert("失败", result.msg);
 						}
 					},
 					failure: function (response, opts) {
 						Ext.Msg.alert("网络错误", response.status + ": " + response.statusText);
 					}
-				})
+				});
 			} else {
 				Ext.Msg.alert("提示", "请选择一个课号提交。");
 			}
@@ -156,6 +157,8 @@ Ext.onReady(function () {
 			let grid = button.up("[xtype='select-grid']");
 			let selectRecord = grid.SelectRecord;
 			let records = grid.getSelectionModel().getSelection();
+			let col = plugTools.ClassStorage.Load("value", "T_L_Col");
+
 			if (records.length > 0) {
 				let params = records[0].getData();
 				params.stype = sctType;
@@ -207,6 +210,7 @@ Ext.onReady(function () {
 			listeners: {
 				// 加载课程计划
 				load: function (store, records, opts) {
+					let col = plugTools.ClassStorage.Load("value", "T_L_Col");
 					if (col.all) {
 						store.AllQueryStore.removeAll();
 						let loadMask = queryGrid.setLoading("全课号信息加载中...");

@@ -6,7 +6,7 @@ if (typeof SctCoz == "undefined") {			// 防止重复定义
 			id: "plug",
 		},
 		statics: {
-			version: "4.1.3",
+			version: "4.1.7",
 			inited: false,
 			debugLevel: 2,
 			SysMenus: null,
@@ -327,7 +327,6 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		autoLoad: true,
 		sorters: [{ property: "term", direction: "DESC" }],
 		// 自定义部分
-		// TODO: [7] <使数组对象化> {标记数组三个值的意义}
 		termSet: [],
 		shoolYear: [],
 		listeners: {
@@ -668,8 +667,24 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 		// 
 		extend: "Ext.data.Store",
 		fields: [
-			"term", "id", "courseid", "lb", "score", "teacherno","courseno",
-			"dja", "afz", "djb", "bfz", "djc", "cfz", "djd", "dfz", "dje", "efz", "nr", "zbnh", "qz"
+			"term", "teacherno", "stid", "id", "courseno", "courseid",
+			"score", "tpye", "bz", "leibie", "nr", "xh", "zb", "qz",
+			"zbnh", "state",
+			"dja", "afz", "djb", "bfz", "djc", "cfz", "djd", "dfz", "dje", "efz",
+			{ name: "score", defaultValue: 100 },
+			{ name: "lb" , convert: function (value, record) { 
+				return (record.get("leibie") == "实验评估") ? 2 : 1;
+			}}, 
+			{ name: "grades", convert: function (value, record) {
+				let arr = [
+					{ value: record.get("afz"), text: record.get("dja") }, 
+					{ value: record.get("bfz"), text: record.get("djb") }, 
+					{ value: record.get("cfz"), text: record.get("djc") }, 
+					{ value: record.get("dfz"), text: record.get("djd") }, 
+					{ value: record.get("efz"), text: record.get("dje") }
+				];
+				return arr;
+			} }
 		],
 		proxy: {
 			type: "ajax", 
@@ -798,12 +813,18 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		constructor: function (config) {
 			Ext.apply(this, Ext.apply({}, config));
 			// 组件
-			var timeGrid = Ext.create("SctCoz.Query.QueryGrid", {
-				autoScroll: false, height: "100%",
-				store: Ext.create("SctCoz.Comm.HourInfo", { fields: [
+			var timeGridStore = Ext.create("SctCoz.Comm.HourInfo", { 
+				fields: [
 					"term", "nodeno", "xss", "nodename", "memo",
 					"week1", "week2", "week3", "week4", "week5", "week6", "week7", 
-				], }),
+				],
+				autoLoad: false
+			});
+			// 直接从本地加载提高加载速度
+			timeGridStore.loadRecords(Ext.data.StoreManager.lookup("SchoolHour").getRange());
+			var timeGrid = Ext.create("SctCoz.Query.QueryGrid", {
+				autoScroll: false, height: "100%",
+				store: timeGridStore,
 				columns: [
 					{ header: "节次", dataIndex: "nodeno", minWidth: 64, fiex: 1, renderer: function (value, metaData, record) {
 						let name = record.get("nodename");
@@ -824,60 +845,97 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 				title: "课程信息",
 				bodyPadding: 2, margin: 1, width: "100%", autoScroll: true,
 				defaultType: "displayfield",
-				fieldDefaults: { labelSeparator: ":", margin: 2, labelAlign: "right", hideEmptyLabel: true, labelWidth: 90, anchor: "0" },
-				layout: { type: "table", columns: 5 }, // columns 规定每行列数
-				viewConfig: { forceFit: true, stripeRows: true, }
-			});
-			this.TimeStore =  Ext.create("SctCoz.Student.Schedule");
-			this.LoadSchedule = function (isAutoLoad, temp) {
-				let form = this.down("[xtype='form']");
-				let grid = this.down("[xtype='query-grid']");
-
-				function loaded (records, opts, success) {
-					// 清空
-					form.removeAll(true);
-					grid.getStore().getRange().forEach(function (record, index , array) {
-						record.set("week1", "");
-						record.set("week2", "");
-						record.set("week3", "");
-						record.set("week4", "");
-						record.set("week5", "");
-						record.set("week6", "");
-						record.set("week7", "");
-					});
-					let flag;
-					records.forEach(function (record, index , array) {
-						// 载入form
-						if (flag != record.get("courseno") ) {
-							form.add([
-								{ fieldLabel: "课程序号", labelWidth: 64, width: 110, value: record.get("courseno") }, 
-								{ fieldLabel: "课程代码", labelWidth: 64, width: 140, value: record.get("courseid") }, 
-								{ fieldLabel: "课程名称", labelWidth: 64, width: 250, value: record.get("cname") },
-								{ fieldLabel: "教师姓名", labelWidth: 64, width: 150, value: record.get("name") }, 
-								{ fieldLabel: "课程备注", labelWidth: 64, width: 250, value: record.get("comm") }
-							]);
-							flag = record.get("courseno");
-						}
-						// 载入grid
-						let week = record.get("week");
-						let seqno = record.get("sequence") - 1;
-						let Text = grid.getStore().getAt(seqno).get("week" + week);
-						Text = Text + record.get("cname");
-						Text = Text + "<br>(" + record.get("startweek") + "-" + record.get("endweek") + ")"; 
-						Text = Text + (record.get("croomno") == null ? "" : record.get("croomno")) + "<br>";
-						grid.getStore().getAt(seqno).set("week" + week, Text);
-					});
-					// 提交更改
-					grid.getStore().commitChanges();
+				fieldDefaults: { 
+					labelSeparator: ":", 
+					margin: 2, 
+					labelAlign: "right", 
+					labelWidth: 90, 
+					anchor: "0" 
+				},
+				layout: { 
+					type: "table", 
+					columns: 5 
+				}, // columns 规定每行列数
+				viewConfig: { 
+					forceFit: true, 
+					stripeRows: true, 
 				}
+			});
+			this.TimeStore =  Ext.create("SctCoz.Student.Schedule", {
+				listeners: {
+					load: function (me, records, success, opts) {
+						// 清空
+						form.removeAll(true);
+						var recordsByTime = timeGridStore.getRange();
+						recordsByTime.forEach(function (record, index , array) {
+							record.set("week1", "");
+							record.set("week2", "");
+							record.set("week3", "");
+							record.set("week4", "");
+							record.set("week5", "");
+							record.set("week6", "");
+							record.set("week7", "");
+						});
+						timeGridStore.commitChanges();
+						let flag;
+						records.forEach(function (record, index , array) {
+							// 载入form
+							if (flag != record.get("courseno") ) {
+								form.add([
+									{ fieldLabel: "课程序号", labelWidth: 64, width: 110, value: record.get("courseno") }, 
+									{ fieldLabel: "课程代码", labelWidth: 64, width: 140, value: record.get("courseid") }, 
+									{ fieldLabel: "课程名称", labelWidth: 64, width: 250, value: record.get("cname") },
+									{ fieldLabel: "教师姓名", labelWidth: 64, width: 150, value: record.get("name") }, 
+									{ fieldLabel: "课程备注", labelWidth: 64, width: 250, value: record.get("comm") }
+								]);
+								flag = record.get("courseno");
+							}
+							// 载入grid
+							let weekno = record.get("week");
+							let seqno = record.get("sequence") - 1;
+							let Text = recordsByTime[seqno].get("week" + weekno);
+							Text = Text + record.get("cname") + "<br>";
+							Text = Text + record.get("courseno") + "<br>";
+							Text = Text + "(" + record.get("startweek") + "-" + record.get("endweek") + ")"; 
+							Text = Text + (record.get("croomno") == null ? "" : record.get("croomno")) + "<br>";
+							recordsByTime[seqno].set("week" + weekno, Text);
+						});
+						// 提交更改
+						timeGridStore.commitChanges();
+					}
+				}
+			});
+			this.LoadSchedule = function (isAutoLoad, temp, title) {
+				let form = this.down("[xtype='form']");
+				let timeGrid = this.down("[xtype='query-grid']");
+				
 				if (isAutoLoad) {
-					this.TimeStore.proxy.extraParams.term = temp;
-					this.TimeStore.load(loaded);
-					grid.printTitle = temp + " 课程表";
+					this.TimeStoresetProxy({
+						type: "ajax",
+						url: "/student/getstutable",
+						reader: { 
+							type: "json", 
+							root: "data" 
+						}
+					});
+					this.TimeStore.getProxy().extraParams.term = temp;
+					this.TimeStore.load();
+					timeGrid.printTitle = temp + " 课程表";
 				} else {
-					this.TimeStore.loadRecords(temp);
-					grid.printTitle = "排课表";
-					loaded(this.TimeStore.getRange());
+					this.TimeStore.setProxy({
+						type: "memory",
+						data: {
+							data: temp.map(function (record, index,array) {
+								return record.getData();
+							})
+						},
+						reader: { 
+							type: "json",
+							root: "data"
+						}
+					});
+					this.TimeStore.load();
+					timeGrid.printTitle = "排课表";
 				}
 			};
 			this.items = [timeGrid, form];
@@ -932,6 +990,7 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		}
 	});
 	Ext.define("SctCoz.Query.CourseSetTable", {
+		extend: "Ext.data.Store",
 		pageSize: 500,
 		alias: ["CourseSetTable"],
 		fields: [

@@ -12,7 +12,8 @@ modern.jsonp
 resources/sass/.sass-cache/
 resources/.arch-internal-preview.css
 .arch-internal-preview.css
-/Demo/*
-/Test/*
+Demo/
+Test/
+images/
 .idea/*
 .vscode/*
