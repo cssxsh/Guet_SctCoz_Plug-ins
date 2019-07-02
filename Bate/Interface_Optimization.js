@@ -826,6 +826,8 @@ Ext.onReady(function () {
 							let result = Ext.decode(response.responseText);
 							if (result.success) {
 								Ext.Msg.alert("成功", result.msg);
+								form.down("button[action='save']").setVisible(false);
+								form.down("button[action='submit']").setVisible(false);
 							} else {
 								Ext.Msg.alert("失败", result.msg);
 							}
