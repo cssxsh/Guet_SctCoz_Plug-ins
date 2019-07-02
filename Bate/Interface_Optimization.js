@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.25
+// @version      3.7.27
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -690,28 +690,45 @@ Ext.onReady(function () {
 					],
 					QueryByStore: queryByStore
 				});
-				// 
-				var loadCourseEvalNo = function (record) {
-					// 
+				// 加载评教数据
+				var loadCourseEvalNo = function (record, grid) {
+					// 加载评教选项
 					evalStore.getProxy().extraParams.term = record.get("term");
 					evalStore.getProxy().extraParams.courseno = record.get("courseno");
 					evalStore.getProxy().extraParams.teacherno = record.get("teacherno");
-					evalStore.load();
+					evalStore.load(function(records, operation, success) {
+						records.forEach(function (item, index, array) {
+							item.set("term", record.get("term"));
+							item.set("courseno", record.get("courseno"));
+							item.set("teacherno", record.get("teacherno"));
+							item.set("courseid", record.get("courseid"));
+							item.set("stid", record.get("stid"));
+						});
+					});
+					// 加载评教评语
 					evalFrom.load({ 
 						url: '/student/JxpgJg', 
 						params: evalStore.getProxy().extraParams,
 						success: function (me, action) {
-							me.reset();
-							me.findField("name").setValue(record.get("name"));
-							me.findField("type").setValue(record.get("type"));
-							me.findField("cname").setValue(record.get("cname"));
-							me.setValues(action.result.data[0]);
+							if (action.result.data.length != 0) {
+								me.findField("name").setValue(record.get("name"));
+								me.findField("type").setValue(record.get("type"));
+								me.findField("cname").setValue(record.get("cname"));
+								me.setValues(action.result.data[0]);
+							} else {
+								// 没有保存记录的情况下
+								me.setValues(record.getData());
+							}
 						}
 					});
 
 					// 切换到输入页
+					let panel = grid.up("[xtype='query-panel']");
 					panel.getLayout().next();
 					Ext.getCmp("card-prev").setDisabled(false);
+					
+					panel.down("button[action='save']").setVisible(!record.get("chk"));
+					panel.down("button[action='submit']").setVisible(!record.get("chk"));
 				};
 				var queryGrid = Ext.create("SctCoz.Query.QueryGrid", {
 					store: Ext.create("SctCoz.Student.CourseEvalNo"),
@@ -720,10 +737,11 @@ Ext.onReady(function () {
 						{ header: "操作", xtype: "actiontextcolumn", width: 48, items: [{
 							text: "评教", handler: function (grid, rowIndex, colIndex) {
 									let record = grid.getStore().getAt(rowIndex);
-									loadCourseEvalNo(record); 
+									loadCourseEvalNo(record, grid); 
 								}
 							}]
 						},
+						{ header: "已评", xtype: "booleancolumn", dataIndex: "chk", width: 48 },
 						{ header: "课程代码", dataIndex: "courseid", width: 96 },
 						{ header: "课程序号", dataIndex: "courseno", width: 96 },
 						{ header: "教师号", dataIndex: "teacherno", width: 96, hidden: true },
@@ -745,11 +763,12 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 30 },
 						{ header: "指标", dataIndex: "xh", width: 64, renderer: function (value, metaData, record) { return record.get("nr"); } },
+						{ header: "学号", dataIndex: "stid", hidden: true},
 						{ header: "内容", dataIndex: "zbnh", width: 350 },
 						{ header: "评价结果", dataIndex: "score", width: 100, 
 							editor: { 
 								xtype: "combo", valueField: "value", displayField: "text",
-								allowBlank: false, queryMode: "local",
+								queryMode: "local", // allowBlank: false,
 								store: Ext.create("Ext.data.Store", {
 									id: "test",
 									fields: ["value", "text"],
@@ -768,6 +787,7 @@ Ext.onReady(function () {
 							renderer: function (score, metaData, record, rowIndex, colIndex, store, view) { 
 								let grade = record.get("grades");
 								let text = score;
+								if (score == null || score == "") return;
 								grade.forEach(function (items, index, array) {
 									if (items.value == score) {
 										text = items.text;
@@ -782,35 +802,24 @@ Ext.onReady(function () {
 				var evalSave = function (button, event) {
 					evalStore.sync(); 
 					let form = button.up("[xtype='form']").getForm();
-					let params = form.getValues(false, true);
+					let params = form.getValues();
 					params.courseid = form.findField("courseid").getValue();
 					params.courseno = form.findField("courseno").getValue();
+
+					switch (button.action) {
+						case "save": 
+							params.chk = 0;	// 设置为未评教
+							break;
+						case "submit": 
+							params.chk = 1;	// 设置为已评教
+							break;
+						default:
+							params.chk = 0;	// 设置为未评教，这里只能用数字
+							break;
+					}
 
 					Ext.Ajax.request({
 						url: "/student/SaveJxpgJg", // 保存评语接口
-						params: params,
-						method: "POST",
-						success: function (response, opts) {
-							let result = Ext.decode(response.responseText);
-							if (result.success) {
-								Ext.Msg.alert("成功", result.msg);
-							} else {
-								Ext.Msg.alert("失败", result.msg);
-							}
-						},
-						failure: function (response, opts) {
-							Ext.Msg.alert("网络错误", response.status + ": " + response.statusText);
-						}
-					});
-				};
-				var evalSet = function (button, event) {
-					let form = button.up("[xtype='form']").getForm();
-					let params = form.getValues(false, true);
-					params.courseid = form.findField("courseid").getValue();
-					params.courseno = form.findField("courseno").getValue();
-
-					Ext.Ajax.request({
-						url: "/student/SaveJxpgJg/1", // 保存评语接口
 						params: params,
 						method: "POST",
 						success: function (response, opts) {
@@ -850,8 +859,8 @@ Ext.onReady(function () {
 					dockedItems: [
 						{ xtype: "toolbar", dock: "bottom", layout: { pack: "center" },
 							items: [
-								{ text: "保存", disabled: true, formBind: true, handler: evalSave }, 
-								{ text: "提交", disabled: true, formBind: true, handler: evalSet }
+								{ text: "保存", action: "save",formBind: true, handler: evalSave }, 
+								{ text: "提交", action: "submit", formBind: true, handler: evalSave }
 							]
 						}
 					]
@@ -887,6 +896,8 @@ Ext.onReady(function () {
 			}
 		}
 	};// 重写完毕
+
+
 	plugTools.menuChange(CourseSetNew);
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
@@ -895,6 +906,8 @@ Ext.onReady(function () {
 	plugTools.menuAdd(LabSctNew);
 	// plugTools.menuAdd(labUnSctNew);
 	plugTools.menuAdd(StuTEMSNew);
+
+
 	// TODO[9]: <重写课表模块> {把实验课加入课程表, 可以使用评教接口}
 	let panel = Ext.getCmp("content_panel");
 	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 

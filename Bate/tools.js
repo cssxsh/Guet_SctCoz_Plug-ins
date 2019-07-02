@@ -647,8 +647,9 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 		// 
 		extend: "Ext.data.Store",
 		fields: [
-			"term", "stid", "courseid", "teacherno", "courseno", "cname", "name", "lb", "chk",
-			{ name: "type", convert: function (value, record) { return (record.get("lb") == 1 ? "理论课" : "实验课"); } }
+			"term", "stid", "courseid", "teacherno", "courseno", "cname", "name", "lb", 
+			{ name: "chk", type: "boolean"},
+			{ name: "type", persist: false , convert: function (value, record) { return (record.get("lb") == 1 ? "理论课" : "实验课"); } }
 		],
 		proxy: {
 			url: "/student/getpjcno",
@@ -670,12 +671,16 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			"term", "teacherno", "stid", "id", "courseno", "courseid",
 			"score", "tpye", "bz", "leibie", "nr", "xh", "zb", "qz",
 			"zbnh", "state",
-			"dja", "afz", "djb", "bfz", "djc", "cfz", "djd", "dfz", "dje", "efz",
-			{ name: "score", defaultValue: 100 },
+			{ name: "dja", persist: false }, { name: "afz", persist: false },
+			{ name: "djb", persist: false }, { name: "bfz", persist: false },
+			{ name: "djc", persist: false }, { name: "cfz", persist: false },
+			{ name: "djd", persist: false }, { name: "dfz", persist: false },
+			{ name: "dje", persist: false }, { name: "efz", persist: false },
+			"score",
 			{ name: "lb" , convert: function (value, record) { 
 				return (record.get("leibie") == "实验评估") ? 2 : 1;
 			}}, 
-			{ name: "grades", convert: function (value, record) {
+			{ name: "grades", persist: false, convert: function (value, record) {
 				let arr = [
 					{ value: record.get("afz"), text: record.get("dja") }, 
 					{ value: record.get("bfz"), text: record.get("djb") }, 
@@ -967,7 +972,7 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		fields: [
 			"pid", "term", "spno", "grade", "courseid", "cname", "tname", 
 			"examt", "xf", "llxs", "syxs", "qtxs", "sjxs", "type", "mustsct", "xjcl", "comm",
-			{ name: "typeText", convert: function (value, record) {
+			{ name: "typeText", persist: false , convert: function (value, record) {
 				let typeArray = [[0, "百分制"], [1, "五级制"], [2, "二级制"]];
 				return typeArray[record.get("type")][1];
 			}}
