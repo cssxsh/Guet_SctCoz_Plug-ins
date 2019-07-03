@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.27
+// @version      3.7.28
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -102,7 +102,7 @@ Ext.onReady(function () {
 						{ fieldLabel: "周次", labelWidth: 32, width: 64, name: "startweek"}, { labelWidth: 0, width: 30, name: "endweek" }, 
 						{ fieldLabel: "星期", labelWidth: 32, width: 64, name: "fromweek"}, { labelWidth: 0, width: 30, name: "toweek" }, 
 						{ fieldLabel: "节次", labelWidth: 32, width: 64, name: "startsequence"}, { labelWidth: 0, width: 30, name: "endsequence" }, 
-						{ fieldLabel: "教室", labelWidth: 32, width: 100, name: "croomno"},
+						{ fieldLabel: "上课教室", xtype: "RoomCombo" },
 						{ fieldLabel: "教师号", labelWidth: 48, width: 110, name: "teacherno"}, 
 						{ fieldLabel: "教师", labelWidth: 32, width: 100, name: "tname",}, 
 						{ fieldLabel: "课号", labelWidth: 32, width: 110, name: "courseno"}, 
@@ -157,7 +157,7 @@ Ext.onReady(function () {
 							records.forEach(function (record, index, array) {
 								let key = record.get("courseno");
 								if (me.GroupsByNo.containsKey(key)) {
-									me.GroupsByNo.get(key).push(rec);
+									me.GroupsByNo.get(key).push(record);
 								} else {
 									me.GroupsByNo.add(key, [record]);
 								}
@@ -172,7 +172,7 @@ Ext.onReady(function () {
 											let key = Info.courseno;
 											let group = me.GroupsByNo.get(key);
 											if (group != null) {
-												group.forEach(function (rec) { rec.set("comment", Info); });
+												group.forEach(function (record) { record.set("comment", Info); });
 											}
 										});
 										Loading.hide();
@@ -210,7 +210,9 @@ Ext.onReady(function () {
 						{ header: "可选人数", dataIndex: "maxperson", width: 40 },
 						{ header: "已选人数", dataIndex: "studentcount", width: 40 },
 						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", 
-							renderer: function (value, metaData, record) { return (record.get("comment") != null ? ["查看"] : [""]); }, 
+							renderer: function (value, metaData, record) {
+								 return (record.get("comment") != null ? ["查看"] : [""]); 
+							}, 
 							items: [{ handler: showComm }], flex: 1 
 						}
 					],
@@ -768,7 +770,7 @@ Ext.onReady(function () {
 						{ header: "评价结果", dataIndex: "score", width: 100, 
 							editor: { 
 								xtype: "combo", valueField: "value", displayField: "text",
-								queryMode: "local", // allowBlank: false,
+								queryMode: "local", allowBlank: true,
 								store: Ext.create("Ext.data.Store", {
 									id: "test",
 									fields: ["value", "text"],
@@ -911,9 +913,9 @@ Ext.onReady(function () {
 
 
 	// TODO[9]: <重写课表模块> {把实验课加入课程表, 可以使用评教接口}
-	let panel = Ext.getCmp("content_panel");
+	let content = Ext.getCmp("content_panel");
 	// FIXME: [2] <添加通用处理> {批量处理应该交给tools} 
-	panel.addListener("add", function (me, lastTab, opt) {
+	content.addListener("add", function (me, lastTab, opt) {
 		lastTab.addListener("add", function (me, opt) {
 			let grids = me.query("grid,showgrid");
 			grids.forEach(function (item) {
@@ -925,7 +927,7 @@ Ext.onReady(function () {
 	});
 	// FIXME: [2] <添加首页处理> {特殊处理应该交给tools}
 	Ext.getCmp("First").close();
-	panel.add({
+	content.add({
 		id: "First",
 		title: "首页",
 		layout: "fit",

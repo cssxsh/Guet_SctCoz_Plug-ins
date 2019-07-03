@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Repair Bug
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      1.3.0
+// @version      1.3.1
 // @description  修补选课系统的bug
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -80,8 +80,8 @@ Ext.onReady(function () {
                         // 第四行
                         { fieldLabel: "宿舍", name: "hostel", width: 120 },
                         { fieldLabel: "联系电话", name: "hostelphone", width: 120 },
-                        { fieldLabel: "政治面貌", name: "political", width: 120 },
-                        { fieldLabel: "入党日期", readOnly: true, name: "rdrq", renderer: ShowFormatDate, colspan: 3 },
+                        { fieldLabel: "政治面貌", name: "political", width: 240, colspan: 2 },
+                        { fieldLabel: "入党日期", readOnly: true, name: "rdrq", renderer: ShowFormatDate, colspan: 2 },
                         // 第五行
                         { fieldLabel: "父母或监护人1", name: "fmxm1", width: 160 },
                         { fieldLabel: "证件类型", name: "fmzjlx1", store: zt, width: 220 },

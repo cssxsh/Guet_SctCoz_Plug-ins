@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.3
+// @version      4.7.4
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -36,17 +36,15 @@ Ext.onReady(function () {
 		overflow: false,	// 关闭以课程人数已满为继续抢课条件
 		all: true			// 开启全课号
 	};
-	// 创建工具
-	let plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
-	if (plugTools.ClassStorage.Load("value", "T_L_Col") != null) {
-		plugTools.ClassStorage.Save("value", col, "T_L_Col");
-	}
+	// 初始化工具
+	if (!SctCoz.tools.inited) SctCoz.tools.init({ debugLevel: 0 });
+	// if (SctCoz.tools.ClassStorage.Load("value", "T_L_Col") != null) {
+	// 	SctCoz.tools.ClassStorage.Save("value", col, "T_L_Col");
+	// }
 
 	var Rreplace_StuSct = function (me, opts) {
 		// 判断模块是否符合
 		var sctType = "";
-		var col = plugTools.ClassStorage.Load("value", "T_L_Col");
 		switch (me.id) {
 			case ("StuSct"):
 				sctType = "正常";
@@ -56,7 +54,7 @@ Ext.onReady(function () {
 				break;
 			default:
 				//不符合要求退出
-				plugTools = plugTools.Logger("类型错误：" + me.id, 2, "By Rreplace_StuSct");
+				SctCoz.tools.Logger("类型错误：" + me.id, 2, "By Rreplace_StuSct");
 				return;
 		}
 		// 
@@ -88,7 +86,7 @@ Ext.onReady(function () {
 			QueryByStore: queryByStore
 		});
 		let user = SctCoz.Student.getUserInfo();
-		// 用户信息里有
+		// 用户信息里有stype会覆盖
 		user.stype = sctType;
 		queryForm.getForm().setValues(user);
 		
@@ -100,34 +98,34 @@ Ext.onReady(function () {
 			let selfMajor = record.get("spno");
 			let cname = record.get("cname");
 			let courseid = record.get("courseid");
-			let col = plugTools.ClassStorage.Load("value", "T_L_Col");
+			let col = SctCoz.tools.ClassStorage.Load("value", "T_L_Col");
 
-			if (record.get("scted")) {
-				// 已选课的情况
+
+			// XXX: [3] <优化性能问题> {解决性能问题} (调整获取课程计划的时间)
+			if (col.all) {
+				sctGrid.selfMajor = selfMajor;
+				let records = newStore.AllQueryStore.getGroups().find(function (item) { return item.name == courseid}).children;
+				records.forEach(function (record, index, array) {
+					sctStore.getProxy().extraParams.id = record.get("pid");
+					sctStore.load({ addRecords: true });
+				});
+				//
 			} else {
-				// 未选课的情况
-				// XXX: [3] <优化性能问题> {解决性能问题} (调整获取课程计划的时间)
-				if (col.all) {
-					sctGrid.selfMajor = selfMajor;
-					let records = newStore.AllQueryStore.getGroups().find(function (item) { return item.name == courseid}).children;
-					records.forEach(function (record, index, array) {
-						sctStore.getProxy().extraParams.id = record.get("pid");
-						sctStore.load({ addRecords: true });
-					});
-					//
-				} else {
-					sctStore.getProxy().extraParams = record.data;
-					sctStore.load();
-				}
-				sctGrid.setTitle(cname + "[" + courseid + "]");
+				sctStore.getProxy().extraParams = record.data;
+				sctStore.load();
 			}
+			sctGrid.setTitle(cname + "[" + courseid + "]");
+			// 按钮分情况显示
+			// 选了课之后就不会再回弹课号了
+			// sctGrid.down("[action='select']").setVisible(!record.get("scted"));
+			// sctGrid.down("[action='take']").setVisible(!record.get("scted"));
 		};
 		var selectCourse = function (button, event) {
 			let grid = button.up("[xtype='select-grid']");
-			let selectRecord = grid.SelectRecord;
-			let records = grid.getSelectionModel().getSelection();
-			if (records.length > 0) {
-				let params = records[0].getData();
+			let selectRecord = grid.getSelectionModel().getLastSelected();
+
+			if (selectRecord != null) {
+				let params = selectRecord.getData();
 				params.stype = sctType;
 				Ext.Ajax.request({
 					url: "/student/SctSave", // 保存选课记录接口
@@ -155,16 +153,14 @@ Ext.onReady(function () {
 		};
 		var takeCourse = function (button, event) {
 			let grid = button.up("[xtype='select-grid']");
-			let selectRecord = grid.SelectRecord;
-			let records = grid.getSelectionModel().getSelection();
-			var col = plugTools.ClassStorage.Load("value", "T_L_Col");
+			let selectRecord = grid.getSelectionModel().getLastSelected();
+			var col = SctCoz.tools.ClassStorage.Load("value", "T_L_Col");
 
-			if (records.length > 0) {
-				var params = records[0].getData();
+			if (selectRecord != null) {
+				var params = selectRecord.getData();
 				params.stype = sctType;
 				
-				// plugTools.Logger("抢课开始，课号：" + params.courseno, 2, "By takeCourse");
-				
+				// SctCoz.tools.Logger("抢课开始，课号：" + params.courseno, 2, "By takeCourse");
 				
 				var task = {
 					run: function () {
@@ -174,7 +170,7 @@ Ext.onReady(function () {
 							method: "POST",
 							success: function (response, opts) {
 								let result = Ext.decode(response.responseText);
-								//var overflow = window.plugTools.ClassStorage.Get("value", "StuSctCol");
+								//var overflow = window.SctCoz.tools.ClassStorage.Get("value", "StuSctCol");
 								if (result.success) {
 									Ext.TaskManager.stop(task);
 									Ext.Msg.hide();
@@ -182,12 +178,13 @@ Ext.onReady(function () {
 										selectRecord.set("scted", true);
 										selectRecord.commit();
 										loadCourseNo(selectRecord);
-										// plugTools.Logger("抢课结束，课号：" + params.courseno, 2, "By takeCourse");
+										// SctCoz.tools.Logger("抢课结束，课号：" + params.courseno, 2, "By takeCourse");
 									});
 									// 下面这句判断应该用正则表达式
+									// TODO: [8] <添加更多条件> {除了选课人数满应该还有其他条件}
 								} else if ("课程:" + params.courseno + "选择失败，选课人数已满!" == result.msg || col.overflow) {
 									Ext.Msg.updateProgress(Ext.TaskManager.timerId % 100 / 100);
-									// plugTools.Logger("抢课进行中，课号：" + params.courseno, 2, "By takeCourse");
+									// SctCoz.tools.Logger("抢课进行中，课号：" + params.courseno, 2, "By takeCourse");
 								} else {
 									Ext.TaskManager.stop(task);
 									Ext.Msg.hide();
@@ -227,7 +224,7 @@ Ext.onReady(function () {
 			listeners: {
 				// 加载课程计划
 				load: function (store, records, opts) {
-					let col = plugTools.ClassStorage.Load("value", "T_L_Col");
+					let col = SctCoz.tools.ClassStorage.Load("value", "T_L_Col");
 					if (col.all) {
 						store.AllQueryStore.removeAll();
 						let loadMask = queryGrid.setLoading("全课号信息加载中...");
@@ -254,7 +251,7 @@ Ext.onReady(function () {
 					}}]
 				},
 				{ dataIndex: "scted", header: "已选", xtype: "booleancolumn", trueText: "是", falseText: "否", width: 40 },
-				// { header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return plugTools.transvalue(value, "TermStore", "term", "termname") } },
+				// { header: "学期", dataIndex: "term", width: 120, renderer: function (value) { return SctCoz.tools.transvalue(value, "TermStore", "term", "termname") } },
 				{ header: "课程代码", dataIndex: "courseid", width: 95 },
 				{ header: "课程名称", dataIndex: "cname",  width: 160 },
 				{ header: "课程性质", dataIndex: "tname", minWidth: 60 },
@@ -274,7 +271,7 @@ Ext.onReady(function () {
 					{
 						formatText: function (records) {
 							let spno = records[0].get("spno");
-							let text = plugTools.transvalue(spno, "MajorNoStore", "spno", "text");
+							let text = SctCoz.tools.transvalue(spno, "MajorNoStore", "spno", "text");
 							if ( spno == this.owner.grid.selfMajor) {
 								// 本专业突出显示
 								text = "<span style='color:red;'>" + text + "</span>";
@@ -321,6 +318,6 @@ Ext.onReady(function () {
 		},
 		isAutoLoad: false
 	};
-	plugTools.menuChange(StuSctNew);
-	plugTools.menuChange(StuSctCxNew);
+	SctCoz.tools.menuChange(StuSctNew);
+	SctCoz.tools.menuChange(StuSctCxNew);
 });

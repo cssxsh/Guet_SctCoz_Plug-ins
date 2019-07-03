@@ -288,7 +288,7 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Comm", {
 		alias: ["CommInfo"],
 		statics: {
-			version: "1.1.1",
+			version: "1.1.4",
 			InitStore: function () {
 				// 注册Store
 				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.TermInfo", { id: "TermStore" }));
@@ -297,6 +297,7 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.CollegeInfo", { id: "CollegeNoStore" }));
 				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.CourseInfo", { id: "CourseIdStore" }));
 				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.HourInfo", { id: "SchoolHour" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.RoomInfo", { id: "Classrooms" }));
 			},
 			getNowTerm: function () {
 				return Ext.data.StoreManager.lookup("TermStore").termSet[0];
@@ -312,6 +313,8 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			}
 		}
 	});
+	
+	// 公共Store
 	Ext.define("SctCoz.Comm.TermInfo", {
 		alias: ["TermInfo"],
 		extend: "Ext.data.Store",
@@ -351,7 +354,7 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 	});
 	Ext.define("SctCoz.Comm.ShoolYear", {
 		alias: ["ShoolYearArray"],
-		extend: Ext.data.ArrayStore,
+		extend: "Ext.data.ArrayStore",
 		fields: ["grade", "text"]
 	});
 	Ext.define("SctCoz.Comm.CollegeInfo", {
@@ -378,7 +381,8 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		extend: "Ext.data.Store",
 		fields: [
 			"spno", "spname", "engname", "dptno", "sptype", "gbno", "years", "degree","comm","major", "code", "used",
-			{ name: "text", convert: function (value, record) { return record.get("spno") + " " + record.get("spname"); } }
+			{ name: "text", convert: function (value, record) { return record.get("spno") + " " + record.get("spname"); } },
+			{ name: "MajorNo", convert: function (value, record) { return record.get("spno"); } }
 		],
 		proxy: {
 			type: "ajax",
@@ -397,7 +401,13 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Comm.TeacherInfo", {
 		alias: ["TeacherInfo"],
 		extend: "Ext.data.Store",
-		fields: ["teacherno", "name", "gender", "dptno","labno", "barcode", "occupation", "occuptime", "headship", "degree", "education", "gradudate", "graduspno", "graduschool", "maincourse", "direction", "state", "type", "product", "award", "comm", "jxqk", "oldno"],
+		fields: [
+			"teacherno", "name", "gender", "dptno","labno", 
+			"barcode", "occupation", "occuptime", "headship", 
+			"degree", "education", "gradudate", "graduspno", 
+			"graduschool", "maincourse", "direction", "state", 
+			"type", "product", "award", "comm", "jxqk", "oldno"
+		],
 		proxy: {
 			type: "ajax",
 			reader: { 
@@ -423,7 +433,7 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		],
 		proxy: {
 			type: "ajax",
-			url: "/comm/gethours",
+			url: "/Comm/GetHours",
 			reader: {
 				type: "json",
 				root: "data"
@@ -434,7 +444,12 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Comm.CourseInfo", {
 		alias: ["CourseInfo"],
 		extend: "Ext.data.Store",
-		fields: ["courseid", "cname", "engname", "used", "llxs", "syxs", "qtxs", "sjxs", "kwxs", "sjzs", "xf", "introduction", "textbook", "reference", "dptno", "cgrade", "labno", "comm", "oldno"],
+		fields: [
+			"courseid", "cname", "engname", "used", 
+			"llxs", "syxs", "qtxs", "sjxs", "kwxs", "sjzs", 
+			"xf", "introduction", "textbook", "reference", 
+			"dptno", "cgrade", "labno", "comm", "oldno"
+		],
 		proxy: {
 			type: "ajax",
 			url: "/Comm/GetCourse",
@@ -449,6 +464,100 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			{ property: "teacherno", direction: "ASC" }
 		]
 	});
+	// TODO [9] <教务参数查询> {使用/Comm/GetCTypeSct弄一个教务参数的总查询}
+	Ext.define("SctCoz.Comm.CampusInfo", {
+		alias: ["CampusInfo"],
+		extend: "Ext.data.Store",
+		fields: [
+			"cid", "ctype", "type", "enabled", 
+			"spno", "grade", "ctype1", "comm",
+			"param1", "param2", "param3", "param4", "param5",
+			{ name: "name", convert: function (value, record) { return record.get("param1"); } },
+			{ name: "CampusNo", convert: function (value, record) { return record.get("type");} }
+		],
+		proxy: {
+			type: "ajax",
+			url: "/Comm/GetCtypeSct/Campus",
+			reader: {
+				type: "json",
+				root: "data"
+			}
+		},
+		autoLoad: true,
+		sorters: [
+			{ property: "CampusNo", direction: "ASC" }
+		]
+	});
+	Ext.define("SctCoz.Comm.BuildingInfo", {
+		alias: ["BuildingInfo"],
+		extend: "Ext.data.Store",
+		fields: [
+			"cid", "ctype", "type", "enabled", 
+			"spno", "grade", "ctype1","comm",
+			"param1", "param2", "param3", "param4", "param5",
+			{ name: "name", convert: function (value, record) { return record.get("param3"); } },
+			{ name: "zone", convert: function (value, record) { return record.get("param2"); } },
+			{ name: "CampusNo", convert: function (value, record) { return record.get("param1"); } },
+			{ name: "BuildingNo", convert: function (value, record) { return record.get("type"); } },
+			{ name: "address", convert: function (value, record) { return record.get("type"); } }
+		],
+		proxy: {
+			type: "ajax",
+			url: "/Comm/GetCtypeSct/Building",
+			reader: {
+				type: "json",
+				root: "data"
+			}
+		},
+		autoLoad: true,
+		sorters: [
+			{ property: "CampusNo", direction: "ASC" },
+			{ property: "BuildingNo", direction: "ASC" }
+		]
+	});
+	Ext.define("SctCoz.Comm.RoomType", {
+		extend: "Ext.data.Store",
+		fields: [
+			"id", "type",
+			{ name: "rtype", convert: function (value, record) { return record.get("id"); } },
+			{ name: "text", convert: function (value, record) { return record.get("type"); } },
+		],
+		proxy: {
+			type: "ajax",
+			url: "/Comm/GetRoomtype",
+			reader: {
+				type: "json",
+				root: "data"
+			}
+		},
+		autoLoad: true,
+		sorters: [
+			{ property: "rtype", direction: "ASC" }
+		]
+	});
+	Ext.define("SctCoz.Comm.RoomInfo", {
+		alias: ["RoomInfo"],
+		extend: "Ext.data.Store",
+		fields: [
+			"croomno", "croomname", "content", "address", 
+			"comm", "tcontent", "examseat", "rtype", "usable", "zone",
+			{ name: "BuildingNo", convert: function (value, record) { return record.get("address"); } }
+		],
+		proxy: {
+			type: "ajax",
+			url: "/Comm/GetClassroom",
+			reader: {
+				type: "json",
+				root: "data"
+			}
+		},
+		autoLoad: true,
+		sorters: [
+			{ property: "rtype", direction: "ASC" }
+		]
+	});
+
+	// 下拉列表组件
 	Ext.define("SctCoz.Comm.TermCombo", {
 		extend: "Ext.form.field.ComboBox",
 		xtype: ["TermCombo"],
@@ -530,11 +639,27 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			this.store.loadRecords(Ext.data.StoreManager.lookup("MajorNoStore").getRange());
 		}
 	});
+	Ext.define("SctCoz.Comm.RoomCombo", {
+		extend: "Ext.form.field.ComboBox",
+		xtype: ["RoomCombo"],
+		name: "croomno",
+		fieldLabel: "教室",
+		width: 150,
+		queryMode: "local",
+		valueField: "croomno",
+		displayField: "croomno",
+		constructor: function (config) {
+			Ext.apply(this, Ext.apply({}, config));
+			this.callParent(arguments);
+			this.labelWidth = this.fieldLabel.length * 16;
+			this.store = Ext.data.StoreManager.lookup("Classrooms");
+		}
+	});
 }
 if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Student", {
 		statics: {
-			version: "1.1.1",
+			version: "1.1.5",
 			InitStore: function () {
 				// 注册Store
 				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Student.PersonInfo", { id: "StudentUser" }));
@@ -546,6 +671,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 		}
 	});
 	// TO-DO: [8] <当前用户信息> {弄一个获取当前用户信息的store}
+	// Store
 	Ext.define("SctCoz.Student.PersonInfo", {
 		extend: "Ext.data.Store",
 		fields: [
@@ -725,11 +851,13 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Query", {
 		statics: {
-			version: "1.1.1",
+			version: "1.1.7",
 			InitStore: function () {
 			}
 		}
 	});
+
+	// 组件
 	Ext.define("SctCoz.Query.QueryPanel", {
 		extend: "Ext.panel.Panel", 
 		xtype: ["query-panel"],
@@ -803,8 +931,8 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		constructor: function (config) {
 			Ext.apply(this, Ext.apply({}, config));
 			this.tbar = this.tbar.concat([
-				{ xtype: "button", text: "提交", handler: config.SelectFn },
-				{ xtype: "button", text: "抢课", handler: config.TakeFn }
+				{ xtype: "button", action: "select", text: "提交", handler: config.SelectFn },
+				{ xtype: "button", action: "take", 	 text: "抢课", handler: config.TakeFn }
 			]);
 			this.callParent(arguments);
 		}
@@ -966,6 +1094,8 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			this.callParent(arguments);
 		}
 	});
+
+	// Store
 	Ext.define("SctCoz.Query.CoursePlan", {
 		extend: "Ext.data.Store",
 		alias: ["CoursePlan"],
