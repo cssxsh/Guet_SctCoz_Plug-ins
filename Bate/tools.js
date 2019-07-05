@@ -305,7 +305,7 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			getSctCozTerm: function () {
 				return Ext.data.StoreManager.lookup("TermStore").termSet[1];
 			},
-			getNextTerm: function () {
+			getArrangeTerm: function () {
 				return Ext.data.StoreManager.lookup("TermStore").termSet[2];
 			},
 			getShoolYear: function () {
@@ -590,7 +590,9 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			this.callParent(arguments);
 			this.labelWidth = this.fieldLabel.length * 16;
 			this.store = Ext.data.StoreManager.lookup("ShoolYears");
-			this.store.loadData(SctCoz.Comm.getShoolYear().map(function (value, index, array) { return [parseInt(value), value]; }));
+			this.store.loadData(SctCoz.Comm.getShoolYear().map(function (value, index, array) { 
+				return [parseInt(value), value]; 
+			}));
 		}
 	});
 	Ext.define("SctCoz.Comm.CollegeCombo", {
@@ -714,7 +716,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 		],
 		proxy: {
 			type: "ajax",
-			url: "/student/getstutable",
+			url: "/Student/GetStuTable",
 			reader: { 
 				type: "json", 
 				root: "data" 
@@ -732,7 +734,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			"lot", "ap", "xm"
 		],
 		proxy: {
-			url: "/student/GetPlan",
+			url: "/Student/GetPlan",
 			type: "ajax",
 			reader: {
 				type: "json",
@@ -747,6 +749,49 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			}
 		}
 	});
+	Ext.define("SctCoz.Student.LabPlan", {
+		extend: "Ext.data.Store",
+		fields: [
+			"teacherno", "cname", "srname", "srdd", "dptname", "spname", 
+			"testtime", "checked", "labid", "term", "courseid", 
+			"dptno", "spno", "grade", "syxs", "qtxs", "sjxs", 
+			"srid", "planid", "comm"
+		],
+		proxy: {
+			url: "/Student/LabPlan",
+			type: "ajax",
+			reader: {
+				type: "json",
+				root: "data"
+			},
+			extraParams: {
+				term: "",
+				grade: "",
+				dptno: "",
+				spno: ""
+			}
+		}
+	});
+	Ext.define("SctCoz.Student.LabItem", {
+		extend: "Ext.data.Store",
+		fields: [
+			"labid", "xh", "itemname", "sylx", "sylb", 
+			"groupperson", "planhours", "syxs", 
+			"address", "srid", "comm", "scted",
+			{ name: "itemno", type: "int", convert: function (value, record) { return parseInt(record.get("xh").slice(9)); } }
+		],
+		proxy: {
+			url: "/Student/LabItem",
+			type: "ajax",
+			reader: {
+				type: "json",
+				root: "data"
+			},
+			extraParams: {
+				labid: ""
+			}
+		}
+	});
 	Ext.define("SctCoz.Student.CourseSetNo", {
 		//
 		extend: "Ext.data.Store",
@@ -757,7 +802,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			"stid", "comm", "lot", "ap", "xm"
 		],
 		proxy: {
-			url: "/student/GetPlanCNo",
+			url: "/Student/GetPlanCNo",
 			type: "ajax",
 			reader: {
 				type: "json",
@@ -778,7 +823,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			{ name: "type", persist: false , convert: function (value, record) { return (record.get("lb") == 1 ? "理论课" : "实验课"); } }
 		],
 		proxy: {
-			url: "/student/getpjcno",
+			url: "/Student/GetPjCno",
 			type: "ajax",
 			reader: {
 				type: "json",
@@ -819,13 +864,13 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 		],
 		proxy: {
 			type: "ajax", 
-			url: "/student/jxpgdata", 
+			url: "/Student/JxpgData", 
 			reader: { 
 				type: "json", 
 				root: "data" 
 			},
 			api: {
-				update: "/student/SaveJxpg" 
+				update: "/Student/SaveJxpg" 
 			}
         }
 	});
@@ -851,7 +896,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Query", {
 		statics: {
-			version: "1.1.7",
+			version: "1.1.9",
 			InitStore: function () {
 			}
 		}
@@ -897,7 +942,7 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		width: "100%", height: "100%", minHeight: 400, layout: "fit", region: "center",
 		plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
 		viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
-		features: [{ ftype: "grouping", id: "groupFea" }],
+		features: [{ ftype: "grouping" }],
 		printTitle: "", // 打印的主标题
 		tbar: [
 			{ xtype: "button", text: "打印文档", formBind: true, iconCls: "print", handler: function printGrid(me, opt) { 

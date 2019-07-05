@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.28
+// @version      3.7.29
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -222,7 +222,7 @@ Ext.onReady(function () {
 				});
 				// 面板
 				var queryPanel = Ext.create("SctCoz.Query.QueryPanel", {
-					TitleText: "课程设置",
+					TitleText: "课程设置【插件模式】",
 					items: [queryForm, queryGrid]
 				});
 				// 添加到TAB
@@ -473,200 +473,10 @@ Ext.onReady(function () {
 			}
 		}
 	};// 重写完毕
-	var LabSctNew = {
-		action: "LabSct",
-		controller: "Plug-in",
-		id: "LabSct",
-		leaf: true,
-		text: "实验选课【插件】",
-		type: "action",
-		isAutoLoad: false,
-		listeners: {
-			afterrender: function (me, opt) {
-				Ext.QuickTips.init();
-				Ext.form.Field.prototype.MsgTarget = "side";
-				// 专业开课查询
-				var qryfrm = Ext.create('Ext.form.Panel', {
-					alias: 'widget.queryform',
-					frame: true, layout: 'fit', region: 'north',
-					fieldDefaults: { labelAlign: 'right', labelWidth: 60, margin: '0 0 6 0' }, 
-					viewConfig: { forceFit: true, stripeRows: true },
-					items: [{
-						xtype: 'fieldset',
-						title: '请输入查询条件，按查询键开始',
-						layout: 'column',
-						defaultType: 'textfield',
-						margin: 0,
-						items: [// xtype里已经封装好了store。
-							{ fieldLabel: '开课学期', labelWidth: 60, width: 200, xtype: 'termcombo', allowBlank: false, value: getTerm()[0] }, 
-							{ fieldLabel: '开课年级', labelWidth: 60, width: 120, xtype: 'gradecombo' },
-							{ fieldLabel: '开课学院', labelWidth: 60, xtype: 'dptcombo', listeners: { change: changeDpt } }, 
-							{ fieldLabel: '开课专业', labelWidth: 60, xtype: 'kscombo' },
-							{ xtype: "button", text: "查询", formBind: true, handler: queryStore, margin: "0 3" }
-						]
-					}]
-				});
-				qryfrm.getForm().setValues(getzt());
-				function queryStore() {
-					sySto.removeAll();
-					sySto.proxy.extraParams = qryfrm.getForm().getValues();
-					sySto.load();
-				}
-				function changeDpt(cmb, newValue, oldValue) {
-					let spno = qryfrm.down("[xtype='kscombo']");
-					spno.getStore().clearFilter();
-					if (newValue != "" && newValue != null) {
-						spno.getStore().filter('dptno', new RegExp('^' + newValue + '$'));
-						spno.setValue("");
-					}
-				}
-				// 实验计划
-				var sySto = Ext.create("Edu.store.LabPlan");
-				Ext.apply(sySto.proxy, { url: "/student/labplan" });
-				var grid = Ext.create("Edu.view.ShowGrid", {
-					height: "50%", region: "center", title: "实验计划",
-					store: sySto,
-					columns: [
-						{ header: "序号", xtype: "rownumberer", width: 40 },
-						{ header: "计划序号", dataIndex: "planid", width: 80 },
-						{ header: "年级", dataIndex: "grade", width: 50 },
-						{ header: "专业", dataIndex: "spname", width: 100 },
-						{ header: "课程代号", dataIndex: "courseid", width: 95 },
-						{ header: "课程名称", dataIndex: "cname", width: 160 },
-						{ header: "实验室", dataIndex: "srname", width: 160 },
-						{ header: "备注", dataIndex: "comm", width: 160 }
-					],
-					listeners: {
-						select: function (e, r) {
-							xmSto.proxy.extraParams.labid = r.data.planid;
-							xmSto.load();
-						}
-					}
-				});
-				// 实验批次
-				var xmSto = Ext.create("Edu.store.LabItem");
-				Ext.apply(xmSto.proxy, { url: "/student/labitem" });
-				var xmGd = Ext.create("Edu.view.ShowGrid", {
-					title: "实验计划项目", region: "south", height: "50%",
-					store: xmSto,
-					columns: [
-						{ header: "序号", xtype: "rownumberer", width: 30 },
-						{ header: "操作", xtype: "actionrendercolumn", width: 40, dataIndex: "scted",
-							renderer: function (v) { if (!v) return ["选批次"]; },
-							items: [{
-								handler: function (grid, rowIndex, colIndex) {
-									var rec = grid.getStore().getAt(rowIndex);
-									grid.getSelectionModel().select(rec);
-									sctcno(rec);
-								}
-							}]
-						},
-						{ header: "已选", width: 40, xtype: "booleancolumn", trueText: "是", falseText: "否", dataIndex: "scted" },
-						{ header: "项目号", dataIndex: "xh", width: 90, 
-							doSort: function(state) {
-								let ds = this.up('grid').getStore();
-								let field = this.getSortParam();
-								ds.sort({
-									property: field, direction: state,
-									sorterFn: function(v1, v2) {
-										let n1 = parseInt(v1.raw.xh);
-										let n2 = parseInt(v2.raw.xh);
-										return n1 > n2 ? 1 : (n1 === n2) ? 0 : -1;
-									} 
-								});
-							}
-						},
-						{ header: "项目", dataIndex: "itemname", width: 360 },
-						{ header: "学时", dataIndex: "syxs", width: 40 },
-						{ header: "实验类别", dataIndex: "sylb", width: 140 },
-						{ header: "实验类型", dataIndex: "sylx", width: 100 },
-						{ header: "备注", dataIndex: "comm", minWidth: 50, flex: 1 }
-					],
-					listeners: { "select": function (e, r) { pcSto.proxy.extraParams.xh = r.data.xh; pcSto.load(); } }
-				});
-
-				function sctSubmit(rec) {
-					var rw = this;
-					Ext.Ajax.request({
-						url: "/student/labSave", //请求的地址
-						params: rec.data,
-						method: "POST",
-						success: function (response, opts) {
-							var obj = Ext.decode(response.responseText);
-							if (obj.success) {
-								Ext.Msg.alert("成功", obj.msg, function () {
-									var jg = xmGd.getSelectionModel().getSelection();
-									if (jg.length > 0) {
-										jg[0].data.scted = 1; jg[0].commit(); rw.up("window").close();
-									}
-								});
-							} else {
-								Ext.Msg.alert("错误", obj.msg);
-							}
-						},
-						failure: function (response, opts) {
-							Ext.Msg.alert("错误", "状态:" + response.status + ": " + response.statusText);
-						}
-					});
-				}
-				var pcSto = Ext.create("Edu.store.LabBatch");
-				Ext.apply(pcSto.proxy, { url: "/student/itembatch" });
-				var gdcno = Ext.create("Edu.view.ShowGrid", {
-					// selType: "checkboxmodel",
-					store: pcSto,
-					columns: [
-						{ header: "操作", xtype: "actionrendercolumn", width: 40,
-							renderer: function (v) { return ["提交"]; },
-							items: [{
-								handler: function (grid, rowIndex, colIndex) {
-									var rec = grid.getStore().getAt(rowIndex);
-									grid.getSelectionModel().select(rec);
-									sctSubmit(rec);
-								}
-							}]
-						},
-						{ header: "批次", dataIndex: "bno", width: 40, editor: { xtype: "numberfield", hideTrigger: true } },
-						{ header: "周次", dataIndex: "zc", width: 40 },
-						{ header: "星期", dataIndex: "xq", width: 40 },
-						{ header: "大节", dataIndex: "jc", width: 40 },
-						{ header: "人数", dataIndex: "persons", width: 40 },
-						{ header: "已选人数", dataIndex: "stusct", width: 80 },
-						{ header: "实验教师", dataIndex: "name", width: 80 },
-						{ header: "实验教室", dataIndex: "srdd", width: 80 },
-						{ header: "备注", dataIndex: "comm", minWidth: 50, flex: 1 }
-					]
-				});
-				var win;
-				function sctcno(rec) {
-					pcSto.removeAll();
-					let sto = gdcno.getStore();
-					sto.proxy.extraParams.xh = rec.data.xh;
-					sto.load();
-					if (!win) {
-						win = Ext.create("Ext.window.Window", {
-							modal: true, height: "60%", width: "60%", layout: "fit", closeAction: "hide",
-							items: [gdcno]
-						});
-					}
-					win.setTitle(rec.data.itemname + "(" + rec.data.xh + ")");
-					win.show();
-				}
-				let pan = Ext.create("Edu.view.ShowPanel", {
-					title: "实验选课",
-					items: [qryfrm, grid, xmGd]
-				});
-
-				me.add(pan);
-			}
-		}
-	};
-	var labUnSctNew = {
-		"action":"LabUnSct","children":[],"command":null,"controller":"Student","id":"bstuk110","leaf":true,"text":"实验退课","type":"action"
-	};
 	var StuTEMSNew = {
-		action: "StuTEMSNew",
+		action: "StuTEMS",
 		text: "学生评教【插件】",
-		id: "StuTEMSNew",
+		id: "StuTEMS",
 		leaf: true,
 		type: "action",
 		isAutoLoad: false,
@@ -906,9 +716,6 @@ Ext.onReady(function () {
 	plugTools.menuChange(StuScoreNew);
 	plugTools.menuChange(SutSctedNew);
 	plugTools.menuChange(StuPlanNew);
-	// TO-DO[9]: <添加实验选课> {添加对实验选课的支持}
-	plugTools.menuAdd(LabSctNew);
-	// plugTools.menuAdd(labUnSctNew);
 	plugTools.menuAdd(StuTEMSNew);
 
 
