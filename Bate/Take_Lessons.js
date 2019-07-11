@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.5
+// @version      4.7.6
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -288,8 +288,10 @@ Ext.onReady(function () {
 				{ header: "教师", dataIndex: "name", width: 72 },
 				{ header: "时间安排", dataIndex: "ap", width: 96, flex: 1 }
 			],
-			SelectFn: selectCourse,
-			TakeFn: takeCourse
+			buttonHandler: {
+				SelectFn: selectCourse,
+				TakeFn: takeCourse
+			}
 		});
 
 		var panel = Ext.create("SctCoz.Query.QueryPanel", {

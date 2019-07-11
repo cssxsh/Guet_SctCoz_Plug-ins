@@ -288,16 +288,16 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Comm", {
 		alias: ["CommInfo"],
 		statics: {
-			version: "1.1.4",
+			version: "1.1.5",
 			InitStore: function () {
 				// 注册Store
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.TermInfo", { id: "TermStore" }));
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.ShoolYear", { id: "ShoolYears" }));
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.MajorInfo", { id: "MajorNoStore" }));
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.CollegeInfo", { id: "CollegeNoStore" }));
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.CourseInfo", { id: "CourseIdStore" }));
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.HourInfo", { id: "SchoolHour" }));
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.RoomInfo", { id: "Classrooms" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.TermInfo", { storeId: "TermStore" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.ShoolYear", { storeId: "ShoolYears" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.MajorInfo", { storeId: "MajorNoStore" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.CollegeInfo", { storeId: "CollegeNoStore" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.CourseInfo", { storeId: "CourseIdStore" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.HourInfo", { storeId: "SchoolHour" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Comm.RoomInfo", { storeId: "Classrooms" }));
 			},
 			getNowTerm: function () {
 				return Ext.data.StoreManager.lookup("TermStore").termSet[0];
@@ -362,8 +362,12 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		extend: "Ext.data.Store",
 		fields: [
 			"dptno", "dptname", "engname", "gbno", "zone", "comm", "bbm", "code", "used", 
-			{ name: "text", convert: function (value, record) { return record.get("dptno") + " " + record.get("dptname"); } },
-			{ name: "CollegeNo", convert: function (value, record) { return parseInt(record.get("dptno")); } }
+			{ name: "text", convert: function (value, record) { 
+				return record.get("dptno") + " " + record.get("dptname"); 
+			}},
+			{ name: "CollegeNo", convert: function (value, record) { 
+				return parseInt(record.get("dptno")); 
+			}}
 		],
 		proxy: {
 			type: "ajax", 
@@ -381,8 +385,12 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		extend: "Ext.data.Store",
 		fields: [
 			"spno", "spname", "engname", "dptno", "sptype", "gbno", "years", "degree","comm","major", "code", "used",
-			{ name: "text", convert: function (value, record) { return record.get("spno") + " " + record.get("spname"); } },
-			{ name: "MajorNo", convert: function (value, record) { return record.get("spno"); } }
+			{ name: "text", convert: function (value, record) { 
+				return record.get("spno") + " " + record.get("spname"); 
+			}},
+			{ name: "MajorNo", convert: function (value, record) { 
+				return record.get("spno"); 
+			}}
 		],
 		proxy: {
 			type: "ajax",
@@ -441,6 +449,23 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		}, 
 		autoLoad: true
 	});
+	Ext.define("SctCoz.Comm.CouresType", {
+		extend: "Ext.data.Store",
+		fields: [
+			"typeno", "tname", "tname1", "issj", "act", "comm",
+			{ name: "text", convert: function (value, record) { 
+				return record.get("typeno") + " " + record.get("tname");
+			}}
+		],
+		proxy: {
+			type: "ajax",
+			url: "/Comm/GetkCtype",
+			reader: {
+				type: "json",
+				root: "data"
+			}
+		}
+	});
 	Ext.define("SctCoz.Comm.CourseInfo", {
 		alias: ["CourseInfo"],
 		extend: "Ext.data.Store",
@@ -472,8 +497,12 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			"cid", "ctype", "type", "enabled", 
 			"spno", "grade", "ctype1", "comm",
 			"param1", "param2", "param3", "param4", "param5",
-			{ name: "name", convert: function (value, record) { return record.get("param1"); } },
-			{ name: "CampusNo", convert: function (value, record) { return record.get("type");} }
+			{ name: "name", convert: function (value, record) { 
+				return record.get("param1"); 
+			}},
+			{ name: "CampusNo", convert: function (value, record) { 
+				return record.get("type"); 
+			}}
 		],
 		proxy: {
 			type: "ajax",
@@ -495,11 +524,21 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 			"cid", "ctype", "type", "enabled", 
 			"spno", "grade", "ctype1","comm",
 			"param1", "param2", "param3", "param4", "param5",
-			{ name: "name", convert: function (value, record) { return record.get("param3"); } },
-			{ name: "zone", convert: function (value, record) { return record.get("param2"); } },
-			{ name: "CampusNo", convert: function (value, record) { return record.get("param1"); } },
-			{ name: "BuildingNo", convert: function (value, record) { return record.get("type"); } },
-			{ name: "address", convert: function (value, record) { return record.get("type"); } }
+			{ name: "name", convert: function (value, record) { 
+				return record.get("param3"); 
+			}},
+			{ name: "zone", convert: function (value, record) { 
+				return record.get("param2"); 
+			}},
+			{ name: "CampusNo", convert: function (value, record) { 
+				return record.get("param1"); 
+			}},
+			{ name: "BuildingNo", convert: function (value, record) { 
+				return record.get("type"); 
+			}},
+			{ name: "address", convert: function (value, record) { 
+				return record.get("type"); 
+			}}
 		],
 		proxy: {
 			type: "ajax",
@@ -519,8 +558,12 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		extend: "Ext.data.Store",
 		fields: [
 			"id", "type",
-			{ name: "rtype", convert: function (value, record) { return record.get("id"); } },
-			{ name: "text", convert: function (value, record) { return record.get("type"); } },
+			{ name: "rtype", convert: function (value, record) { 
+				return record.get("id");
+			}},
+			{ name: "text", convert: function (value, record) { 
+				return record.get("type"); 
+			}},
 		],
 		proxy: {
 			type: "ajax",
@@ -541,7 +584,9 @@ if (typeof SctCoz.Comm == "undefined") {	// 防止重复定义
 		fields: [
 			"croomno", "croomname", "content", "address", 
 			"comm", "tcontent", "examseat", "rtype", "usable", "zone",
-			{ name: "BuildingNo", convert: function (value, record) { return record.get("address"); } }
+			{ name: "BuildingNo", convert: function (value, record) { 
+				return record.get("address"); 
+			}}
 		],
 		proxy: {
 			type: "ajax",
@@ -664,7 +709,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			version: "1.1.5",
 			InitStore: function () {
 				// 注册Store
-				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Student.PersonInfo", { id: "StudentUser" }));
+				SctCoz.tools.ClassStorage.Save("store", Ext.create("SctCoz.Student.PersonInfo", { storeId: "StudentUser" }));
 				// Ext.create("SctCoz.Student.Schedule", { id: "StudentSchedule" });
 			},
 			getUserInfo: function () {
@@ -712,7 +757,9 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			"cname", "courseno", "teacherno", "name", "term", "courseid", "croomno", "comm", 
 			"startweek", "endweek", "oddweek", "week", "seq", "maxcnt", 
 			"xf", "llxs", "syxs", "sjxs", "qtxs", "sctcnt", "hours", "tname", "name", 
-			{ name: "sequence", convert: function (value, record) { return (value == null) ? record.get("seq") : value} }
+			{ name: "sequence", convert: function (value, record) { 
+				return (value == null) ? record.get("seq") : value;
+			}}
 		],
 		proxy: {
 			type: "ajax",
@@ -778,7 +825,9 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			"labid", "xh", "itemname", "sylx", "sylb", 
 			"groupperson", "planhours", "syxs", 
 			"address", "srid", "comm", "scted",
-			{ name: "itemno", type: "int", convert: function (value, record) { return parseInt(record.get("xh").slice(9)); } }
+			{ name: "itemno", type: "int", convert: function (value, record) { 
+				return parseInt(record.get("xh").slice(9)); 
+			}}
 		],
 		proxy: {
 			url: "/Student/LabItem",
@@ -820,7 +869,9 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 		fields: [
 			"term", "stid", "courseid", "teacherno", "courseno", "cname", "name", "lb", 
 			{ name: "chk", type: "boolean"},
-			{ name: "type", persist: false , convert: function (value, record) { return (record.get("lb") == 1 ? "理论课" : "实验课"); } }
+			{ name: "type", persist: false, convert: function (value, record) { 
+				return record.get("lb") == 1 ? "理论课" : "实验课"; 
+			}}
 		],
 		proxy: {
 			url: "/Student/GetPjCno",
@@ -847,7 +898,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 			{ name: "djc", persist: false }, { name: "cfz", persist: false },
 			{ name: "djd", persist: false }, { name: "dfz", persist: false },
 			{ name: "dje", persist: false }, { name: "efz", persist: false },
-			"score",
+			{ name:"score", defaultValue: 100 },
 			{ name: "lb" , convert: function (value, record) { 
 				return (record.get("leibie") == "实验评估") ? 2 : 1;
 			}}, 
@@ -860,7 +911,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 					{ value: record.get("efz"), text: record.get("dje") }
 				];
 				return arr;
-			} }
+			}}
 		],
 		proxy: {
 			type: "ajax", 
@@ -896,7 +947,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Query", {
 		statics: {
-			version: "1.1.9",
+			version: "1.1.10",
 			InitStore: function () {
 			}
 		}
@@ -930,7 +981,7 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		}],
 		constructor: function (config) {
 			Ext.apply(this, Ext.apply({}, config));
-			this.argcols.push({ xtype: "button", text: "查询", margin: "0 3", formBind: true , handler: this.QueryByStore });
+			this.argcols.push({ xtype: "button", text: "查询", margin: "0 3", formBind: true, iconCls: "search", handler: this.QueryByStore });
 			this.items[0].items = this.argcols;
 			this.callParent(arguments);
 		}
@@ -938,46 +989,74 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 	Ext.define("SctCoz.Query.QueryGrid", {
 		extend: "Ext.grid.Panel",
 		xtype: ["query-grid"],
-		columnLines: true,
-		width: "100%", height: "100%", minHeight: 400, layout: "fit", region: "center",
-		plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
-		viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
-		features: [{ ftype: "grouping" }],
-		printTitle: "", // 打印的主标题
+		width: "100%", height: "100%", layout: "fit", region: "center",
+		plugins: [
+			{ ptype: "cellediting", clicksToEdit: 1 }, 
+			// 使用缓冲加载解决决加载慢
+			{ ptype: "bufferedrenderer", numFromEdge: 80, trailingBufferZone: 100, leadingBufferZone: 100 }
+		],
+		viewConfig: { 
+			columnLines: true,			// 列分割线
+			forceFit: true, 			// 自适应
+			stripeRows: true, 			// 斑马纹
+			enableTextSelection: true 	// 文字可选（复制）
+		},
+		features: [
+			// 取消分组功能，避免报错
+			// { ftype: "grouping", enableNoGroups: true, startCollapsed: true, id: "group" }
+		],
+		printConfig: {
+			printTitle: "",				// 打印的主标题
+		},
 		tbar: [
 			{ xtype: "button", text: "打印文档", formBind: true, iconCls: "print", handler: function printGrid(me, opt) { 
-				let title = me.up("query-grid").printTitle;
+				let title = me.up("query-grid").printConfig.title;
 				Ext.ux.grid.Printer.mainTitle = title;
 				Ext.ux.grid.Printer.print(me.up("grid"));
 			}},
 			{ xtype: "button", text: "导出表格", formBind: true, iconCls: "excel", handler: function printGrid(me, opt) {  
-				let title = me.up("query-grid").printTitle;
+				let title = me.up("query-grid").printConfig.title;
 				Ext.ux.grid.Printer.mainTitle = title;
 				Ext.ux.grid.Printer.ToExcel(me.up("grid"));
 			}}
 		],
 		constructor: function (config) {
+			config.tbar = this.tbar.concat(config.newTbar);
 			Ext.apply(this, Ext.apply({}, config));
-			this.tbar = this.tbar.concat(config.newTbar);
 			this.callParent(arguments);
+			// this.getView().getFeature("group").disable()
 		}
 	});
 	Ext.define("SctCoz.Query.SelectGrid", {
 		extend: "Ext.grid.Panel",
 		xtype: ["select-grid"],
 		columnLines: true,
-		width: "100%", height: "100%", minHeight: 400, layout: "fit", region: "center",
-		plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
-		viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
-		features: [{ ftype: "grouping", id: "groupFea" }],
+		width: "100%", height: "100%", layout: "fit", region: "center",
+		plugins: [
+			{ ptype: "cellediting", clicksToEdit: 1 }, 
+			// 使用缓冲加载解决报错
+			{ ptype: "bufferedrenderer", numFromEdge: 80, trailingBufferZone: 100, leadingBufferZone: 100 }
+		],
+		viewConfig: { 
+			forceFit: true, 
+			stripeRows: true, 
+			enableTextSelection: true 
+		},
+		features: [
+			{ ftype: "grouping" }
+		],
 		selType: "checkboxmodel",
 		selModel: { mode: "SINGLE" },
 		tbar: [],
+		buttonHandler: {
+			// SelectFn,
+			// TakeFn
+		},
 		constructor: function (config) {
 			Ext.apply(this, Ext.apply({}, config));
 			this.tbar = this.tbar.concat([
-				{ xtype: "button", action: "select", text: "提交", handler: config.SelectFn },
-				{ xtype: "button", action: "take", 	 text: "抢课", handler: config.TakeFn }
+				{ xtype: "button", action: "select", text: "提交", handler: config.buttonHandler.SelectFn },
+				{ xtype: "button", action: "take", 	 text: "抢课", handler: config.buttonHandler.TakeFn }
 			]);
 			this.callParent(arguments);
 		}
@@ -986,7 +1065,11 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		extend: "Ext.panel.Panel", 
 		xtype: ["query-schedule"],
 		bodyPadding: 0, margin: 1, width:"100%", layout: "card",
-		viewConfig: { forceFit: true },
+		viewConfig: { 
+			forceFit: true, 
+			stripeRows: true, 
+			enableTextSelection: true 
+		},
 		activeItem: 0,
 		constructor: function (config) {
 			Ext.apply(this, Ext.apply({}, config));
@@ -1179,10 +1262,10 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 			"startweek", "endweek", "oddweek", "croomno", "week", "sequence", "term", 
 			"courseid", "coment", "studentcount", "credithour", 
 			"teachperiod", "labperiod", "copperiod", "maxperson"
-		],
+		], 
 		filterOnLoad: true,
 		// 用课号做分组依据方便后面处理, 但这样有问题
-		// groupField: "courseno",
+		// groupField: "sct",
 		proxy: {
 			type: "ajax", url: "/Query/GetCourseTable",
 			reader: { 

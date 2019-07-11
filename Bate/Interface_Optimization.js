@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.29
+// @version      3.7.30
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -29,11 +29,13 @@
 // 启动接口
 Ext.onReady(function () {
 	// 一些参数
-	let col = {
+	// TODO [8] <控制收至模块> {要外部修改时通过插件变量仓库处理}
+	var col = {
 		ver: "3.7",			// 主要版本号
 		stid_hide: false,	// 学号参数是否隐藏
 		sct_hide: false,	// 已选控制是否隐藏
-		info_load: false	// 是否加载课程信息
+		info_load: false,	// 是否加载课程信息
+		eval_hide: false	// 是否在评教之后隐藏按钮
 	};
 	// 创建工具
 	var plugTools = SctCoz.tools;
@@ -81,9 +83,9 @@ Ext.onReady(function () {
 					store.load(function () {
 						// 教务自带的过滤有问题，需要本地再次过滤
 						// TODO: [7] <完善条件过滤> {应该让被过滤的记录以课号相关联}
-						store.filterBy(function (rec) {
-							s = parseInt(rec.get('startweek')) < params.startweek;
-							t = parseInt(rec.get('endweek')) > params.endweek;
+						store.filterBy(function (record) {
+							s = parseInt(record.get('startweek')) < params.startweek;
+							t = parseInt(record.get('endweek')) > params.endweek;
 							if (s || t) {
 								return false;
 							} else {
@@ -91,7 +93,7 @@ Ext.onReady(function () {
 							}
 						});
 					});
-					grid.printTitle = formSet.findField("term").getDisplayValue() + "课程设置";
+					grid.printConfig.title = formSet.findField("term").getDisplayValue() + "课程设置";
 				};
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
@@ -135,7 +137,10 @@ Ext.onReady(function () {
 					let store = me.up("grid").getStore();
 					let key = store.getAt(index).get("courseno");
 					let Group = store.GroupsByNo.get(key);
-					Group.forEach(function (record) { record.set("sct", checked); });
+					Group.forEach(function (record) { 
+						console.log(record.get("courseno"));
+						record.set("sct", checked); 
+					});
 				};
 				// 日程表
 				// FIX-ME: [8] <重写课程表格> {添加和规范化课程表格功能和格式} (教务自带的模块不够好用)
@@ -191,7 +196,14 @@ Ext.onReady(function () {
 					store: newStore,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40, sortable: false },
-						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, editor: { xtype: "checkbox" }, listeners: { checkchange: checkChange } },
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, 
+							editor: { 
+								xtype: "checkbox" 
+							}, 
+							listeners: { 
+								checkchange: checkChange 
+							} 
+						},
 						{ header: "年级", dataIndex: "grade", width: 50 },
 						{ header: "专业", dataIndex: "spname", width: 120 },
 						{ header: "课程序号", dataIndex: "courseno", width: 80 },
@@ -209,11 +221,13 @@ Ext.onReady(function () {
 						{ header: "上机学时", dataIndex: "copperiod", width: 40 },
 						{ header: "可选人数", dataIndex: "maxperson", width: 40 },
 						{ header: "已选人数", dataIndex: "studentcount", width: 40 },
-						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", 
+						{ header: "备注", dataIndex: "comment", xtype: "actionrendercolumn", flex: 1, 
 							renderer: function (value, metaData, record) {
-								 return (record.get("comment") != null ? ["查看"] : [""]); 
+								 return (record.get("comment") != null) ? ["查看"] : [""]; 
 							}, 
-							items: [{ handler: showComm }], flex: 1 
+							items: [
+								{ handler: showComm }
+							]
 						}
 					],
 					newTbar: [
@@ -250,7 +264,7 @@ Ext.onReady(function () {
 					let params = formSet.getValues();
 
 					store.getProxy().extraParams = params;
-					grid.printTitle = formSet.findField("term").getDisplayValue() + "学生成绩";
+					grid.printConfig.title = formSet.findField("term").getDisplayValue() + "学生成绩";
 					store.load();
 				};
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
@@ -420,7 +434,7 @@ Ext.onReady(function () {
 					store.getProxy().extraParams = formSet.getValues();
 					store.load();
 					// 设置打印标题
-					grid.printTitle = formSet.findField("term").getDisplayValue() + formSet.findField("plan").getDisplayValue();
+					grid.printConfig.title = formSet.findField("term").getDisplayValue() + formSet.findField("plan").getDisplayValue();
 				}
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
@@ -442,12 +456,16 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 35 },
 						{ header: "计划序号", dataIndex: "pid", width: 80 },
-						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value, metaData, record) {
-							return plugTools.transvalue(value, "TermStore", "term", "termname") 
-						}},
-						{ header: "专业", dataIndex: "spno", width: 160, renderer: function (value, metaData, record) { 
-							return plugTools.transvalue(value, "MajorNoStore", "spno", "text") 
-						}},
+						{ header: "学期", dataIndex: "term", width: 120, 
+							renderer: function (value, metaData, record) {
+								return plugTools.transvalue(value, "TermStore", "term", "termname") 
+							}
+						},
+						{ header: "专业", dataIndex: "spno", width: 160, 
+							renderer: function (value, metaData, record) { 
+								return plugTools.transvalue(value, "MajorNoStore", "spno", "text") 
+							}
+						},
 						{ header: "年级", dataIndex: "grade", width: 40 },
 						{ header: "课程代码", dataIndex: "courseid", width: 90 },
 						{ header: "课程名称", dataIndex: "cname", minWidth: 160 },
@@ -494,7 +512,7 @@ Ext.onReady(function () {
 					store.getProxy().extraParams = formSet.getValues();
 					store.load();
 					// 设置打印标题
-					grid.printTitle = formSet.findField("term").getDisplayValue() + "评教列表";
+					grid.printConfig.title = formSet.findField("term").getDisplayValue() + "评教列表";
 				};
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
@@ -505,9 +523,12 @@ Ext.onReady(function () {
 				// 加载评教数据
 				var loadCourseEvalNo = function (record, grid) {
 					// 加载评教选项
-					evalStore.getProxy().extraParams.term = record.get("term");
-					evalStore.getProxy().extraParams.courseno = record.get("courseno");
-					evalStore.getProxy().extraParams.teacherno = record.get("teacherno");
+					let params = {
+						term: record.get("term"),
+						courseno: record.get("courseno"),
+						teacherno: record.get("teacherno")
+					}
+					evalStore.getProxy().extraParams = params;
 					evalStore.load(function(records, operation, success) {
 						records.forEach(function (item, index, array) {
 							item.set("term", record.get("term"));
@@ -519,7 +540,7 @@ Ext.onReady(function () {
 					});
 					// 加载评教评语
 					evalFrom.load({ 
-						url: '/student/JxpgJg', 
+						url: "/student/JxpgJg", 
 						params: evalStore.getProxy().extraParams,
 						success: function (me, action) {
 							if (action.result.data.length != 0) {
@@ -538,16 +559,19 @@ Ext.onReady(function () {
 					let panel = grid.up("[xtype='query-panel']");
 					panel.getLayout().next();
 					Ext.getCmp("card-prev").setDisabled(false);
-					
-					panel.down("button[action='save']").setVisible(!record.get("chk"));
-					panel.down("button[action='submit']").setVisible(!record.get("chk"));
+					if (col.eval_hide) {
+						panel.down("button[action='save']").setVisible(!record.get("chk") && col.eval_hide);
+						panel.down("button[action='submit']").setVisible(!record.get("chk") && col.eval_hide);
+					}
 				};
 				var queryGrid = Ext.create("SctCoz.Query.QueryGrid", {
 					store: Ext.create("SctCoz.Student.CourseEvalNo"),
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 36 },
-						{ header: "操作", xtype: "actiontextcolumn", width: 48, items: [{
-							text: "评教", handler: function (grid, rowIndex, colIndex) {
+						{ header: "操作", xtype: "actiontextcolumn", width: 48, 
+							items: [{
+								text: "评教", 
+								handler: function (grid, rowIndex, colIndex) {
 									let record = grid.getStore().getAt(rowIndex);
 									loadCourseEvalNo(record, grid); 
 								}
@@ -563,29 +587,35 @@ Ext.onReady(function () {
 					]
 				});
 				var qureyCard = Ext.create("Ext.container.Container", { 
-					region: "center", layout: "border", items: [queryForm, queryGrid] 
+					region: "center", layout: "border", 
+					items: [queryForm, queryGrid] 
 				});
 				// 输入部分
 				var evalStore = Ext.create("SctCoz.Student.Evaluation");
 				var evalGrid = Ext.create("Ext.grid.Panel", {
 					//
 					region: "center",
-					plugins: [Ext.create("Ext.grid.plugin.CellEditing", { clicksToEdit: 1 })],
+					plugins: [
+						{ ptype: "cellediting", clicksToEdit: 1 }
+					],
 					store: evalStore,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 30 },
-						{ header: "指标", dataIndex: "xh", width: 64, renderer: function (value, metaData, record) { return record.get("nr"); } },
+						{ header: "指标", dataIndex: "xh", width: 64, 
+							renderer: function (value, metaData, record) { 
+								return record.get("nr"); 
+							} 
+						},
 						{ header: "学号", dataIndex: "stid", hidden: true},
 						{ header: "内容", dataIndex: "zbnh", width: 350 },
 						{ header: "评价结果", dataIndex: "score", width: 100, 
 							editor: { 
 								xtype: "combo", valueField: "value", displayField: "text",
 								queryMode: "local", allowBlank: true,
-								store: Ext.create("Ext.data.Store", {
-									id: "test",
+								store: {
 									fields: ["value", "text"],
 									data: []
-								}),
+								},
 								listeners: {
 									"expand": function (me, opts) {
 										let grid = me.up("[xtype='grid']");
@@ -614,9 +644,15 @@ Ext.onReady(function () {
 				var evalSave = function (button, event) {
 					evalStore.sync(); 
 					let form = button.up("[xtype='form']");
-					let params = form.getForm().getValues();
-					params.courseid = form.getForm().findField("courseid").getValue();
-					params.courseno = form.getForm().findField("courseno").getValue();
+					let params = {
+						lb: form.getForm().findField("lb").getValue(),
+						teacherno: form.getForm().findField("teacherno").getValue(),
+						term: form.getForm().findField("term").getValue(),
+						stid: form.getForm().findField("stid").getValue(),
+						bz: form.getForm().findField("bz").getValue(),
+						courseid: form.getForm().findField("courseid").getValue(),
+						courseno: form.getForm().findField("courseno").getValue()
+					};
 
 					switch (button.action) {
 						case "save": 
@@ -638,8 +674,14 @@ Ext.onReady(function () {
 							let result = Ext.decode(response.responseText);
 							if (result.success) {
 								Ext.Msg.alert("成功", result.msg);
-								form.down("button[action='save']").setVisible(!params.chk);
-								form.down("button[action='submit']").setVisible(!params.chk);
+								if (col.eval_hide) {
+									form.down("button[action='save']").setVisible(!params.chk);
+									form.down("button[action='submit']").setVisible(!params.chk);
+								}
+								let queryGrid = form.up("[xtype='panel']").down("[xtype='query-grid']");
+								let queryRecord = queryGrid.getStore().findRecord("courseno", params.courseno);
+								queryRecord.set("chk", params.chk);
+								queryGrid.getStore().commitChanges();
 							} else {
 								Ext.Msg.alert("失败", result.msg);
 							}
@@ -726,7 +768,9 @@ Ext.onReady(function () {
 		lastTab.addListener("add", function (me, opt) {
 			let grids = me.query("grid,showgrid");
 			grids.forEach(function (item) {
-				item.columns.forEach(function (c) { c.sortable = true; });
+				item.columns.forEach(function (c) {
+					c.sortable = true; 
+				});
 				let gridView = item.getView();
 				gridView.enableTextSelection = true;
 			});
@@ -774,8 +818,9 @@ Ext.onReady(function () {
 									content:
 										"当前优化插件版本为：" + col.ver + "<br/><br/>" +
 										"当前插件仍处于未完成的测试阶段。<br/>" +
-										"如果插件有问题或者对插件有什么建议或意见请到以下链接反馈或发送邮件到以下邮箱：<br/>" +
+										"如果插件有问题或者对插件有什么建议或意见请到以下链接反馈" +
 										"<a href='https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues' target='_blank'>https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues</a><br/>" +
+										"或发送邮件到以下邮箱：<br/>" + 
 										"<a href='mailto:cssxsh@gmail.com' target='_blank'>cssxsh@gmail.com</a><br/>"
 									,
 									postdate: null,
@@ -804,7 +849,10 @@ Ext.onReady(function () {
 					function showdata(data) {
 						Ext.create("Ext.window.Window", {
 							title: data.title, width: "70%", height: "70%", modal: true, resizable: true, layout: "fit",
-							items: [{ xtype: "form", autoScroll: true, frame: true, padding: "1", html: data.content.replace(/\n/g, "<br/>") }]
+							items: [{ 
+								xtype: "form", autoScroll: true, frame: true, padding: "1", 
+								html: data.content.replace(/\n/g, "<br/>") 
+							}]
 						}).show();
 					};
 					let id = data.id;
@@ -834,7 +882,12 @@ Ext.onReady(function () {
 				var grid = Ext.create("Edu.view.ShowGrid", {
 					store: gdSto, region: "center", hidden: true, title: "公共信息",
 					columns: [
-						{ header: "查阅", xtype: "actioncolumn", width: 30, icon: "/images/0775.gif", tooltip: "阅读", handler: function (grid, rowIndex, colIndex) { var rec = grid.getStore().getAt(rowIndex); showMsg(rec.data); } },
+						{ header: "查阅", xtype: "actioncolumn", width: 30, icon: "/images/0775.gif", tooltip: "阅读", 
+							handler: function (grid, rowIndex, colIndex) { 
+								var rec = grid.getStore().getAt(rowIndex); 
+								showMsg(rec.data); 
+							} 
+						},
 						{ header: "序号", xtype: "rownumberer", width: 40 },
 						{ header: "标题", dataIndex: "title", width: 400 },
 						{ header: "发布来源", dataIndex: "operator" },
