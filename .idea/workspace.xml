@@ -16,13 +16,11 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="19">
-              <caret line="164" column="32" selection-start-line="164" selection-start-column="32" selection-end-line="164" selection-end-column="32" />
-              <folding>
-                <element signature="n#!!doc" expanded="true" />
-              </folding>
+        <entry file="file://$PROJECT_DIR$/README.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor />
+              <second_editor />
             </state>
           </provider>
         </entry>
@@ -95,10 +93,13 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../htmlgame/brewstand" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -141,6 +142,8 @@
       <workItem from="1551363592502" duration="2329000" />
       <workItem from="1552398526669" duration="153000" />
       <workItem from="1552399053151" duration="198000" />
+      <workItem from="1563215247728" duration="39000" />
+      <workItem from="1563215389805" duration="898000" />
     </task>
     <task id="LOCAL-00001" summary="so shit">
       <created>1550986746290</created>
@@ -153,7 +156,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="55731000" />
+    <option name="totallyTimeSpent" value="56668000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -179,7 +182,7 @@
       <window_info anchor="bottom" id="TODO" order="6" weight="0.2776204" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" weight="0.3286119" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="9" visible="true" weight="0.36685553" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="9" visible="true" weight="0.2266289" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
@@ -204,9 +207,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Test/test.js">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
+    <entry file="file://$PROJECT_DIR$/Test/test.js" />
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="285">
@@ -214,36 +215,15 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Take_Lessons.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="830">
-          <caret line="300" column="24" selection-start-line="300" selection-start-column="24" selection-end-line="300" selection-end-column="24" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-            <element signature="e#612#1195#0" />
-            <element signature="n#!!block;n#sctDpt#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="e#1893#2569#0" />
-            <element signature="e#2835#3037#0" />
-            <element signature="e#3085#3927#0" />
-            <element signature="n#!!block;n#sctcno1#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="n#!!block;n#sctSubmit#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="n#!!block;n#sctSubmit_#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="n#!!block;n#sctcno#0;n#!!block;n#Rreplace_StuSct#0" />
-            <element signature="e#7274#8790#0" />
-            <element signature="e#10007#10213#0" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/Take_Lessons.js" />
     <entry file="file://$PROJECT_DIR$/tools.js" />
     <entry file="file://$PROJECT_DIR$/Json/GetHourInfo.json" />
-    <entry file="file://$PROJECT_DIR$/Interface_Optimization.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="164" column="32" selection-start-line="164" selection-start-column="32" selection-end-line="164" selection-end-column="32" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
+    <entry file="file://$PROJECT_DIR$/Interface_Optimization.js" />
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor />
+          <second_editor />
         </state>
       </provider>
     </entry>
