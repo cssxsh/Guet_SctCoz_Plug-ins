@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.30
+// @version      3.7.31
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -29,17 +29,12 @@
 // 启动接口
 Ext.onReady(function () {
 	// 一些参数
-	// TODO [8] <控制收至模块> {要外部修改时通过插件变量仓库处理}
-	var col = {
+	// TO-DO [8] <控制收至模块> {要外部修改时通过插件变量仓库处理}
+	var ctrl = {
 		ver: "3.7",			// 主要版本号
-		stid_hide: false,	// 学号参数是否隐藏
-		sct_hide: false,	// 已选控制是否隐藏
-		info_load: false,	// 是否加载课程信息
-		eval_hide: false	// 是否在评教之后隐藏按钮
 	};
 	// 创建工具
-	var plugTools = SctCoz.tools;
-	if (!plugTools.inited) plugTools.init({ debugLevel: 0 });
+	if (!SctCoz.tools) SctCoz.tools.init({ debugLevel: 0 });
 
 	// 创建并应用修改
 	var CourseSetNew = {
@@ -53,6 +48,18 @@ Ext.onReady(function () {
 				// 提示设置
 				Ext.QuickTips.init();
 				Ext.form.Field.prototype.MsgTarget = "side";
+				// 控制参数
+				var ClassStorage = SctCoz.tools.ClassStorage;
+				var ctrl = ClassStorage.Load("value", me.id + "Crtl");
+				if (ctrl == null) {
+					// 默认设置
+					ctrl = {
+						stid_hide: false,	// 学号参数是否隐藏
+						sct_hide: false,	// 已选控制是否隐藏
+						info_load: false	// 是否加载课程信息
+					};
+					ClassStorage.Save("value", ctrl, me.id + "Crtl");
+				}
 				// 查询面板
 				var queryByStore = function (button, event) {
 					let panel = button.up("[xtype='query-panel']");
@@ -111,7 +118,7 @@ Ext.onReady(function () {
 						{ fieldLabel: "课程代码", labelWidth: 64, width: 150, name: "courseid" }, 
 						{ fieldLabel: "课程名称", labelWidth: 64, width: 200, name: "cname" },
 						{ fieldLabel: "日期", labelWidth: 32, width: 150, name: "date", xtype: "datefield"}, 
-						{ fieldLabel: "其他", labelWidth: 32, width: 120, name: "stid", hidden: col.stid_hide }
+						{ fieldLabel: "其他", labelWidth: 32, width: 120, name: "stid", hidden: ctrl.stid_hide }
 					],
 					QueryByStore: queryByStore
 				});
@@ -119,7 +126,7 @@ Ext.onReady(function () {
 				var showComm = function (grid, rowIndex, colIndex) {
 					let store = grid.getStore();
 					let info = store.getAt(rowIndex).get("comment");
-					plugTools.LoadData({
+					SctCoz.tools.LoadData({
 						path: info.path,
 						success: function (response) {
 							let data = response.data;
@@ -129,7 +136,7 @@ Ext.onReady(function () {
 							}).show();
 						},
 						failure: function (result) {
-							plugTools.Logger(result, 2, "By [Get info of courses]");
+							SctCoz.tools.Logger(result, 2, "By [Get info of courses]");
 						}
 					});
 				};
@@ -168,9 +175,9 @@ Ext.onReady(function () {
 								}
 							});
 							// 获取有信息的课号列表
-							if (col.info_load) {
+							if (ctrl.info_load) {
 								let Loading = newGrid.setLoading("加载课程信息中...");
-								plugTools.LoadData({
+								SctCoz.tools.LoadData({
 									path: "CourseNoList.json",
 									success: function (response) {
 										(Ext.isArray(response.data) ? response.data : [response.data]).forEach(function (Info) {
@@ -183,7 +190,7 @@ Ext.onReady(function () {
 										Loading.hide();
 									},
 									failure: function (result) {
-										plugTools.Logger(result, 2, "By [Get info of courses]");
+										SctCoz.tools.Logger(result, 2, "By [Get info of courses]");
 										Loading.hide();
 									}
 								});
@@ -196,7 +203,7 @@ Ext.onReady(function () {
 					store: newStore,
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40, sortable: false },
-						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: col.sct_hide, 
+						{ header: "选中", dataIndex: "sct", width: 40, xtype: "checkcolumn", hidden: ctrl.sct_hide, 
 							editor: { 
 								xtype: "checkbox" 
 							}, 
@@ -282,7 +289,7 @@ Ext.onReady(function () {
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 },
 						{ header: "学期", dataIndex: "term", width: 120, renderer: function (value, metaData, record) { 
-							return plugTools.transvalue(value, "TermStore", "term", "termname"); } 
+							return SctCoz.tools.transvalue(value, "TermStore", "term", "termname"); } 
 						},
 						{ header: "课程代码", dataIndex: "cid", width: 96 },
 						{ header: "课号", dataIndex: "cno", width: 64 },
@@ -363,7 +370,7 @@ Ext.onReady(function () {
 						async: false,
 						params: { term: form.getValues().term },
 						success: function (response, opts) { data = Ext.Array.clone(Ext.decode(response.responseText).data); },
-						failure: function (response, opts) { plugTools.Logger(response, 2, "By [Get info of teachers]"); }
+						failure: function (response, opts) { SctCoz.tools.Logger(response, 2, "By [Get info of teachers]"); }
 					});
 
 					sto.each(function (rec) {
@@ -458,12 +465,12 @@ Ext.onReady(function () {
 						{ header: "计划序号", dataIndex: "pid", width: 80 },
 						{ header: "学期", dataIndex: "term", width: 120, 
 							renderer: function (value, metaData, record) {
-								return plugTools.transvalue(value, "TermStore", "term", "termname") 
+								return SctCoz.tools.transvalue(value, "TermStore", "term", "termname") 
 							}
 						},
 						{ header: "专业", dataIndex: "spno", width: 160, 
 							renderer: function (value, metaData, record) { 
-								return plugTools.transvalue(value, "MajorNoStore", "spno", "text") 
+								return SctCoz.tools.transvalue(value, "MajorNoStore", "spno", "text") 
 							}
 						},
 						{ header: "年级", dataIndex: "grade", width: 40 },
@@ -491,7 +498,7 @@ Ext.onReady(function () {
 			}
 		}
 	};// 重写完毕
-	var StuTEMSNew = {
+	var StuEvalNew = {
 		action: "StuTEMS",
 		text: "学生评教【插件】",
 		id: "StuTEMS",
@@ -503,6 +510,17 @@ Ext.onReady(function () {
 				// 
 				Ext.QuickTips.init();
 				Ext.form.Field.prototype.MsgTarget = "side";
+				// 控制参数
+				var ClassStorage = SctCoz.tools.ClassStorage;
+				var ctrl = ClassStorage.Load("value", me.id + "Crtl");
+				if (ctrl == null) {
+					// 默认设置
+					ctrl = {
+						term_optional: false,	// 学期是否可选
+						eval_hide: false		// 是否在评教之后隐藏按钮
+					};
+					ClassStorage.Save("value", ctrl, me.id + "Crtl");
+				}
 				// 查询部分
 				var queryByStore = function (button, event) {
 					let panel = button.up("[xtype='query-panel']");
@@ -516,7 +534,7 @@ Ext.onReady(function () {
 				};
 				var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 					argcols: [// xtype里已经封装好了store。
-						{ fieldLabel: "开课学期", xtype: "TermCombo" , readOnly: true}
+						{ fieldLabel: "开课学期", xtype: "TermCombo" , readOnly: !ctrl.term_optional }
 					],
 					QueryByStore: queryByStore
 				});
@@ -559,9 +577,9 @@ Ext.onReady(function () {
 					let panel = grid.up("[xtype='query-panel']");
 					panel.getLayout().next();
 					Ext.getCmp("card-prev").setDisabled(false);
-					if (col.eval_hide) {
-						panel.down("button[action='save']").setVisible(!record.get("chk") && col.eval_hide);
-						panel.down("button[action='submit']").setVisible(!record.get("chk") && col.eval_hide);
+					if (ctrl.eval_hide) {
+						panel.down("button[action='save']").setVisible(!record.get("chk") && ctrl.eval_hide);
+						panel.down("button[action='submit']").setVisible(!record.get("chk") && ctrl.eval_hide);
 					}
 				};
 				var queryGrid = Ext.create("SctCoz.Query.QueryGrid", {
@@ -674,7 +692,7 @@ Ext.onReady(function () {
 							let result = Ext.decode(response.responseText);
 							if (result.success) {
 								Ext.Msg.alert("成功", result.msg);
-								if (col.eval_hide) {
+								if (ctrl.eval_hide) {
 									form.down("button[action='save']").setVisible(!params.chk);
 									form.down("button[action='submit']").setVisible(!params.chk);
 								}
@@ -754,11 +772,11 @@ Ext.onReady(function () {
 	};// 重写完毕
 
 
-	plugTools.menuChange(CourseSetNew);
-	plugTools.menuChange(StuScoreNew);
-	plugTools.menuChange(SutSctedNew);
-	plugTools.menuChange(StuPlanNew);
-	plugTools.menuAdd(StuTEMSNew);
+	SctCoz.tools.menuChange(CourseSetNew);
+	SctCoz.tools.menuChange(StuScoreNew);
+	SctCoz.tools.menuChange(SutSctedNew);
+	SctCoz.tools.menuChange(StuPlanNew);
+	SctCoz.tools.menuAdd(StuEvalNew);
 
 
 	// TODO[9]: <重写课表模块> {把实验课加入课程表, 可以使用评教接口}
@@ -800,14 +818,14 @@ Ext.onReady(function () {
 							let rec = me.findRecord("openshow", 1);
 							if (rec) showMsg(rec.data);
 							// XXX: 尝试在这里添加一下获取新信息
-							plugTools.LoadData({
+							SctCoz.tools.LoadData({
 								path: "NewInfo.json",
 								success: function (response) {
 									let data = Ext.isArray(response.data) ? response.data : [response.data];
 									me.loadData(data, true);
 								},
 								failure: function (result) {
-									plugTools.Logger(result, 2, "By [Get NewInfo]");
+									SctCoz.tools.Logger(result, 2, "By [Get NewInfo]");
 								}
 							});
 
@@ -816,7 +834,7 @@ Ext.onReady(function () {
 									id: "info-0",
 									title: "插件用户须知",
 									content:
-										"当前优化插件版本为：" + col.ver + "<br/><br/>" +
+										"当前优化插件版本为：" + ctrl.ver + "<br/><br/>" +
 										"当前插件仍处于未完成的测试阶段。<br/>" +
 										"如果插件有问题或者对插件有什么建议或意见请到以下链接反馈" +
 										"<a href='https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues' target='_blank'>https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues</a><br/>" +

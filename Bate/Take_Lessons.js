@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.6
+// @version      4.7.7
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -29,12 +29,8 @@
 // 启动接口
 Ext.onReady(function () {
 	// 一些参数
-	let col = {
-		ver: "0.3",			// 主要版本号
-		time: 1000,			// 抢课时间间隔
-		old_hide: true,		// 旧模块是否隐藏
-		overflow: false,	// 关闭以课程人数已满为继续抢课条件
-		all: true			// 开启全课号
+	var crtl = {
+		ver: "0.3"			// 主要版本号
 	};
 	// 初始化工具
 	if (!SctCoz.tools.inited) SctCoz.tools.init({ debugLevel: 0 });
@@ -42,6 +38,7 @@ Ext.onReady(function () {
 	// 	SctCoz.tools.ClassStorage.Save("value", col, "T_L_Col");
 	// }
 
+	// 抢课和重修差别不大只在stype参数上所以共用一个描绘函数
 	var Rreplace_StuSct = function (me, opts) {
 		// 判断模块是否符合
 		var SctType = "";
@@ -60,6 +57,20 @@ Ext.onReady(function () {
 		// 
 		Ext.QuickTips.init();
 		Ext.form.Field.prototype.MsgTarget = "side";
+		// 控制参数
+		var ClassStorage = SctCoz.tools.ClassStorage;
+		var ctrl = ClassStorage.Load("value", me.id + "Crtl");
+		if (ctrl == null) {
+			// 默认设置
+			ctrl = {
+				time: 1000,			// 抢课时间间隔，单位毫秒
+				old_hide: true,		// 旧模块是否隐藏
+				overflow: false,	// 关闭以课程人数已满为继续抢课条件
+				all: true,			// 开启全课号
+				term_optional: false,	// 学期是否可选
+			};
+			ClassStorage.Save("value", ctrl, me.id + "Crtl");
+		}
 
 		var queryByStore = function (button, event) {
 			let panel = button.up("[xtype='query-panel']");
@@ -77,7 +88,7 @@ Ext.onReady(function () {
 		};
 		var queryForm = Ext.create("SctCoz.Query.QueryForm", {
 			argcols: [
-				{ fieldLabel: "开课学期", xtype: "TermCombo", readOnly: true, value: SctCoz.Comm.getSctCozTerm() },
+				{ fieldLabel: "开课学期", xtype: "TermCombo", readOnly: crtl.term_optional, value: SctCoz.Comm.getSctCozTerm() },
 				{ fieldLabel: "开课年级", xtype: "GradesCombo", allowBlank: false },
 				{ fieldLabel: "开课学院", xtype: "CollegeCombo", allowBlank: false }, 
 				{ fieldLabel: "开课专业", xtype: "MajorCombo", allowBlank: false },
@@ -101,7 +112,7 @@ Ext.onReady(function () {
 
 
 			// XXX: [3] <优化性能问题> {解决性能问题} (调整获取课程计划的时间)
-			if (col.all) {
+			if (ctrl.all) {
 				sctGrid.selfMajor = selfMajor;
 				let records = newStore.AllQueryStore.getGroups().find(function (item) { return item.name == courseid}).children;
 				records.forEach(function (record, index, array) {
@@ -181,7 +192,7 @@ Ext.onReady(function () {
 									});
 									// 下面这句判断应该用正则表达式
 									// TODO: [8] <添加更多条件> {除了选课人数满应该还有其他条件}
-								} else if ("课程:" + params.courseno + "选择失败，选课人数已满!" == result.msg || col.overflow) {
+								} else if ("课程:" + params.courseno + "选择失败，选课人数已满!" == result.msg || ctrl.overflow) {
 									Ext.Msg.updateProgress(Ext.TaskManager.timerId % 100 / 100);
 									// SctCoz.tools.Logger("抢课进行中，课号：" + params.courseno, 2, "By takeCourse");
 								} else {
@@ -197,7 +208,7 @@ Ext.onReady(function () {
 							}
 						});
 					},
-					interval: col.time
+					interval: ctrl.time
 				};
 				Ext.TaskManager.start(task);
 				Ext.Msg.show({
@@ -224,7 +235,7 @@ Ext.onReady(function () {
 				// 加载课程计划
 				load: function (store, records, opts) {
 					let col = SctCoz.tools.ClassStorage.Load("value", "T_L_Col");
-					if (col.all) {
+					if (ctrl.all) {
 						store.AllQueryStore.removeAll();
 						let loadMask = queryGrid.setLoading("全课号信息加载中...");
 						records.forEach(function (record, index, array) {

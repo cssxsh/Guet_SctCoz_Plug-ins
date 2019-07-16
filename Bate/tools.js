@@ -29,7 +29,7 @@ if (typeof SctCoz == "undefined") {			// 防止重复定义
 							break;
 						case "store":
 							this.NewStores.push(value);
-							this.NewStores.push(value.id);
+							this.NewStoresIdList.push(value.id);
 							break;
 						case "value":
 						default: 
@@ -102,7 +102,7 @@ if (typeof SctCoz == "undefined") {			// 防止重复定义
 			// TODO[6] <改变菜单方法> {改变菜单的方法应该对store进行处理}
 			menuAdd: function (config) {
 				this.Logger(config.action + " add...");
-				this.Menus_Tree.store.addListener("load",function once (store) {
+				this.Menus_Tree.store.addListener("load", function (store) {
 					store.tree.root.appendChild(config);
 				});
 				this.ClassStorage.Save("menu", config);
@@ -1267,7 +1267,8 @@ if (typeof SctCoz.Query == "undefined") {	// 防止重复定义
 		// 用课号做分组依据方便后面处理, 但这样有问题
 		// groupField: "sct",
 		proxy: {
-			type: "ajax", url: "/Query/GetCourseTable",
+			url: "/Query/GetCourseTable",
+			type: "ajax", 
 			reader: { 
 				type: "json", 
 				root: "data" 
