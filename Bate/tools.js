@@ -837,7 +837,8 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 				root: "data"
 			},
 			extraParams: {
-				labid: ""
+				labid: "",
+				term: "" // 筛选已选的课程可以通过添加参数条件实现，十分诡异
 			}
 		}
 	});

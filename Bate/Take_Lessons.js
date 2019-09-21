@@ -10,7 +10,7 @@
 // @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate/Take_Lessons.js
 // @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate/Take_Lessons.js
 // @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
-// @require      https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/Bate/tools.js
+// @require      https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate/tools.js
 // @license      MIT
 // @run-at       document-end
 // @connect      raw.githubusercontent.com
@@ -388,7 +388,10 @@ Ext.onReady(function () {
 					],
 					listeners: {
 						select: function (me, record, index, opts) {
-							let params = { labid: record.get("planid"), term: record.get("term") };
+							let params = {
+								// term: record.get("term"), // 添加这个参数可以过滤未选项目
+								labid: record.get("planid")
+							};
 							let grid = this.up("[xtype='query-panel']").down("grid[region='south']");
 							let store = grid.getStore();
 							store.getProxy().extraParams = params;
@@ -405,7 +408,7 @@ Ext.onReady(function () {
 					store: Ext.create("SctCoz.Student.LabItem"),
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 },
-						{ header: "操作", xtype: "actionrendercolumn", width: 40, dataIndex: "scted",
+						{ header: "操作", xtype: "actionrendercolumn", width: 60, dataIndex: "scted",
 							renderer: function (scted) { return (!scted) ? ["选批次"] : ["查询"]; },
 							items: [{ handler: function (grid, rowIndex, colIndex) {
 								var record = grid.getStore().getAt(rowIndex);

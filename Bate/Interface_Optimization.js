@@ -10,7 +10,7 @@
 // @installURL   https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate/Interface_Optimization.js
 // @downloadURL  https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate/Interface_Optimization.js
 // @suppertURL   https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues
-// @require      https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/Bate/tools.js
+// @require      https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Bate/tools.js
 // @license      MIT
 // @run-at       document-end
 // @connect      raw.githubusercontent.com
@@ -34,7 +34,7 @@ Ext.onReady(function () {
 		ver: "3.7",			// 主要版本号
 	};
 	// 创建工具
-	if (!SctCoz.tools) SctCoz.tools.init({ debugLevel: 0 });
+	if (!SctCoz.tools.inited) SctCoz.tools.init({ debugLevel: 0 });
 
 	// 创建并应用修改
 	var CourseSetNew = {
