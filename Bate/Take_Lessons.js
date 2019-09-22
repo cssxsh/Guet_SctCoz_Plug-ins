@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.8
+// @version      4.7.9
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -396,7 +396,7 @@ Ext.onReady(function () {
 							let store = grid.getStore();
 							store.getProxy().extraParams = params;
 							store.load();
-							store.sort({ property: "itemno", direction: "ASC" });
+							// store.sort({ property: "itemno", direction: "ASC" });
 						}
 					}
 				});
@@ -404,7 +404,7 @@ Ext.onReady(function () {
 					title: "实验计划项目", region: "south", height: "50%",
 					columnLines: true,
 					viewConfig: { forceFit: true, stripeRows: true, enableTextSelection: true },
-					features: [{ ftype: "grouping" }],
+					// features: [{ ftype: "grouping" }], 多余的属性导致选中时报错
 					store: Ext.create("SctCoz.Student.LabItem"),
 					columns: [
 						{ header: "序号", xtype: "rownumberer", width: 40 },

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.32
+// @version      3.7.33
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -549,6 +549,7 @@ Ext.onReady(function () {
 					evalStore.getProxy().extraParams = params;
 					evalStore.load(function(records, operation, success) {
 						records.forEach(function (item, index, array) {
+							// 有些信息没有被填充，手动填充
 							item.set("term", record.get("term"));
 							item.set("courseno", record.get("courseno"));
 							item.set("teacherno", record.get("teacherno"));
@@ -577,6 +578,7 @@ Ext.onReady(function () {
 					let panel = grid.up("[xtype='query-panel']");
 					panel.getLayout().next();
 					Ext.getCmp("card-prev").setDisabled(false);
+					Ext.getCmp("card-next").setDisabled(true);
 					if (ctrl.eval_hide) {
 						panel.down("button[action='save']").setVisible(!record.get("chk") && ctrl.eval_hide);
 						panel.down("button[action='submit']").setVisible(!record.get("chk") && ctrl.eval_hide);
@@ -602,6 +604,52 @@ Ext.onReady(function () {
 						{ header: "教师", dataIndex: "name", width: 96 },
 						{ header: "类型", dataIndex: "type", width: 96},
 						{ header: "课程名称", dataIndex: "cname",  minWidth: 240, flex: 1 }
+					],
+					newTbar: [
+						{ xtype: "button", text: "一键评教", formBind: true, iconCls: "reset", handler: function (me, opt) { 
+							// Ext.Msg.alert("并没有卵用", "？？？");
+							let store = me.up("[xtype='query-grid']").getStore();
+							store.each(function (record) {
+								// 只处理未评教记录
+								if (record.get("chk") == true) return true;
+
+								let params = {
+									term: record.get("term"),
+									courseno: record.get("courseno"),
+									teacherno: record.get("teacherno")
+								}
+								evalStore.getProxy().extraParams = params;
+								evalStore.load(function(records, operation, success) {
+									records.forEach(function (item, index, array) {
+										// 有些信息没有被填充，手动填充
+										item.set("term", record.get("term"));
+										item.set("courseno", record.get("courseno"));
+										item.set("teacherno", record.get("teacherno"));
+										item.set("courseid", record.get("courseid"));
+										item.set("stid", record.get("stid"));
+									});
+								});
+								// 加载评教评语
+								evalFrom.load({ 
+									url: "/student/JxpgJg", 
+									params: evalStore.getProxy().extraParams,
+									success: function (me, action) {
+										if (action.result.data.length != 0) {
+											me.findField("name").setValue(record.get("name"));
+											me.findField("type").setValue(record.get("type"));
+											me.findField("cname").setValue(record.get("cname"));
+											me.setValues(action.result.data[0]);
+										} else {
+											// 没有保存记录的情况下
+											me.setValues(record.getData());
+										}
+										
+										evalSave(evalFrom.down("button[action='submit']"));
+									}
+								});
+								return true;
+							});
+						}},
 					]
 				});
 				var qureyCard = Ext.create("Ext.container.Container", { 
@@ -691,7 +739,7 @@ Ext.onReady(function () {
 						success: function (response, opts) {
 							let result = Ext.decode(response.responseText);
 							if (result.success) {
-								Ext.Msg.alert("成功", result.msg);
+								Ext.Msg.alert(params.courseno + "评教成功", result.msg);
 								if (ctrl.eval_hide) {
 									form.down("button[action='save']").setVisible(!params.chk);
 									form.down("button[action='submit']").setVisible(!params.chk);
@@ -733,7 +781,7 @@ Ext.onReady(function () {
 					dockedItems: [
 						{ xtype: "toolbar", dock: "bottom", layout: { pack: "center" },
 							items: [
-								{ text: "保存", action: "save",formBind: true, handler: evalSave }, 
+								{ text: "保存", action: "save", formBind: true, handler: evalSave }, 
 								{ text: "提交", action: "submit", formBind: true, handler: evalSave }
 							]
 						}

@@ -23,5 +23,25 @@
     "files.autoSave": "afterDelay",
     "diffEditor.ignoreTrimWhitespace": true,
     "window.zoomLevel": 0,
-    "editor.fontFamily": "Consolas, 'Courier New', monospace, '楷体'"
+    "editor.fontFamily": "Consolas, 'Courier New', monospace, '楷体'",
+    "todo-tree.highlights.customHighlight": {
+        "TODO": {
+            "icon": "alert",
+            "iconColour": "red",
+            "type": "line",
+            "foreground": "red"
+        },
+        "FIXME": {
+            "icon": "beaker",
+            "iconColour": "yellow",
+            "type": "line",
+            "foreground": "yellow"
+        },
+        "XXX": {
+            "icon": "check",
+            "iconColour": "blue",
+            "type": "line",
+            "foreground": "blue"
+        }
+    }
 }

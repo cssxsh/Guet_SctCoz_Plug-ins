@@ -840,7 +840,10 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 				labid: "",
 				term: "" // 筛选已选的课程可以通过添加参数条件实现，十分诡异
 			}
-		}
+		},
+		sorters: [
+			{ property: "itemno", direction: "ASC" }
+		]
 	});
 	Ext.define("SctCoz.Student.CourseSetNo", {
 		//
@@ -882,7 +885,7 @@ if (typeof SctCoz.Student == "undefined") {	// 防止重复定义
 				root: "data"
 			},
 			extraParams: {
-				// 计划序号
+				// 评教学期
 				term: ""
 			}
 		}
