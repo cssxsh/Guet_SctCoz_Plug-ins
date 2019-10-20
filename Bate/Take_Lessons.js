@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.10
+// @version      4.7.11
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -318,7 +318,7 @@ const Rreplace_StuSct = (me) => {
     });
 
     const panel = Ext.create("SctCoz.Query.QueryPanel", {
-        Titconstext: "学生" + SctType + "选课【插件模式】",
+        TitleText: "学生" + SctType + "选课【插件模式】",
         items: [queryForm, queryGrid, sctGrid]
     });
     me.add(panel);

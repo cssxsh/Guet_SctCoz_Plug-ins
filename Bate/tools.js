@@ -696,7 +696,7 @@ if (typeof SctCoz.Student === "undefined") {	// 防止重复定义
 		autoLoad: true,
 		listeners: {
 			load: (me, records) => {
-				Ext.Ajax.request({
+				records[0] && Ext.Ajax.request({
 					url: "/student/StuInfo", // 请求的地址
 					method: "GET",
 					success: (response) => {
