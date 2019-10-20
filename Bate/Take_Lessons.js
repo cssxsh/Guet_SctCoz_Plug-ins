@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Take Lessons
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      4.7.9
+// @version      4.7.10
 // @description  新教务抢课脚本
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop

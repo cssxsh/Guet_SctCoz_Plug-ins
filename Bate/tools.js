@@ -7,7 +7,7 @@ if (typeof SctCoz === "undefined") {			// 防止重复定义
 			id: "plug",
 		},
 		statics: {
-			version: "4.1.7",
+			version: "4.1.8",
 			inited: false,
 			debugLevel: 2,
 			SysMenus: null,
