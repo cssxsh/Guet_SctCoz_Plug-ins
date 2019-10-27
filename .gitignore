@@ -18,7 +18,3 @@ images/
 .idea/*
 .vscode/*
 node_modules
-yarn.lock
-.eslintrc.json
-package.json
-package-lock.json
