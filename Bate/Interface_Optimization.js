@@ -528,7 +528,7 @@ const SutSctedNewListeners = {
 };
 const SutSctedNew = {
     action: "StuScted",
-    text: "已选课程",
+    text: "已选课程【插件】",
     id: "StuScted",
     leaf: true,
     isAutoLoad: true,

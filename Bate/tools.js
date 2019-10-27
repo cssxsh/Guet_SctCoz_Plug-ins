@@ -12,7 +12,7 @@ if (typeof SctCoz === "undefined") {
             inited: false,
             debugLevel: 2,
             SysMenus: null,
-            NodeStore: null,
+            tree: null,
 
             // X-XX: 弄一个变量仓库专门管理常用全局变量
             ClassStorage: {
@@ -104,9 +104,7 @@ if (typeof SctCoz === "undefined") {
             // TODO[6] <改变菜单方法> {改变菜单的方法应该对store进行处理}
             menuAdd: function(config) {
                 this.Logger(config.action + " add...");
-                const store = this.NodeStore;
-                const record = Ext.create("Edu.model.Menu", config);
-                store.add(record);
+                config.isNew = true;
                 this.ClassStorage.Save("menu", config);
             },
             menuChange: function(config) {
@@ -170,18 +168,22 @@ if (typeof SctCoz === "undefined") {
                 // 初始化
                 this.Logger("ver " + this.version + " initing...");
                 this.SysMenus = Ext.getCmp("SystemMenus");
-                this.NodeStore = this.SysMenus.down("treeview").store;
+                const store = this.SysMenus.store;
+                this.tree = store.tree.root;
 
-                const store = this.NodeStore;
-                this.NodeStore.addListener("add", function (me) {
+                store.addListener("load", function () {
                     const storage = SctCoz.tools.ClassStorage;
+                    const tree = SctCoz.tools.tree;
                     const menus = storage.getList("menu");
                     menus.forEach((menu) => {
                         const config = storage.Load("menu", menu);
-                        const record = me.findRecord("action", config.action);
-                        record && record.set("text", config.text);
+                        if (config.isNew) {
+                            Ext.getCmp("SystemMenus").store.tree.root.appendChild(config);
+                        } else {
+                            const node = tree.findChild("action", config.action, true);
+                            node && (node.data.text = config.text);
+                        }
                     });
-                    store.commitChanges();
                 });
                 // 重载打开Tab的方法
                 this.SysMenus.openTab = this.newOpenTab;

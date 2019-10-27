@@ -326,7 +326,7 @@ const Rreplace_StuSct = (me) => {
 // 创建修改并应用
 const StuSctNew = {
     action: "StuSct",
-    text: "选课【插件】",
+    text: "正常选课【插件】",
     id: "StuSct",
     listeners: {
         afterrender: Rreplace_StuSct
