@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.34
+// @version      3.7.35
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -315,7 +315,7 @@ const StuScoreNewListeners = {
         });
 
         const queryPanel = Ext.create("SctCoz.Query.QueryPanel", {
-            TitleText: "学生成绩",
+            TitleText: "学生成绩【插件模式】",
             items: [queryForm, queryGrid]
         });
         me.add(queryPanel);
@@ -605,7 +605,7 @@ const StuPlanNewListeners = {
             ]
         });
         const queryPanel = Ext.create("SctCoz.Query.QueryPanel", {
-            TitleText: "课程计划",
+            TitleText: "课程计划【插件模式】",
             items: [queryForm, queryGrid]
         });
         // 加载组件
@@ -959,7 +959,7 @@ const StuEvalNewListeners = {
             Ext.getCmp("card-next").setDisabled(!layout.getNext());
         };
         const panel = Ext.create("SctCoz.Query.QueryPanel", {
-            TitleText: "学生评教【插件】",
+            TitleText: "学生评教【插件模式】",
             layout: "card",
             items: [qureyCard, evalCard],
             bbar: [
@@ -993,7 +993,7 @@ const StuEvalNew = {
     listeners: StuEvalNewListeners
 }; // 重写完毕
 
-const load = () => {
+const load = function () {
     // 一些参数
     // TO-DO [8] <控制收至模块> {要外部修改时通过插件变量仓库处理}
     const ctrl = {
@@ -1189,4 +1189,4 @@ const load = () => {
     });
 };
 // 启动接口
-Ext.onReady(load);
+Ext.onReady(load, window);
