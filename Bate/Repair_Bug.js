@@ -51,7 +51,6 @@ Ext.onReady(function() {
           ["A", "护照"],
           ["C", "港澳台居民居住证"]
         ];
-        const transvalue = SctCoz.tools.transvalue;
         const frm = Ext.create("Ext.form.Panel", {
           url: "/Student/GetPerson",
           method: "post",
@@ -77,7 +76,7 @@ Ext.onReady(function() {
               name: "spno",
               width: 180,
               renderer: value =>
-                transvalue(value, "MajorNoStore", "spno", "text")
+                SctCoz.tools.TransValue(value, "MajorNoStore", "spno", "text")
             },
             { fieldLabel: "年级", name: "grade", width: 140 },
             { fieldLabel: "班级", name: "classno", width: 140 },
