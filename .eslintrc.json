@@ -53,7 +53,7 @@
         "space-unary-ops": 1,
         "spaced-comment": 1,
         "arrow-body-style": 1,
-        "arrow-parens": 1,
+        "arrow-parens": 0,
         "no-restricted-imports": 1,
         "no-duplicate-imports": 1,
         "no-useless-computed-key": 1,
