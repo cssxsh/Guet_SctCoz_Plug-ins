@@ -1,6 +1,7 @@
 // 这是一个接口库
 // version 4.1
 // "use strict"; 不能使用严格模式
+let defineByExt;
 SctCoz = window.SctCoz || {};
 SctCoz.tools = SctCoz.tools || {
     version: '4.1.9',
@@ -285,7 +286,7 @@ SctCoz.tools = SctCoz.tools || {
 };
 SctCoz.Comm = SctCoz.Comm || {
     version: '1.1.5',
-    init: function () {
+    init: function() {
         this.define();
         // 注册Store
         SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.TermInfo', { storeId: 'TermStore' }));
@@ -301,7 +302,7 @@ SctCoz.Comm = SctCoz.Comm || {
     getArrangeTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[2],
     getShoolYear: () => Ext.data.StoreManager.lookup('TermStore').shoolYear,
 };
-SctCoz.Comm.define = SctCoz.Comm.define || (() => {
+defineByExt = () => {
     // 公共Store
     Ext.define('SctCoz.Comm.TermInfo', {
         alias: ['TermInfo'],
@@ -644,7 +645,7 @@ SctCoz.Comm.define = SctCoz.Comm.define || (() => {
         queryMode: 'local',
         valueField: 'dptno',
         listeners: {
-            change: function (combo, newValue) {
+            change: function(combo, newValue) {
                 if (!combo.config.noMajor) {
                     const majorNo = combo.up('fieldset').down("[xtype='MajorCombo']");
                     const spno = majorNo.getValue();
@@ -692,10 +693,11 @@ SctCoz.Comm.define = SctCoz.Comm.define || (() => {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-});
+};
+SctCoz.Comm.define = SctCoz.Comm.define || defineByExt;
 SctCoz.Student = SctCoz.Student || {
     version: '1.1.5',
-    init: function () {
+    init: function() {
         // 注册Store
         this.define();
         SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Student.PersonInfo', { storeId: 'StudentUser' }));
@@ -710,9 +712,9 @@ SctCoz.Student = SctCoz.Student || {
             console.log(e);
         }
         return data;
-    }
+    },
 };
-SctCoz.Student.define = SctCoz.Student.define || (() => {
+defineByExt = () => {
     // TO-DO: [8] <当前用户信息> {弄一个获取当前用户信息的store}
     // Store
     Ext.define('SctCoz.Student.PersonInfo', {
@@ -1073,14 +1075,125 @@ SctCoz.Student.define = SctCoz.Student.define || (() => {
             },
         },
     });
-});
+};
+SctCoz.Student.define = SctCoz.Student.define || defineByExt;
 SctCoz.Query = SctCoz.Query || {
     version: '1.1.10',
-    init: function () {
+    init: function() {
         this.define();
     },
 };
-SctCoz.Query.define = SctCoz.Query.define || (() => {
+defineByExt = () => {
+    // Store
+    Ext.define('SctCoz.Query.CoursePlan', {
+        extend: 'Ext.data.Store',
+        alias: ['CoursePlan'],
+        fields: [
+            'pid',
+            'term',
+            'spno',
+            'grade',
+            'courseid',
+            'cname',
+            'tname',
+            'examt',
+            'xf',
+            'llxs',
+            'syxs',
+            'qtxs',
+            'sjxs',
+            'type',
+            'mustsct',
+            'xjcl',
+            'comm',
+            {
+                name: 'typeText',
+                persist: false,
+                convert: (value, record) => {
+                    const typeArray = [[0, '百分制'], [1, '五级制'], [2, '二级制']];
+                    return typeArray[record.get('type')][1];
+                },
+            },
+        ],
+        proxy: {
+            url: '/Query/GetCoursePlan',
+            type: 'ajax',
+            reader: {
+                type: 'json',
+                root: 'data',
+            },
+            extraParams: {
+                term: '',
+                grade: '',
+                dptno: '',
+                spno: '',
+                courseid: '',
+                plan: 0,
+            },
+        },
+    });
+    Ext.define('SctCoz.Query.CourseSetTable', {
+        extend: 'Ext.data.Store',
+        pageSize: 500,
+        alias: ['CourseSetTable'],
+        fields: [
+            { name: 'sct', type: 'boolean', defaultValue: true },
+            'dptname',
+            'spname',
+            'grade',
+            'cname',
+            'courseno',
+            'name',
+            'startweek',
+            'endweek',
+            'oddweek',
+            'croomno',
+            'week',
+            'sequence',
+            'term',
+            'courseid',
+            'coment',
+            'studentcount',
+            'credithour',
+            'teachperiod',
+            'labperiod',
+            'copperiod',
+            'maxperson',
+        ],
+        filterOnLoad: true,
+        // 用课号做分组依据方便后面处理, 但这样有问题
+        // groupField: "sct",
+        proxy: {
+            url: '/Query/GetCourseTable',
+            type: 'ajax',
+            reader: {
+                type: 'json',
+                root: 'data',
+            },
+            extraParams: {
+                term: '',
+                grade: '',
+                dptno: '',
+                spno: '',
+                courseid: '',
+                startweek: 0,
+                endweek: 20,
+                fromweek: 0,
+                toweek: 7,
+                startsequence: 0,
+                endsequence: 100,
+                croomno: '',
+                teacherno: '',
+                tname: '',
+                courseno: '',
+                cname: '',
+                date: '',
+                stid: '0000000000',
+            },
+        },
+        autoLoad: false,
+    });
+
     // 组件
     Ext.define('SctCoz.Query.QueryPanel', {
         extend: 'Ext.panel.Panel',
@@ -1362,7 +1475,7 @@ SctCoz.Query.define = SctCoz.Query.define || (() => {
                             Text = `${Text}${record.get('cname')}<br>`;
                             Text = `${Text}${record.get('courseno')}<br>`;
                             Text = `${Text}(${record.get('startweek')}-${record.get('endweek')})`;
-                            Text = `${Text}${record.get('croomno') === null ? '' : record.get('croomno')}<br>`;
+                            Text = `${Text}${record.get('croomno') ? record.get('croomno') : ''}<br>`;
                             recordsByTime[seqno].set('week' + weekno, Text);
                         });
                         // 提交更改
@@ -1426,116 +1539,7 @@ SctCoz.Query.define = SctCoz.Query.define || (() => {
             this.callParent(arguments);
         },
     });
-
-    // Store
-    Ext.define('SctCoz.Query.CoursePlan', {
-        extend: 'Ext.data.Store',
-        alias: ['CoursePlan'],
-        fields: [
-            'pid',
-            'term',
-            'spno',
-            'grade',
-            'courseid',
-            'cname',
-            'tname',
-            'examt',
-            'xf',
-            'llxs',
-            'syxs',
-            'qtxs',
-            'sjxs',
-            'type',
-            'mustsct',
-            'xjcl',
-            'comm',
-            {
-                name: 'typeText',
-                persist: false,
-                convert: (value, record) => {
-                    const typeArray = [[0, '百分制'], [1, '五级制'], [2, '二级制']];
-                    return typeArray[record.get('type')][1];
-                },
-            },
-        ],
-        proxy: {
-            url: '/Query/GetCoursePlan',
-            type: 'ajax',
-            reader: {
-                type: 'json',
-                root: 'data',
-            },
-            extraParams: {
-                term: '',
-                grade: '',
-                dptno: '',
-                spno: '',
-                courseid: '',
-                plan: 0,
-            },
-        },
-    });
-    Ext.define('SctCoz.Query.CourseSetTable', {
-        extend: 'Ext.data.Store',
-        pageSize: 500,
-        alias: ['CourseSetTable'],
-        fields: [
-            { name: 'sct', type: 'boolean', defaultValue: true },
-            'dptname',
-            'spname',
-            'grade',
-            'cname',
-            'courseno',
-            'name',
-            'startweek',
-            'endweek',
-            'oddweek',
-            'croomno',
-            'week',
-            'sequence',
-            'term',
-            'courseid',
-            'coment',
-            'studentcount',
-            'credithour',
-            'teachperiod',
-            'labperiod',
-            'copperiod',
-            'maxperson',
-        ],
-        filterOnLoad: true,
-        // 用课号做分组依据方便后面处理, 但这样有问题
-        // groupField: "sct",
-        proxy: {
-            url: '/Query/GetCourseTable',
-            type: 'ajax',
-            reader: {
-                type: 'json',
-                root: 'data',
-            },
-            extraParams: {
-                term: '',
-                grade: '',
-                dptno: '',
-                spno: '',
-                courseid: '',
-                startweek: 0,
-                endweek: 20,
-                fromweek: 0,
-                toweek: 7,
-                startsequence: 0,
-                endsequence: 100,
-                croomno: '',
-                teacherno: '',
-                tname: '',
-                courseno: '',
-                cname: '',
-                date: '',
-                stid: '0000000000',
-            },
-        },
-        autoLoad: false,
-    });
-});
+};
+SctCoz.Query.define = SctCoz.Query.define || defineByExt;
 
 // 在测试中添加工具
