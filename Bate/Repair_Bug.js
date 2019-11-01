@@ -75,7 +75,7 @@ Ext.onReady(function() {
               fieldLabel: "专业",
               name: "spno",
               width: 180,
-              renderer: value =>
+              renderer: (value) =>
                 SctCoz.tools.TransValue(value, "MajorNoStore", "spno", "text")
             },
             { fieldLabel: "年级", name: "grade", width: 140 },
