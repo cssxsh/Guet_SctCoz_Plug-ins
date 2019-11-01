@@ -1,317 +1,307 @@
 // 这是一个接口库
 // version 4.1
 // "use strict"; 不能使用严格模式
-if (typeof SctCoz === 'undefined') {
-    // 防止重复定义
-    Ext.define('SctCoz.tools', {
-        config: {
-            id: 'plug',
+SctCoz = window.SctCoz || {};
+SctCoz.tools = SctCoz.tools || {
+    version: '4.1.9',
+    inited: false,
+    debugLevel: 2,
+    SysMenus: null,
+    tree: null,
+
+    // X-XX: 弄一个变量仓库专门管理常用全局变量
+    ClassStorage: {
+        // 变量数组
+        NewMenus: [],
+        NewMenusIdList: [],
+        NewStores: [],
+        NewStoresIdList: [],
+        // TO-DO[8] <添加更多类型> {除了menu还有store等}
+        // 操作方法
+        Save: function(type, value, key) {
+            switch (type) {
+                case 'menu':
+                    this.NewMenus.push(value);
+                    this.NewMenusIdList.push(value.id);
+                    break;
+                case 'store':
+                    this.NewStores.push(value);
+                    this.NewStoresIdList.push(value.id);
+                    break;
+                case 'value':
+                default:
+                    GM_setValue(key, value);
+                    break;
+            }
         },
-        statics: {
-            version: '4.1.9',
-            inited: false,
-            debugLevel: 2,
-            SysMenus: null,
-            tree: null,
-
-            // X-XX: 弄一个变量仓库专门管理常用全局变量
-            ClassStorage: {
-                // 变量数组
-                NewMenus: [],
-                NewMenusIdList: [],
-                NewStores: [],
-                NewStoresIdList: [],
-                // TO-DO[8] <添加更多类型> {除了menu还有store等}
-                // 操作方法
-                Save: function(type, value, key) {
-                    switch (type) {
-                        case 'menu':
-                            this.NewMenus.push(value);
-                            this.NewMenusIdList.push(value.id);
-                            break;
-                        case 'store':
-                            this.NewStores.push(value);
-                            this.NewStoresIdList.push(value.id);
-                            break;
-                        case 'value':
-                        default:
-                            GM_setValue(key, value);
-                            break;
-                    }
-                },
-                Load: function(type, key, defaultValue) {
-                    let value = null;
-                    switch (type) {
-                        case 'menu':
-                            value = this.NewMenus.find((item) => item.id === key);
-                            break;
-                        case 'store':
-                            value = this.NewStores.find((item) => item.id === key);
-                            break;
-                        case 'value':
-                        default:
-                            value = GM_getValue(key);
-                            break;
-                    }
-                    return value || defaultValue;
-                },
-                Set: function(type, key, setData) {
-                    switch (type) {
-                        case 'menu':
-                            this.NewMenus.filter((item) => item.id === key).forEach(setData);
-                            break;
-                        case 'store':
-                            this.NewStores.filter((item) => item.id === key).forEach(setData);
-                            break;
-                        case 'value':
-                        default:
-                            GM_setValue(setData(GM_getValue(key)));
-                            break;
-                    }
-                },
-                Delete: function(type, key) {
-                    switch (type) {
-                        case 'menu':
-                            this.NewMenus.filter((item) => item.id === key).forEach(this.NewMenus.splice);
-                            break;
-                        case 'store':
-                            this.NewStores.filter((item) => item.id === key).forEach(this.NewStores.splice);
-                            break;
-                        case 'value':
-                        default:
-                            GM_deleteValue(key);
-                            break;
-                    }
-                },
-                getList: function(type) {
-                    let list;
-                    switch (type) {
-                        case 'menu':
-                            list = this.NewMenusIdList;
-                            break;
-                        case 'store':
-                            list = this.NewStoresIdList;
-                            break;
-                        case 'value':
-                        default:
-                            list = GM_listValues();
-                            break;
-                    }
-                    return list;
-                },
-            },
-            // 用来操作菜单的函数
-            // TODO[6] <改变菜单方法> {改变菜单的方法应该对store进行处理}
-            menuAdd: function(config) {
-                this.Logger(config.action + ' add...');
-                config.isNew = true;
-                this.ClassStorage.Save('menu', config);
-            },
-            menuChange: function(config) {
-                this.Logger(config.action + ' change...');
-                this.ClassStorage.Save('menu', config);
-            },
-            getNewSetting: function(id) {
-                const menu = this.ClassStorage.Load('menu', id);
-                return menu || { isAutoLoad: true };
-            },
-            // 新的启动模块函数, 用来配合menuChange使用
-            newOpenTab: function(URL, id, text, actid) {
-                const tabPanel = Ext.getCmp('content_panel');
-                const tabNodeId = tabPanel.down(`#${actid}`);
-                const newConfig = SctCoz.tools.getNewSetting(actid);
-                if (tabNodeId === null) {
-                    tabPanel
-                        .add({
-                            id: actid,
-                            title: newConfig.text || text,
-                            layout: 'fit',
-                            closable: true,
-                            childActId: actid,
-                            barChange: false,
-                            loader: {
-                                url: URL,
-                                loadMask: '请稍等...',
-                                autoLoad: newConfig.isAutoLoad,
-                                scripts: true,
-                            },
-                            listeners: newConfig.listeners,
-                        })
-                        .show()
-                        .addListener('activate', (me) => {
-                            if (me.barChange) {
-                                me.barChange = false;
-                                me.loader.load();
-                            }
-                        });
-                } else {
-                    tabPanel.setActiveTab(tabNodeId);
-                }
-            },
-            init: function(config) {
-                // config 参数赋值
-                this.debugLevel = (config && config.debugLevel) || config.debugLevel;
-                // 初始化
-                this.Logger('ver ' + this.version + ' initing...');
-                this.SysMenus = Ext.getCmp('SystemMenus');
-                const store = this.SysMenus.store;
-                this.tree = store.tree.root;
-
-                store.addListener('load', function() {
-                    const storage = SctCoz.tools.ClassStorage;
-                    const tree = SctCoz.tools.tree;
-                    const menus = storage.getList('menu');
-                    menus.forEach((menu) => {
-                        const config = storage.Load('menu', menu);
-                        if (config.isNew) {
-                            Ext.getCmp('SystemMenus').store.tree.root.appendChild(config);
-                        } else {
-                            const node = tree.findChild('action', config.action, true);
-                            node && (node.data.text = config.text);
-                        }
-                    });
-                });
-                // 重载打开Tab的方法
-                this.SysMenus.openTab = this.newOpenTab;
-                // 注册Store
-                try {
-                    SctCoz.Comm.InitStore();
-                    SctCoz.Student.InitStore();
-                } catch (e) {
-                    this.Logger(e, 3);
-                }
-                Ext.ClassManager.set('TransValue', this.transValue);
-                this.inited = true;
-            },
-            // 写一些调试用组件
-            // 调试输出
-            // FIXME: [5] <优化易用程度> {调用时更加方便易用}
-            Logger: function(info, Level, hint, way) {
-                // 选择输出形式
-                let prefix = '';
-                let style = '';
-                // 默认输出等级为1
-                const level = Level === undefined ? 1 : Level;
-                // 低于debug等级不输出
-                if (level < this.debugLevel && level >= 0) {
-                    return;
-                }
-                // 各种输出的写法有问题
-                switch (level) {
-                    case 0:
-                        console.log('%o', info);
-                        break; // 过程记录
-                    case 1:
-                        prefix = '@: ';
-                        style = 'color: green;';
-                        console.info('%c' + prefix + info, style);
-                        break; // 运行异常
-                    case 2:
-                        prefix = '$: ';
-                        style = 'color: blue; font-size: 12px';
-                        console.groupCollapsed('%c' + prefix + hint, style);
-                        console.warn(info);
-                        console.groupEnd();
-                        break; // 轻微警告
-                    case 3:
-                        prefix = '#: ';
-                        style = 'color: yellow; font-size: 24px';
-                        console.groupCollapsed('%c' + prefix + hint, style);
-                        console.debug(info);
-                        console.groupEnd();
-                        break; // 严重错误
-                    case 4:
-                        prefix = '!: ';
-                        style = 'color: red; font-size: 48px';
-                        console.groupCollapsed('%c' + prefix + hint, style);
-                        console.error(info);
-                        console.groupEnd();
-                        break;
-                    case 5: // 回滚代码
-                        prefix = '作者是个菜鸡！！！： ';
-                        style = 'color: black; font-size: 96px';
-                        console.group('%c' + prefix + hint, style);
-                        console.error(info);
-                        console.groupEnd();
-                        break;
-                    case -1:
-                    default:
-                        // 特殊处理
-                        prefix = '?: ';
-                        style = 'color: green;';
-                        console.groupCollapsed('%c' + prefix + hint, style);
-                        console[way](info);
-                        console.groupEnd();
-                        break;
-                }
-            },
-            // 修复了问题,原因是没有添加连接名单
-            LoadData: function(config) {
-                const isByGit = config.isByGit === undefined ? true : false;
-                this.Logger(config, -1, 'Plug-in data from ' + (isByGit ? 'extranet' : 'intranet') + ' loading...', 'info');
-                const urlByGit = 'https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/';
-                const urlByGuet = 'http://experiment.guet.edu.cn/upfile/';
-                const url = isByGit ? urlByGit + config.path : urlByGuet + config.path.replace(/\//g, '_') + '.rar';
-                GM_xmlhttpRequest({
-                    // GET, HEAD, POST, 默认GET
-                    method: config.method || 'GET',
-                    // 数据选项， 仅在POST情况下生效
-                    data: config.data,
-                    // 默认加载path
-                    url: config.url || url,
-                    // arraybuffer, blob, json， 默认json
-                    responseType: config.type || 'json',
-                    // 延迟上限， 默认3000ms
-                    outtime: config.timeout || 3000,
-                    // 加载失败的情况
-                    ontimeout: config.failure,
-                    onerror: config.failure,
-                    // 成功完成的情况
-                    onload: (result) => {
-                        switch (result.status) {
-                            case 404:
-                                config.failure(result);
-                                break;
-                            case 200:
-                            default:
-                                config.success(result.response);
-                                break;
-                        }
+        Load: function(type, key, defaultValue) {
+            let value = null;
+            switch (type) {
+                case 'menu':
+                    value = this.NewMenus.find((item) => item.id === key);
+                    break;
+                case 'store':
+                    value = this.NewStores.find((item) => item.id === key);
+                    break;
+                case 'value':
+                default:
+                    value = GM_getValue(key);
+                    break;
+            }
+            return value || defaultValue;
+        },
+        Set: function(type, key, setData) {
+            switch (type) {
+                case 'menu':
+                    this.NewMenus.filter((item) => item.id === key).forEach(setData);
+                    break;
+                case 'store':
+                    this.NewStores.filter((item) => item.id === key).forEach(setData);
+                    break;
+                case 'value':
+                default:
+                    GM_setValue(setData(GM_getValue(key)));
+                    break;
+            }
+        },
+        Delete: function(type, key) {
+            switch (type) {
+                case 'menu':
+                    this.NewMenus.filter((item) => item.id === key).forEach(this.NewMenus.splice);
+                    break;
+                case 'store':
+                    this.NewStores.filter((item) => item.id === key).forEach(this.NewStores.splice);
+                    break;
+                case 'value':
+                default:
+                    GM_deleteValue(key);
+                    break;
+            }
+        },
+        getList: function(type) {
+            let list;
+            switch (type) {
+                case 'menu':
+                    list = this.NewMenusIdList;
+                    break;
+                case 'store':
+                    list = this.NewStoresIdList;
+                    break;
+                case 'value':
+                default:
+                    list = GM_listValues();
+                    break;
+            }
+            return list;
+        },
+    },
+    // 用来操作菜单的函数
+    // TODO[6] <改变菜单方法> {改变菜单的方法应该对store进行处理}
+    menuAdd: function(config) {
+        this.Logger(config.action + ' add...');
+        config.isNew = true;
+        this.ClassStorage.Save('menu', config);
+    },
+    menuChange: function(config) {
+        this.Logger(config.action + ' change...');
+        this.ClassStorage.Save('menu', config);
+    },
+    getNewSetting: function(id) {
+        const menu = this.ClassStorage.Load('menu', id);
+        return menu || { isAutoLoad: true };
+    },
+    // 新的启动模块函数, 用来配合menuChange使用
+    newOpenTab: function(URL, id, text, actid) {
+        const tabPanel = Ext.getCmp('content_panel');
+        const tabNodeId = tabPanel.down(`#${actid}`);
+        const newConfig = SctCoz.tools.getNewSetting(actid);
+        if (tabNodeId === null) {
+            tabPanel
+                .add({
+                    id: actid,
+                    title: newConfig.text || text,
+                    layout: 'fit',
+                    closable: true,
+                    childActId: actid,
+                    barChange: false,
+                    loader: {
+                        url: URL,
+                        loadMask: '请稍等...',
+                        autoLoad: newConfig.isAutoLoad,
+                        scripts: true,
                     },
+                    listeners: newConfig.listeners,
+                })
+                .show()
+                .addListener('activate', (me) => {
+                    if (me.barChange) {
+                        me.barChange = false;
+                        me.loader.load();
+                    }
                 });
-            },
-            // 转换值表示
-            transValue: function(value, storeId, oldField, newField) {
-                const record = Ext.data.StoreManager.lookup(storeId).findRecord(oldField, value);
-                // console.log(record.get(newField));
-                return record && record.get(newField);
-            },
-        },
-    });
-}
-if (typeof SctCoz.Comm === 'undefined') {
-    // 防止重复定义
-    Ext.define('SctCoz.Comm', {
-        alias: ['CommInfo'],
-        statics: {
-            version: '1.1.5',
-            InitStore: () => {
-                // 注册Store
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.TermInfo', { storeId: 'TermStore' }));
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.ShoolYear', { storeId: 'ShoolYears' }));
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.MajorInfo', { storeId: 'MajorNoStore' }));
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.CollegeInfo', { storeId: 'CollegeNoStore' }));
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.CourseInfo', { storeId: 'CourseIdStore' }));
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.HourInfo', { storeId: 'SchoolHour' }));
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.RoomInfo', { storeId: 'Classrooms' }));
-            },
-            getNowTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[0],
-            getSctCozTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[1],
-            getArrangeTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[2],
-            getShoolYear: () => Ext.data.StoreManager.lookup('TermStore').shoolYear,
-        },
-    });
+        } else {
+            tabPanel.setActiveTab(tabNodeId);
+        }
+    },
+    init: function(config) {
+        // config 参数赋值
+        this.debugLevel = (config && config.debugLevel) || config.debugLevel;
+        // 初始化
+        this.Logger('ver ' + this.version + ' initing...');
+        this.SysMenus = Ext.getCmp('SystemMenus');
+        const store = this.SysMenus.store;
+        this.tree = store.tree.root;
 
+        store.addListener('load', function() {
+            const storage = SctCoz.tools.ClassStorage;
+            const tree = SctCoz.tools.tree;
+            const menus = storage.getList('menu');
+            menus.forEach((menu) => {
+                const config = storage.Load('menu', menu);
+                if (config.isNew) {
+                    Ext.getCmp('SystemMenus').store.tree.root.appendChild(config);
+                } else {
+                    const node = tree.findChild('action', config.action, true);
+                    node && (node.data.text = config.text);
+                }
+            });
+        });
+        // 重载打开Tab的方法
+        this.SysMenus.openTab = this.newOpenTab;
+        // 注册Store
+        try {
+            SctCoz.Comm.init();
+            SctCoz.Student.init();
+            SctCoz.Query.init();
+        } catch (e) {
+            this.Logger(e, 3);
+        }
+        Ext.ClassManager.set('TransValue', this.transValue);
+        this.inited = true;
+    },
+    // 写一些调试用组件
+    // 调试输出
+    // FIXME: [5] <优化易用程度> {调用时更加方便易用}
+    Logger: function(info, Level, hint, way) {
+        // 选择输出形式
+        let prefix = '';
+        let style = '';
+        // 默认输出等级为1
+        const level = Level === undefined ? 1 : Level;
+        // 低于debug等级不输出
+        if (level < this.debugLevel && level >= 0) {
+            return;
+        }
+        // 各种输出的写法有问题
+        switch (level) {
+            case 0:
+                console.log('%o', info);
+                break; // 过程记录
+            case 1:
+                prefix = '@: ';
+                style = 'color: green;';
+                console.info('%c' + prefix + info, style);
+                break; // 运行异常
+            case 2:
+                prefix = '$: ';
+                style = 'color: blue; font-size: 12px';
+                console.groupCollapsed('%c' + prefix + hint, style);
+                console.warn(info);
+                console.groupEnd();
+                break; // 轻微警告
+            case 3:
+                prefix = '#: ';
+                style = 'color: yellow; font-size: 24px';
+                console.groupCollapsed('%c' + prefix + hint, style);
+                console.debug(info);
+                console.groupEnd();
+                break; // 严重错误
+            case 4:
+                prefix = '!: ';
+                style = 'color: red; font-size: 48px';
+                console.groupCollapsed('%c' + prefix + hint, style);
+                console.error(info);
+                console.groupEnd();
+                break;
+            case 5: // 回滚代码
+                prefix = '作者是个菜鸡！！！： ';
+                style = 'color: black; font-size: 96px';
+                console.group('%c' + prefix + hint, style);
+                console.error(info);
+                console.groupEnd();
+                break;
+            case -1:
+            default:
+                // 特殊处理
+                prefix = '?: ';
+                style = 'color: green;';
+                console.groupCollapsed('%c' + prefix + hint, style);
+                console[way](info);
+                console.groupEnd();
+                break;
+        }
+    },
+    // 修复了问题,原因是没有添加连接名单
+    LoadData: function(config) {
+        const isByGit = config.isByGit === undefined ? true : false;
+        this.Logger(config, -1, 'Plug-in data from ' + (isByGit ? 'extranet' : 'intranet') + ' loading...', 'info');
+        const urlByGit = 'https://raw.githubusercontent.com/cssxsh/Guet_SctCoz_Plug-ins/master/Json/';
+        const urlByGuet = 'http://experiment.guet.edu.cn/upfile/';
+        const url = isByGit ? urlByGit + config.path : urlByGuet + config.path.replace(/\//g, '_') + '.rar';
+        GM_xmlhttpRequest({
+            // GET, HEAD, POST, 默认GET
+            method: config.method || 'GET',
+            // 数据选项， 仅在POST情况下生效
+            data: config.data,
+            // 默认加载path
+            url: config.url || url,
+            // arraybuffer, blob, json， 默认json
+            responseType: config.type || 'json',
+            // 延迟上限， 默认3000ms
+            outtime: config.timeout || 3000,
+            // 加载失败的情况
+            ontimeout: config.failure,
+            onerror: config.failure,
+            // 成功完成的情况
+            onload: (result) => {
+                switch (result.status) {
+                    case 404:
+                        config.failure(result);
+                        break;
+                    case 200:
+                    default:
+                        config.success(result.response);
+                        break;
+                }
+            },
+        });
+    },
+    // 转换值表示
+    transValue: function(value, storeId, oldField, newField) {
+        const record = Ext.data.StoreManager.lookup(storeId).findRecord(oldField, value);
+        // console.log(record.get(newField));
+        return record && record.get(newField);
+    },
+};
+SctCoz.Comm = SctCoz.Comm || {
+    version: '1.1.5',
+    init: function () {
+        this.define();
+        // 注册Store
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.TermInfo', { storeId: 'TermStore' }));
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.ShoolYear', { storeId: 'ShoolYears' }));
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.MajorInfo', { storeId: 'MajorNoStore' }));
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.CollegeInfo', { storeId: 'CollegeNoStore' }));
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.CourseInfo', { storeId: 'CourseIdStore' }));
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.HourInfo', { storeId: 'SchoolHour' }));
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.RoomInfo', { storeId: 'Classrooms' }));
+    },
+    getNowTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[0],
+    getSctCozTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[1],
+    getArrangeTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[2],
+    getShoolYear: () => Ext.data.StoreManager.lookup('TermStore').shoolYear,
+};
+SctCoz.Comm.define = SctCoz.Comm.define || (() => {
     // 公共Store
     Ext.define('SctCoz.Comm.TermInfo', {
         alias: ['TermInfo'],
@@ -654,16 +644,14 @@ if (typeof SctCoz.Comm === 'undefined') {
         queryMode: 'local',
         valueField: 'dptno',
         listeners: {
-            change: (combo, newValue) => {
-                const majorNo = combo.up('fieldset').down("[xtype='MajorCombo']");
-                const spno = majorNo.getValue();
-                majorNo.getStore().clearFilter();
-                if (!newValue) {
-                    majorNo.getStore().filter('dptno', new RegExp(`^${newValue}$`));
+            change: function (combo, newValue) {
+                if (!combo.config.noMajor) {
+                    const majorNo = combo.up('fieldset').down("[xtype='MajorCombo']");
+                    const spno = majorNo.getValue();
+                    majorNo.getStore().clearFilter();
                     majorNo.setValue('');
-                    if (majorNo.findRecordByValue(spno) !== null && majorNo.findRecordByValue(spno) !== false) {
-                        majorNo.setValue(spno);
-                    }
+                    newValue && majorNo.getStore().filter('dptno', newValue);
+                    majorNo.findRecordByValue(spno) && majorNo.setValue(spno);
                 }
             },
         },
@@ -681,11 +669,11 @@ if (typeof SctCoz.Comm === 'undefined') {
         minWidth: 240,
         queryMode: 'local',
         valueField: 'spno',
+        valueNotFoundText: '',
         constructor: function() {
             // 因为过滤要求,不能直接使用注册好的Store，用间接继承数据的办法
-            this.store = Ext.create('SctCoz.Comm.MajorInfo', { autoLoad: false });
+            this.store = Ext.clone(Ext.data.StoreManager.lookup('MajorNoStore'));
             this.callParent(arguments);
-            this.store.loadRecords(Ext.data.StoreManager.lookup('MajorNoStore').getRange());
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
@@ -704,23 +692,27 @@ if (typeof SctCoz.Comm === 'undefined') {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-}
-if (typeof SctCoz.Student === 'undefined') {
-    // 防止重复定义
-    Ext.define('SctCoz.Student', {
-        statics: {
-            version: '1.1.5',
-            InitStore: () => {
-                // 注册Store
-                SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Student.PersonInfo', { storeId: 'StudentUser' }));
-                // Ext.create("SctCoz.Student.Schedule", { id: "StudentSchedule" });
-            },
-            getUserInfo: () =>
-                Ext.data.StoreManager.lookup('StudentUser')
-                    .getAt(0)
-                    .getData(),
-        },
-    });
+});
+SctCoz.Student = SctCoz.Student || {
+    version: '1.1.5',
+    init: function () {
+        // 注册Store
+        this.define();
+        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Student.PersonInfo', { storeId: 'StudentUser' }));
+        // Ext.create("SctCoz.Student.Schedule", { id: "StudentSchedule" });
+    },
+    getUserInfo: () => {
+        const store = Ext.data.StoreManager.lookup('StudentUser');
+        let data = null;
+        try {
+            data = store.getAt(0).getData();
+        } catch (e) {
+            console.log(e);
+        }
+        return data;
+    }
+};
+SctCoz.Student.define = SctCoz.Student.define || (() => {
     // TO-DO: [8] <当前用户信息> {弄一个获取当前用户信息的store}
     // Store
     Ext.define('SctCoz.Student.PersonInfo', {
@@ -1081,16 +1073,14 @@ if (typeof SctCoz.Student === 'undefined') {
             },
         },
     });
-}
-if (typeof SctCoz.Query === 'undefined') {
-    // 防止重复定义
-    Ext.define('SctCoz.Query', {
-        statics: {
-            version: '1.1.10',
-            InitStore: () => {},
-        },
-    });
-
+});
+SctCoz.Query = SctCoz.Query || {
+    version: '1.1.10',
+    init: function () {
+        this.define();
+    },
+};
+SctCoz.Query.define = SctCoz.Query.define || (() => {
     // 组件
     Ext.define('SctCoz.Query.QueryPanel', {
         extend: 'Ext.panel.Panel',
@@ -1546,6 +1536,6 @@ if (typeof SctCoz.Query === 'undefined') {
         },
         autoLoad: false,
     });
-}
+});
 
 // 在测试中添加工具
