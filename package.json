@@ -24,11 +24,18 @@
             "pre-commit": "npm run format"
         }
     },
+    "prettier": {
+        "printWidth": 233,
+        "tabWidth": 4,
+        "singleQuote": true,
+        "trailingComma": "es5",
+        "arrowParens": "always"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/cssxsh/Guet_SctCoz_Plug-ins.git"
     },
-    "author": "",
+    "author": "cssxsh",
     "license": "ISC",
     "bugs": {
         "url": "https://github.com/cssxsh/Guet_SctCoz_Plug-ins/issues"
