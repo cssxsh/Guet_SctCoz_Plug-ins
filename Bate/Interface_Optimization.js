@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.7.35
+// @version      3.9.0
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -203,11 +203,9 @@ const CourseSetNewListeners = {
                                 (Ext.isArray(response.data) ? response.data : [response.data]).forEach((Info) => {
                                     const key = Info.courseno;
                                     const group = me.GroupsByNo.get(key);
-                                    if (group !== null) {
-                                        group.forEach((record) => {
-                                            record.set('comment', Info);
-                                        });
-                                    }
+                                    group && group.forEach((record) => {
+                                        record.set('comment', Info);
+                                    });
                                 });
                                 Loading.hide();
                             },
@@ -260,7 +258,7 @@ const CourseSetNewListeners = {
                     dataIndex: 'comment',
                     xtype: 'actionrendercolumn',
                     flex: 1,
-                    renderer: (value, metaData, record) => (record.get('comment') === null ? [''] : ['查看']),
+                    renderer: (value, metaData, record) => (record.get('comment') ? ['查看'] : ['']),
                     items: [{ handler: showComm }],
                 },
             ],
@@ -304,6 +302,9 @@ const StuScoreNewListeners = {
             const formSet = panel.down("[xtype='query-form']").getForm();
             const params = formSet.getValues();
 
+            params.cname = params.cname.trim();
+            params.courseno = params.courseno.trim();
+            params.courseid = params.courseid.trim();
             store.getProxy().extraParams = params;
             grid.printConfig.title = formSet.findField('term').getDisplayValue() + '学生成绩';
             store.load();
@@ -365,6 +366,67 @@ const StuScoreNew = {
     isAutoLoad: false,
     listeners: StuScoreNewListeners,
 }; // 重写完毕
+const StuLabScoreNewListeners = {
+    afterrender: (me) => {
+        // 提示设置
+        Ext.QuickTips.init();
+        Ext.form.Field.prototype.MsgTarget = 'side';
+        // 查询面板
+        const queryByStore = (button) => {
+            const panel = button.up("[xtype='query-panel']");
+            const grid = panel.down("[xtype='query-grid']");
+            const store = grid.getStore();
+            const formSet = panel.down("[xtype='query-form']").getForm();
+            const params = formSet.getValues();
+
+            store.getProxy().extraParams = params;
+            grid.printConfig.title = formSet.findField('term').getDisplayValue() + '学生实验成绩';
+            store.load();
+        };
+        const queryForm = Ext.create('SctCoz.Query.QueryForm', {
+            argcols: [
+                // xtype里已经封装好了store。
+                { fieldLabel: '开课学期', xtype: 'TermCombo', allowBlank: true },
+            ],
+            QueryByStore: queryByStore,
+        });
+        // 表格
+        const queryGrid = Ext.create('SctCoz.Query.QueryGrid', {
+            store: Ext.create('SctCoz.Student.LabScore'),
+            columns: [
+                { header: '序号', xtype: 'rownumberer', width: 40 },
+                {
+                    header: '学期',
+                    dataIndex: 'term',
+                    width: 120,
+                    renderer: (value) => {
+                        const name = TransValue(value, 'TermStore', 'term', 'termname');
+                        return name;
+                    },
+                },
+                { header: '课程代码', dataIndex: 'courseid', width: 96 },
+                { header: '实验序号', dataIndex: 'labid', width: 96 },
+                { header: '课程名称', dataIndex: 'cname', minWidth: 120, flex: 1 },
+                { header: '考核成绩', dataIndex: 'khcj', minWidth: 32 },
+                { header: '成绩', dataIndex: 'zpxs', minWidth: 64 },
+            ],
+        });
+
+        const queryPanel = Ext.create('SctCoz.Query.QueryPanel', {
+            TitleText: '实验成绩【插件模式】',
+            items: [queryForm, queryGrid],
+        });
+        me.add(queryPanel);
+    },
+};
+const StuLabScoreNew = {
+    action: 'StuLab',
+    text: '实验成绩【插件】',
+    id: 'StuLab',
+    leaf: true,
+    isAutoLoad: false,
+    listeners: StuLabScoreNewListeners,
+}; // 新模块
 const SutSctedNewListeners = {
     add: (me) => {
         // 修改 Grid
@@ -899,9 +961,6 @@ const StuEvalNewListeners = {
                     renderer: (score, metaData, record) => {
                         const grade = record.get('grades');
                         let text = score;
-                        if (score === null || score === '') {
-                            return;
-                        }
                         grade.forEach((items) => {
                             if (items.value === score) {
                                 text = items.text;
@@ -1084,6 +1143,7 @@ const load = function() {
     SctCoz.tools.menuChange(StuScoreNew);
     SctCoz.tools.menuChange(SutSctedNew);
     SctCoz.tools.menuChange(StuPlanNew);
+    SctCoz.tools.menuChange(StuLabScoreNew);
     SctCoz.tools.menuAdd(StuEvalNew);
 
     // TODO[9]: <重写课表模块> {把实验课加入课程表, 可以使用评教接口}

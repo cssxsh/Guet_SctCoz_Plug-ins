@@ -4,7 +4,7 @@
 let defineByExt;
 SctCoz = window.SctCoz || {};
 SctCoz.tools = SctCoz.tools || {
-    version: '4.1.9',
+    version: '4.3.0',
     inited: false,
     debugLevel: 2,
     SysMenus: null,
@@ -49,7 +49,11 @@ SctCoz.tools = SctCoz.tools || {
                     value = GM_getValue(key);
                     break;
             }
-            return value || defaultValue;
+            if (!value) {
+                value = defaultValue;
+                defaultValue && this.Save(type, defaultValue, key);
+            }
+            return value;
         },
         Set: function(type, key, setData) {
             switch (type) {
@@ -116,7 +120,7 @@ SctCoz.tools = SctCoz.tools || {
         const tabPanel = Ext.getCmp('content_panel');
         const tabNodeId = tabPanel.down(`#${actid}`);
         const newConfig = SctCoz.tools.getNewSetting(actid);
-        if (tabNodeId === null) {
+        if (!tabNodeId) {
             tabPanel
                 .add({
                     id: actid,
@@ -285,7 +289,7 @@ SctCoz.tools = SctCoz.tools || {
     },
 };
 SctCoz.Comm = SctCoz.Comm || {
-    version: '1.1.5',
+    version: '1.3.0',
     init: function() {
         this.define();
         // 注册Store
@@ -468,7 +472,7 @@ defineByExt = () => {
         },
         autoLoad: true,
     });
-    Ext.define('SctCoz.Comm.CouresType', {
+    Ext.define('SctCoz.Comm.CourseType', {
         extend: 'Ext.data.Store',
         fields: [
             'typeno',
@@ -503,8 +507,7 @@ defineByExt = () => {
                 root: 'data',
             },
         },
-        autoLoad: false,
-        sorters: [{ property: 'dptno', direction: 'ASC' }, { property: 'teacherno', direction: 'ASC' }],
+        autoLoad: true,
     });
     // TODO [9] <教务参数查询> {使用/Comm/GetCTypeSct弄一个教务参数的总查询}
     Ext.define('SctCoz.Comm.CampusInfo', {
@@ -616,7 +619,7 @@ defineByExt = () => {
         constructor: function() {
             this.store = Ext.data.StoreManager.lookup('TermStore');
             this.callParent(arguments);
-            if (this.getValue() === null) {
+            if (!this.getValue()) {
                 this.setValue(SctCoz.Comm.getNowTerm().get('term'));
             }
             this.labelWidth = this.fieldLabel.length * 16;
@@ -693,10 +696,25 @@ defineByExt = () => {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
+    Ext.define('SctCoz.Comm.CourseCombo', {
+        extend: 'Ext.form.field.ComboBox',
+        xtype: ['CourseCombo'],
+        name: 'courseid',
+        fieldLabel: '课程代码',
+        width: 160,
+        queryMode: 'local',
+        valueField: 'courseid',
+        displayField: 'courseid',
+        constructor: function() {
+            this.store = Ext.data.StoreManager.lookup('CourseInfos');
+            this.callParent(arguments);
+            this.labelWidth = this.fieldLabel.length * 16;
+        },
+    });
 };
 SctCoz.Comm.define = SctCoz.Comm.define || defineByExt;
 SctCoz.Student = SctCoz.Student || {
-    version: '1.1.5',
+    version: '1.3.0',
     init: function() {
         // 注册Store
         this.define();
@@ -705,7 +723,7 @@ SctCoz.Student = SctCoz.Student || {
     },
     getUserInfo: () => {
         const store = Ext.data.StoreManager.lookup('StudentUser');
-        let data = null;
+        let data = {};
         try {
             data = store.getAt(0).getData();
         } catch (e) {
@@ -1075,10 +1093,43 @@ defineByExt = () => {
             },
         },
     });
+    Ext.define('SctCoz.Student.LabScore', {
+        extend: 'Ext.data.Store',
+        fields: [
+            'astype',
+            'chk',
+            'cjlb',
+            'cname',
+            'comm',
+            'courseid',
+            'grade',
+            'khcj',
+            'kslb',
+            'labid',
+            'name',
+            'pscj',
+            'spname',
+            'spno',
+            'stid',
+            'teacherno',
+            'term',
+            'testtime',
+            'tname',
+            'zpcj'
+        ],
+        proxy: {
+            type: 'ajax',
+            url: '/Student/GetStuLab',
+            reader: {
+                type: 'json',
+                root: 'data',
+            },
+        },
+    });
 };
 SctCoz.Student.define = SctCoz.Student.define || defineByExt;
 SctCoz.Query = SctCoz.Query || {
-    version: '1.1.10',
+    version: '1.3.0',
     init: function() {
         this.define();
     },
