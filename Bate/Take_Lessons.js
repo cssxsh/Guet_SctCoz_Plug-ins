@@ -225,8 +225,8 @@ const Rreplace_StuSct = (me) => {
             Ext.Msg.alert('提示', '请选择一个课号提交。');
         }
     };
-    const newStore = Ext.create('SctCoz.Student.CoursePlan', {
-        AllQueryStore: Ext.create('SctCoz.Query.CoursePlan', {
+    const newStore = Ext.createByAlias('SCoursePlan', {
+        AllQueryStore: Ext.createByAlias('CoursePlan', {
             // 方便之后使用
             groupField: 'courseid',
         }),
@@ -284,7 +284,7 @@ const Rreplace_StuSct = (me) => {
             { header: '学分', dataIndex: 'xf', width: 45 },
         ],
     });
-    const sctStore = Ext.create('SctCoz.Student.CourseSetNo', {
+    const sctStore = Ext.createByAlias('SCourseSetNo', {
         groupField: 'spno',
     });
     const feature = {
@@ -417,7 +417,7 @@ const LabSctNew = {
                 title: '实验计划',
                 height: '50%',
                 region: 'center',
-                store: Ext.create('SctCoz.Student.LabPlan'),
+                store: Ext.createByAlias('SLabPlan'),
                 columns: [
                     { header: '序号', xtype: 'rownumberer', width: 40 },
                     { header: '计划序号', dataIndex: 'planid', width: 80 },
@@ -465,7 +465,7 @@ const LabSctNew = {
                     enabconstextSelection: true,
                 },
                 // features: [{ ftype: "grouping" }], 多余的属性导致选中时报错
-                store: Ext.create('SctCoz.Student.LabItem'),
+                store: Ext.createByAlias('SLabItem'),
                 columns: [
                     { header: '序号', xtype: 'rownumberer', width: 40 },
                     {
