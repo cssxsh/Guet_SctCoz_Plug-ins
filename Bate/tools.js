@@ -4,7 +4,7 @@
 let defineByExt;
 SctCoz = window.SctCoz || {};
 SctCoz.tools = SctCoz.tools || {
-    version: '4.3.0',
+    version: '4.3.1',
     inited: false,
     debugLevel: 2,
     SysMenus: null,
@@ -293,22 +293,38 @@ SctCoz.Comm = SctCoz.Comm || {
     init: function() {
         this.define();
         // 注册Store
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.TermInfo', { storeId: 'TermStore' }));
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.ShoolYear', { storeId: 'ShoolYears' }));
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.MajorInfo', { storeId: 'MajorNoStore' }));
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.CollegeInfo', { storeId: 'CollegeNoStore' }));
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.CourseInfo', { storeId: 'CourseIdStore' }));
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.HourInfo', { storeId: 'SchoolHour' }));
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Comm.RoomInfo', { storeId: 'Classrooms' }));
+        try {
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('TermInfo', { storeId: 'TermStore' }));
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('MajorInfo', { storeId: 'MajorNoStore' }));
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('CollegeInfo', { storeId: 'CollegeNoStore' }));
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('CourseInfo', { storeId: 'CourseIdStore' }));
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('HourInfo', { storeId: 'SchoolHour' }));
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('RoomInfo', { storeId: 'Classrooms' }));
+        } catch (e) {
+            SctCoz.tools.Logger(e, 3);
+        }
     },
-    getNowTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[0],
-    getSctCozTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[1],
-    getArrangeTerm: () => Ext.data.StoreManager.lookup('TermStore').termSet[2],
-    getShoolYear: () => Ext.data.StoreManager.lookup('TermStore').shoolYear,
+    getNowTerm: function() {
+        const store = Ext.data.StoreManager.lookup('TermStore');
+        return store && store.termSet[0];
+    },
+    getSctCozTerm: function() {
+        const store = Ext.data.StoreManager.lookup('TermStore');
+        return store && store.termSet[1];
+    },
+    getArrangeTerm: function() {
+        const store = Ext.data.StoreManager.lookup('TermStore');
+        return store && store.termSet[2];
+    },
+    getShoolYear: function() {
+        const store = Ext.data.StoreManager.lookup('TermStore');
+        return store && store.shoolYear;
+    },
 };
 defineByExt = () => {
+    // SctCoz.Comm
     // 公共Store
-    Ext.define('SctCoz.Comm.TermInfo', {
+    Ext.define('SctCoz.Comm.Store.TermInfo', {
         alias: ['TermInfo'],
         extend: 'Ext.data.Store',
         fields: ['term', 'startdate', 'enddate', 'weeknum', 'termname', 'schoolyear', 'comm'],
@@ -324,7 +340,6 @@ defineByExt = () => {
         sorters: [{ property: 'term', direction: 'DESC' }],
         // 自定义部分
         termSet: [],
-        shoolYear: [],
         listeners: {
             load: (me, records) => {
                 (me.termSet = []),
@@ -341,16 +356,18 @@ defineByExt = () => {
                             me.termSet = records.slice(0, 3);
                         },
                     });
-                me.shoolYear = Ext.Array.unique(records.map((termInfo) => termInfo.get('schoolyear')));
+                const shoolYear = Ext.Array.unique(records.map((termInfo) => termInfo.get('schoolyear')));
+                const ShoolYear = Ext.createByAlias('ShoolYear', { storeId: 'ShoolYears' });
+                ShoolYear.loadData(shoolYear.map((value) => [parseInt(value), value]));
             },
         },
     });
-    Ext.define('SctCoz.Comm.ShoolYear', {
-        alias: ['ShoolYearArray'],
+    Ext.define('SctCoz.Comm.Store.ShoolYear', {
+        alias: ['ShoolYear'],
         extend: 'Ext.data.ArrayStore',
         fields: ['grade', 'text'],
     });
-    Ext.define('SctCoz.Comm.CollegeInfo', {
+    Ext.define('SctCoz.Comm.Store.CollegeInfo', {
         alias: ['CollegeInfo'],
         extend: 'Ext.data.Store',
         fields: [
@@ -383,7 +400,7 @@ defineByExt = () => {
         autoLoad: true,
         sorters: [{ property: 'CollegeNo', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Comm.MajorInfo', {
+    Ext.define('SctCoz.Comm.Store.MajorInfo', {
         alias: ['MajorInfo'],
         extend: 'Ext.data.Store',
         fields: [
@@ -416,7 +433,7 @@ defineByExt = () => {
         autoLoad: true,
         sorters: [{ property: 'dptno', direction: 'ASC' }, { property: 'spno', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Comm.TeacherInfo', {
+    Ext.define('SctCoz.Comm.Store.TeacherInfo', {
         alias: ['TeacherInfo'],
         extend: 'Ext.data.Store',
         fields: [
@@ -458,7 +475,7 @@ defineByExt = () => {
             this.callParent(arguments);
         },
     });
-    Ext.define('SctCoz.Comm.HourInfo', {
+    Ext.define('SctCoz.Comm.Store.HourInfo', {
         alias: ['HourInfo'],
         extend: 'Ext.data.Store',
         fields: ['term', 'nodeno', 'xss', 'nodename', 'memo'],
@@ -472,7 +489,7 @@ defineByExt = () => {
         },
         autoLoad: true,
     });
-    Ext.define('SctCoz.Comm.CourseType', {
+    Ext.define('SctCoz.Comm.Store.CourseType', {
         extend: 'Ext.data.Store',
         fields: [
             'typeno',
@@ -495,7 +512,7 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Comm.CourseInfo', {
+    Ext.define('SctCoz.Comm.Store.CourseInfo', {
         alias: ['CourseInfo'],
         extend: 'Ext.data.Store',
         fields: ['courseid', 'cname', 'engname', 'used', 'llxs', 'syxs', 'qtxs', 'sjxs', 'kwxs', 'sjzs', 'xf', 'introduction', 'textbook', 'reference', 'dptno', 'cgrade', 'labno', 'comm', 'oldno'],
@@ -510,7 +527,7 @@ defineByExt = () => {
         autoLoad: true,
     });
     // TODO [9] <教务参数查询> {使用/Comm/GetCTypeSct弄一个教务参数的总查询}
-    Ext.define('SctCoz.Comm.CampusInfo', {
+    Ext.define('SctCoz.Comm.Store.CampusInfo', {
         alias: ['CampusInfo'],
         extend: 'Ext.data.Store',
         fields: [
@@ -541,7 +558,7 @@ defineByExt = () => {
         autoLoad: true,
         sorters: [{ property: 'CampusNo', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Comm.BuildingInfo', {
+    Ext.define('SctCoz.Comm.Store.BuildingInfo', {
         alias: ['BuildingInfo'],
         extend: 'Ext.data.Store',
         fields: [
@@ -575,7 +592,7 @@ defineByExt = () => {
         autoLoad: true,
         sorters: [{ property: 'CampusNo', direction: 'ASC' }, { property: 'BuildingNo', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Comm.RoomType', {
+    Ext.define('SctCoz.Comm.Store.RoomType', {
         extend: 'Ext.data.Store',
         fields: ['id', 'type', { name: 'rtype', convert: (value, record) => record.get('id') }, { name: 'text', convert: (value, record) => record.get('type') }],
         proxy: {
@@ -589,7 +606,7 @@ defineByExt = () => {
         autoLoad: true,
         sorters: [{ property: 'rtype', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Comm.RoomInfo', {
+    Ext.define('SctCoz.Comm.Store.RoomInfo', {
         alias: ['RoomInfo'],
         extend: 'Ext.data.Store',
         fields: ['croomno', 'croomname', 'content', 'address', 'comm', 'tcontent', 'examseat', 'rtype', 'usable', 'zone', { name: 'BuildingNo', convert: (value, record) => record.get('address') }],
@@ -606,7 +623,7 @@ defineByExt = () => {
     });
 
     // 下拉列表组件
-    Ext.define('SctCoz.Comm.TermCombo', {
+    Ext.define('SctCoz.Comm.Combo.Term', {
         extend: 'Ext.form.field.ComboBox',
         xtype: ['TermCombo'],
         name: 'term',
@@ -619,13 +636,11 @@ defineByExt = () => {
         constructor: function() {
             this.store = Ext.data.StoreManager.lookup('TermStore');
             this.callParent(arguments);
-            if (!this.getValue()) {
-                this.setValue(SctCoz.Comm.getNowTerm().get('term'));
-            }
+            !this.getValue() && this.setValue(SctCoz.Comm.getNowTerm().get('term'));
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-    Ext.define('SctCoz.Comm.GradeCombo', {
+    Ext.define('SctCoz.Comm.Combo.Grade', {
         extend: 'Ext.form.field.ComboBox',
         xtype: ['GradesCombo'],
         name: 'grade',
@@ -635,11 +650,10 @@ defineByExt = () => {
         constructor: function() {
             this.store = Ext.data.StoreManager.lookup('ShoolYears');
             this.callParent(arguments);
-            this.store.loadData(SctCoz.Comm.getShoolYear().map((value) => [parseInt(value), value]));
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-    Ext.define('SctCoz.Comm.CollegeCombo', {
+    Ext.define('SctCoz.Comm.Combo.College', {
         extend: 'Ext.form.field.ComboBox',
         xtype: ['CollegeCombo'], // 直接作为xtype使用
         name: 'dptno',
@@ -665,7 +679,7 @@ defineByExt = () => {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-    Ext.define('SctCoz.Comm.MajorCombo', {
+    Ext.define('SctCoz.Comm.Combo.Major', {
         extend: 'Ext.form.field.ComboBox',
         xtype: ['MajorCombo'],
         name: 'spno',
@@ -681,7 +695,7 @@ defineByExt = () => {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-    Ext.define('SctCoz.Comm.RoomCombo', {
+    Ext.define('SctCoz.Comm.Combo.Room', {
         extend: 'Ext.form.field.ComboBox',
         xtype: ['RoomCombo'],
         name: 'croomno',
@@ -696,7 +710,7 @@ defineByExt = () => {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
-    Ext.define('SctCoz.Comm.CourseCombo', {
+    Ext.define('SctCoz.Comm.Combo.Course', {
         extend: 'Ext.form.field.ComboBox',
         xtype: ['CourseCombo'],
         name: 'courseid',
@@ -711,6 +725,22 @@ defineByExt = () => {
             this.labelWidth = this.fieldLabel.length * 16;
         },
     });
+
+    // 数据列
+    Ext.define('SctCoz.Comm.Column.Term', {
+        extend: 'Ext.grid.column.Column',
+        xtype: ['TermColumn'],
+        header: '学期',
+        dataIndex: 'term',
+        renderer: (value) => TransValue(value, 'TermStore', 'term', 'termname'),
+    });
+    Ext.define('SctCoz.Comm.Column.Major', {
+        extend: 'Ext.grid.column.Column',
+        xtype: ['MajorColumn'],
+        header: '学期',
+        dataIndex: 'spno',
+        renderer: (value) => TransValue(value, 'MajorNoStore', 'spno', 'text'),
+    });
 };
 SctCoz.Comm.define = SctCoz.Comm.define || defineByExt;
 SctCoz.Student = SctCoz.Student || {
@@ -718,8 +748,11 @@ SctCoz.Student = SctCoz.Student || {
     init: function() {
         // 注册Store
         this.define();
-        SctCoz.tools.ClassStorage.Save('store', Ext.create('SctCoz.Student.PersonInfo', { storeId: 'StudentUser' }));
-        // Ext.create("SctCoz.Student.Schedule", { id: "StudentSchedule" });
+        try {
+            SctCoz.tools.ClassStorage.Save('store', Ext.createByAlias('SPersonInfo', { storeId: 'StudentUser' }));
+        } catch (e) {
+            SctCoz.tools.Logger(e, 3);
+        }
     },
     getUserInfo: () => {
         const store = Ext.data.StoreManager.lookup('StudentUser');
@@ -727,15 +760,17 @@ SctCoz.Student = SctCoz.Student || {
         try {
             data = store.getAt(0).getData();
         } catch (e) {
-            console.log(e);
+            SctCoz.tools.Logger(e, 3);
         }
         return data;
     },
 };
 defineByExt = () => {
+    // SctCoz.Student
     // TO-DO: [8] <当前用户信息> {弄一个获取当前用户信息的store}
     // Store
-    Ext.define('SctCoz.Student.PersonInfo', {
+    Ext.define('SctCoz.Student.Store.PersonInfo', {
+        alias: ['SPersonInfo'],
         extend: 'Ext.data.Store',
         fields: [
             'stid',
@@ -812,7 +847,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.Schedule', {
+    Ext.define('SctCoz.Student.Store.Schedule', {
+        alias: ['SSchedule'],
         extend: 'Ext.data.Store',
         fields: [
             'id',
@@ -861,7 +897,8 @@ defineByExt = () => {
         },
         sorters: [{ property: 'courseno', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Student.CoursePlan', {
+    Ext.define('SctCoz.Student.Store.CoursePlan', {
+        alias: ['SSchedule'],
         extend: 'Ext.data.Store',
         fields: ['id', 'term', 'courseid', 'cname', 'spno', 'grade', 'tname', 'xf', 'scted', 'courseno', 'name', 'maxstu', 'sctcnt', 'stid', 'comm', 'lot', 'ap', 'xm'],
         proxy: {
@@ -880,7 +917,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.LabPlan', {
+    Ext.define('SctCoz.Student.Store.LabPlan', {
+        alias: ['SLabPlan'],
         extend: 'Ext.data.Store',
         fields: ['teacherno', 'cname', 'srname', 'srdd', 'dptname', 'spname', 'testtime', 'checked', 'labid', 'term', 'courseid', 'dptno', 'spno', 'grade', 'syxs', 'qtxs', 'sjxs', 'srid', 'planid', 'comm'],
         proxy: {
@@ -898,7 +936,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.LabItem', {
+    Ext.define('SctCoz.Student.Store.LabItem', {
+        alias: ['SLabItem'],
         extend: 'Ext.data.Store',
         fields: [
             'labid',
@@ -933,8 +972,8 @@ defineByExt = () => {
         },
         sorters: [{ property: 'itemno', direction: 'ASC' }],
     });
-    Ext.define('SctCoz.Student.CourseSetNo', {
-        //
+    Ext.define('SctCoz.Student.Store.CourseSetNo', {
+        alias: ['SCourseSetNo'],
         extend: 'Ext.data.Store',
         fields: ['id', 'term', 'courseid', 'cname', 'spno', 'grade', 'tname', 'xf', 'scted', 'courseno', 'name', 'maxstu', 'sctcnt', 'stid', 'comm', 'lot', 'ap', 'xm'],
         proxy: {
@@ -950,8 +989,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.CourseEvalNo', {
-        //
+    Ext.define('SctCoz.Student.Store.CourseEvalNo', {
+        alias: ['SCourseEvalNo'],
         extend: 'Ext.data.Store',
         fields: [
             'term',
@@ -982,8 +1021,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.Evaluation', {
-        //
+    Ext.define('SctCoz.Student.Store.Evaluation', {
+        alias: ['SEvaluation'],
         extend: 'Ext.data.Store',
         fields: [
             'term',
@@ -1044,7 +1083,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.Score', {
+    Ext.define('SctCoz.Student.Store.Score', {
+        alias: ['SScore'],
         extend: 'Ext.data.Store',
         fields: [
             'dptno',
@@ -1093,7 +1133,8 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Student.LabScore', {
+    Ext.define('SctCoz.Student.Store.LabScore', {
+        alias: ['SLabScore'],
         extend: 'Ext.data.Store',
         fields: ['astype', 'chk', 'cjlb', 'cname', 'comm', 'courseid', 'grade', 'khcj', 'kslb', 'labid', 'name', 'pscj', 'spname', 'spno', 'stid', 'teacherno', 'term', 'testtime', 'tname', 'zpcj'],
         proxy: {
@@ -1114,10 +1155,11 @@ SctCoz.Query = SctCoz.Query || {
     },
 };
 defineByExt = () => {
+    // SctCoz.Query
     // Store
-    Ext.define('SctCoz.Query.CoursePlan', {
-        extend: 'Ext.data.Store',
+    Ext.define('SctCoz.Query.Store.CoursePlan', {
         alias: ['CoursePlan'],
+        extend: 'Ext.data.Store',
         fields: [
             'pid',
             'term',
@@ -1162,10 +1204,10 @@ defineByExt = () => {
             },
         },
     });
-    Ext.define('SctCoz.Query.CourseSetTable', {
+    Ext.define('SctCoz.Query.Store.CourseSetTable', {
+        alias: ['CourseSetTable'],
         extend: 'Ext.data.Store',
         pageSize: 500,
-        alias: ['CourseSetTable'],
         fields: [
             { name: 'sct', type: 'boolean', defaultValue: true },
             'dptname',
@@ -1393,12 +1435,7 @@ defineByExt = () => {
         activeItem: 0,
         constructor: function() {
             // 组件
-            const timeGridStore = Ext.create('SctCoz.Comm.HourInfo', {
-                fields: ['term', 'nodeno', 'xss', 'nodename', 'memo', 'week1', 'week2', 'week3', 'week4', 'week5', 'week6', 'week7'],
-                autoLoad: false,
-            });
-            // 直接从本地加载提高加载速度
-            timeGridStore.loadRecords(Ext.data.StoreManager.lookup('SchoolHour').getRange());
+            const timeGridStore = Ext.clone(Ext.data.StoreManager.lookup('SchoolHour'));
             const timeGrid = Ext.create('SctCoz.Query.QueryGrid', {
                 autoScroll: false,
                 height: '100%',
@@ -1444,7 +1481,7 @@ defineByExt = () => {
                     stripeRows: true,
                 },
             });
-            this.TimeStore = Ext.create('SctCoz.Student.Schedule', {
+            this.TimeStore = Ext.createByAlias('SSchedule', {
                 listeners: {
                     load: (me, records) => {
                         // 清空

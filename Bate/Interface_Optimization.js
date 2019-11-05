@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Interface Optimization
 // @namespace    https://github.com/cssxsh/Guet_SctCoz_Plug-ins
-// @version      3.9.0
+// @version      3.9.1
 // @description  对选课系统做一些优化
 // @author       cssxsh
 // @include      http://bkjw.guet.edu.cn/Login/MainDesktop
@@ -181,7 +181,7 @@ const CourseSetNewListeners = {
                 items: [panView],
             }).show();
         };
-        const newStore = Ext.create('SctCoz.Query.CourseSetTable', {
+        const newStore = Ext.createByAlias('CourseSetTable', {
             listeners: {
                 load: (me, records) => {
                     // 课号分组
@@ -327,18 +327,10 @@ const StuScoreNewListeners = {
         });
         // 表格
         const queryGrid = Ext.create('SctCoz.Query.QueryGrid', {
-            store: Ext.create('SctCoz.Student.Score'),
+            store: Ext.createByAlias('SScore'),
             columns: [
                 { header: '序号', xtype: 'rownumberer', width: 40 },
-                {
-                    header: '学期',
-                    dataIndex: 'term',
-                    width: 120,
-                    renderer: (value) => {
-                        const name = TransValue(value, 'TermStore', 'term', 'termname');
-                        return name;
-                    },
-                },
+                { header: '学期', xtype: 'TermColumn', width: 120 },
                 { header: '课程代码', dataIndex: 'cid', width: 96 },
                 { header: '课号', dataIndex: 'cno', width: 64 },
                 { header: '课程名称', dataIndex: 'cname', minWidth: 120, flex: 1 },
@@ -393,18 +385,10 @@ const StuLabScoreNewListeners = {
         });
         // 表格
         const queryGrid = Ext.create('SctCoz.Query.QueryGrid', {
-            store: Ext.create('SctCoz.Student.LabScore'),
+            store: Ext.createByAlias('SLabScore'),
             columns: [
                 { header: '序号', xtype: 'rownumberer', width: 40 },
-                {
-                    header: '学期',
-                    dataIndex: 'term',
-                    width: 120,
-                    renderer: (value) => {
-                        const name = TransValue(value, 'TermStore', 'term', 'termname');
-                        return name;
-                    },
-                },
+                { header: '学期', xtype: 'TermColumn', width: 120 },
                 { header: '课程代码', dataIndex: 'courseid', width: 96 },
                 { header: '实验序号', dataIndex: 'labid', width: 96 },
                 { header: '课程名称', dataIndex: 'cname', minWidth: 120, flex: 1 },
@@ -675,22 +659,12 @@ const StuPlanNewListeners = {
         queryForm.getForm().setValues(SctCoz.Student.getUserInfo());
         // 创建新grid
         const queryGrid = Ext.create('SctCoz.Query.QueryGrid', {
-            store: Ext.create('SctCoz.Query.CoursePlan'),
+            store: Ext.createByAlias('CoursePlan'),
             columns: [
                 { header: '序号', xtype: 'rownumberer', width: 35 },
                 { header: '计划序号', dataIndex: 'pid', width: 80 },
-                {
-                    header: '学期',
-                    dataIndex: 'term',
-                    width: 120,
-                    renderer: (value) => TransValue(value, 'TermStore', 'term', 'termname'),
-                },
-                {
-                    header: '专业',
-                    dataIndex: 'spno',
-                    width: 160,
-                    renderer: (value) => TransValue(value, 'MajorNoStore', 'spno', 'text'),
-                },
+                { header: '学期', xtype: 'TermColumn', width: 120 },
+                { header: '专业', xtype: 'MajorColumn', width: 160 },
                 { header: '年级', dataIndex: 'grade', width: 40 },
                 { header: '课程代码', dataIndex: 'courseid', width: 90 },
                 { header: '课程名称', dataIndex: 'cname', minWidth: 160 },
@@ -863,7 +837,7 @@ const StuEvalNewListeners = {
             },
         };
         const queryGrid = Ext.create('SctCoz.Query.QueryGrid', {
-            store: Ext.create('SctCoz.Student.CourseEvalNo'),
+            store: Ext.createByAlias('SCourseEvalNo'),
             columns: [
                 { header: '序号', xtype: 'rownumberer', width: 36 },
                 {
@@ -919,7 +893,7 @@ const StuEvalNewListeners = {
             items: [queryForm, queryGrid],
         });
         // 输入部分
-        const evalStore = Ext.create('SctCoz.Student.Evaluation');
+        const evalStore = Ext.createByAlias('SEvaluation');
         const evalGrid = Ext.create('Ext.grid.Panel', {
             //
             region: 'center',
