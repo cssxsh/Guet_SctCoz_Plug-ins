@@ -1095,28 +1095,7 @@ defineByExt = () => {
     });
     Ext.define('SctCoz.Student.LabScore', {
         extend: 'Ext.data.Store',
-        fields: [
-            'astype',
-            'chk',
-            'cjlb',
-            'cname',
-            'comm',
-            'courseid',
-            'grade',
-            'khcj',
-            'kslb',
-            'labid',
-            'name',
-            'pscj',
-            'spname',
-            'spno',
-            'stid',
-            'teacherno',
-            'term',
-            'testtime',
-            'tname',
-            'zpcj'
-        ],
+        fields: ['astype', 'chk', 'cjlb', 'cname', 'comm', 'courseid', 'grade', 'khcj', 'kslb', 'labid', 'name', 'pscj', 'spname', 'spno', 'stid', 'teacherno', 'term', 'testtime', 'tname', 'zpcj'],
         proxy: {
             type: 'ajax',
             url: '/Student/GetStuLab',

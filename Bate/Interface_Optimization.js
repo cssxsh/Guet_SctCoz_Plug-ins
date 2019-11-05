@@ -203,9 +203,10 @@ const CourseSetNewListeners = {
                                 (Ext.isArray(response.data) ? response.data : [response.data]).forEach((Info) => {
                                     const key = Info.courseno;
                                     const group = me.GroupsByNo.get(key);
-                                    group && group.forEach((record) => {
-                                        record.set('comment', Info);
-                                    });
+                                    group &&
+                                        group.forEach((record) => {
+                                            record.set('comment', Info);
+                                        });
                                 });
                                 Loading.hide();
                             },
