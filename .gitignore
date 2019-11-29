@@ -15,6 +15,6 @@ resources/.arch-internal-preview.css
 Demo/
 Test/
 images/
-.idea/*
-.vscode/*
+.idea/
+.vscode/
 node_modules
