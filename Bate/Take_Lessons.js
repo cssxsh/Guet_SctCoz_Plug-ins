@@ -622,7 +622,7 @@ const LabSctNew = {
 
             // me.add(pan);
             const panel = Ext.create('SctCoz.Query.QueryPanel', {
-                Titconstext: '实验选课【插件模式】',
+                TitleText: '实验选课【插件模式】',
                 items: [queryForm, planGrid, itemGrid],
             });
             me.add(panel);

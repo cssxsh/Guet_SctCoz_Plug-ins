@@ -67,15 +67,16 @@ const CourseSetNewListeners = {
             params.cname = params.cname.trim();
 
             store.getProxy().extraParams = params;
-            store.load(() => {
-                // 教务自带的过滤有问题，需要本地再次过滤
-                // TODO: [7] <完善条件过滤> {应该让被过滤的记录以课号相关联}
-                store.filterBy((record) => {
-                    const s = parseInt(record.get('startweek')) > params.startweek;
-                    const t = parseInt(record.get('endweek')) < params.endweek;
-                    return s && t;
-                });
-            });
+            store.load();
+            // store.load(() => {
+            //     // 教务自带的过滤有问题，需要本地再次过滤
+            //     // TO-DO: [7] <完善条件过滤> {应该让被过滤的记录以课号相关联}
+            //     store.filterBy((record) => {
+            //         const s = parseInt(record.get('startweek')) > params.startweek;
+            //         const t = parseInt(record.get('endweek')) < params.endweek;
+            //         return s && t;
+            //     });
+            // });
             grid.printConfig.title = formSet.findField('term').getDisplayValue() + '课程设置';
         };
         const queryForm = Ext.create('SctCoz.Query.QueryForm', {
