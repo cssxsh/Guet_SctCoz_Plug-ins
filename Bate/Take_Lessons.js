@@ -225,7 +225,7 @@ const Rreplace_StuSct = (me) => {
             Ext.Msg.alert('提示', '请选择一个课号提交。');
         }
     };
-    const newStore = Ext.createByAlias('SCoursePlan', {
+    const newStore = Ext.createByAlias('SSchedule', {
         AllQueryStore: Ext.createByAlias('CoursePlan', {
             // 方便之后使用
             groupField: 'courseid',

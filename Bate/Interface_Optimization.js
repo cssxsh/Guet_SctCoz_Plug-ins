@@ -590,7 +590,7 @@ const SutSctedNewListeners = {
                 data.forEach((i, index) => {
                     if (i.courseno === rec.data.courseno) {
                         item.name = i.name.toString();
-                        item.teacherno = i.teacherno.toString();
+                        item.teacherno = (i.teacherno || 0).toString();
                         item.courseno = i.courseno.toString();
                         data.splice(index, 1);
                     }
@@ -761,9 +761,10 @@ const StuEvalNewListeners = {
             });
             // 加载评教评语
             evalFrom.load({
-                url: '/student/JxpgJg',
-                params: evalStore.getProxy().extraParams,
+                url: '/Student/JxpgJg',
+                params: params,
                 success: (me, action) => {
+                    // console.log(action.result);
                     if (action.result.data.length !== 0) {
                         me.findField('name').setValue(record.get('name'));
                         me.findField('type').setValue(record.get('type'));
@@ -773,6 +774,9 @@ const StuEvalNewListeners = {
                         // 没有保存记录的情况下
                         me.setValues(record.getData());
                     }
+                },
+                failure: (me) => {
+                    me.setValues(record.getData());
                 },
             });
 
@@ -817,8 +821,8 @@ const StuEvalNewListeners = {
                     });
                     // 加载评教评语
                     evalFrom.load({
-                        url: '/student/JxpgJg',
-                        params: evalStore.getProxy().extraParams,
+                        url: '/Student/JxpgJg',
+                        params: params,
                         success: (me, action) => {
                             if (action.result.data.length !== 0) {
                                 me.findField('name').setValue(record.get('name'));

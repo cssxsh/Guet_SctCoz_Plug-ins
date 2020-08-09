@@ -346,7 +346,8 @@ defineByExt = () => {
                     (me.shoolYear = []),
                     Ext.Ajax.request({
                         url: '/Comm/CurTerm', // 获取教务设置
-                        method: 'GET',
+                        method: 'GET', 
+                        async: false,
                         success: (response) => {
                             Ext.decode(response.responseText).forEach((term) => {
                                 me.termSet.push(records.find((termInfo) => termInfo.get('term') === term));
@@ -1031,7 +1032,6 @@ defineByExt = () => {
             'id',
             'courseno',
             'courseid',
-            'score',
             'tpye',
             'bz',
             'leibie',
@@ -1051,7 +1051,11 @@ defineByExt = () => {
             { name: 'dfz', persist: false },
             { name: 'dje', persist: false },
             { name: 'efz', persist: false },
-            { name: 'score', defaultValue: 100 },
+            {
+                name: 'score',
+                defaultValue: 100,
+                convert: (value) => (value === null ? 100 : value),
+            },
             {
                 name: 'lb',
                 convert: (value, record) => (record.get('leibie') === '实验评估' ? 2 : 1),
@@ -1314,6 +1318,7 @@ defineByExt = () => {
     Ext.define('SctCoz.Query.QueryGrid', {
         extend: 'Ext.grid.Panel',
         xtype: ['query-grid'],
+        columnLines: true,
         width: '100%',
         height: '100%',
         layout: 'fit',
@@ -1334,10 +1339,6 @@ defineByExt = () => {
             stripeRows: true, // 斑马纹
             enableTextSelection: true, // 文字可选（复制）
         },
-        features: [
-            // 取消分组功能，避免报错
-            // { ftype: "grouping", enableNoGroups: true, startCollapsed: true, id: "group" }
-        ],
         printConfig: {
             printTitle: '', // 打印的主标题
         },
@@ -1366,7 +1367,7 @@ defineByExt = () => {
             },
         ],
         constructor: function(config) {
-            config.tbar = this.tbar.concat(config.newTbar);
+            this.tbar = this.tbar.concat(config.newTbar || []);
             this.callParent(arguments);
             // this.getView().getFeature("group").disable()
         },
